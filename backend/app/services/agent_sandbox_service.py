@@ -5,6 +5,7 @@ import json
 import os
 import re
 import tempfile
+import uuid
 from pathlib import Path
 
 from app.services.agent_access_service import AgentAccessError, agent_access_service
@@ -44,13 +45,13 @@ class AgentSandboxService:
         ):
             raise AgentSandboxError("Sandbox uchun fayl yo‘li noto‘g‘ri.")
 
-    def _command(self, source: Path) -> list[str]:
+    def _command(self, source: Path, container_name: str) -> list[str]:
         # Docker's --mount uses comma-separated fields; reject ambiguous host paths.
         source_text = str(source)
         if "," in source_text:
             raise AgentSandboxError("Docker bind-mount yo‘lida vergul bo‘lishi mumkin emas.")
         return [
-            self.DOCKER_BIN, "run", "--rm", "--pull=never",
+            self.DOCKER_BIN, "run", "--rm", "--pull=never", "--name", container_name,
             "--network=none", "--read-only", "--cap-drop=ALL",
             "--security-opt=no-new-privileges", "--pids-limit=16",
             "--memory=96m", "--cpus=0.50", "--user=65532:65532",
@@ -58,6 +59,22 @@ class AgentSandboxService:
             "--mount", f"type=bind,source={source_text},target=/input/file,readonly",
             self.IMAGE, "-c", self.READ_SCRIPT,
         ]
+
+
+    async def _force_remove(self, container_name: str) -> None:
+        """Best-effort cleanup if the Docker client is cancelled while the container runs."""
+        cleanup: asyncio.subprocess.Process | None = None
+        try:
+            cleanup = await asyncio.create_subprocess_exec(
+                self.DOCKER_BIN, "rm", "-f", container_name,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            await asyncio.wait_for(cleanup.communicate(), timeout=4)
+        except (FileNotFoundError, asyncio.TimeoutError, OSError):
+            if cleanup is not None and cleanup.returncode is None:
+                cleanup.kill()
+                await cleanup.communicate()
 
     async def read_granted_file(self, agent_id: str, relative_path: str) -> dict:
         self._validate_relative_path(relative_path)
@@ -76,6 +93,7 @@ class AgentSandboxService:
             raise AgentSandboxError("Fayl 2 MB limitdan katta.")
         staged_path: str | None = None
         process: asyncio.subprocess.Process | None = None
+        container_name = "nexus-agent-read-" + uuid.uuid4().hex
         try:
             # Stage only the explicitly granted file. The container never receives
             # a mount of the workspace directory or any other host path.
@@ -87,7 +105,7 @@ class AgentSandboxService:
                 staged.write(file_bytes)
             os.chmod(staged_path, 0o444)
             process = await asyncio.create_subprocess_exec(
-                *self._command(Path(staged_path)),
+                *self._command(Path(staged_path), container_name),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -98,6 +116,7 @@ class AgentSandboxService:
             except asyncio.TimeoutError as exc:
                 process.kill()
                 await process.communicate()
+                await asyncio.shield(self._force_remove(container_name))
                 raise AgentSandboxError("Sandbox vaqt limiti tugadi; container to‘xtatildi.") from exc
             if process.returncode != 0:
                 detail = stderr.decode("utf-8", errors="replace")[:500].strip()
@@ -124,6 +143,7 @@ class AgentSandboxService:
             if process is not None and process.returncode is None:
                 process.kill()
                 await process.communicate()
+            await asyncio.shield(self._force_remove(container_name))
             raise
         finally:
             if staged_path is not None:
