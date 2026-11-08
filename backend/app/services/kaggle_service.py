@@ -52,7 +52,7 @@ class KaggleService:
             "TUNNEL_PASSWORD": self.tunnel_password,
         }.items() if not v]
         if missing:
-            raise KaggleError("backend/.env da to‘ldirilmagan: " + ", ".join(missing))
+            raise KaggleError("NEXUS sozlamalarida to‘ldirilmagan qiymatlar: " + ", ".join(missing))
 
     def _run(self, args: list[str]) -> str:
         env = {**os.environ, "KAGGLE_USERNAME": settings.kaggle_username, "KAGGLE_KEY": self.kaggle_key}
