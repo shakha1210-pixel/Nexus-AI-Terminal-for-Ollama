@@ -195,10 +195,10 @@ function App() {
           <div className="topbar-actions">
             <label className="language-switch" aria-label={t("actions.language")}><span>{t("actions.language")}</span><select value={language} onChange={(event) => setLanguage(event.target.value as "uz" | "en")}><option value="uz">O‘zbekcha</option><option value="en">English</option></select></label>
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
-            <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label=t("actions.changeTheme") title=t("actions.changeTheme")>
+            <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label={t("actions.changeTheme")} title={t("actions.changeTheme")}>
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
             </button>
-            <button className="icon-button" onClick={() => { playUiSound(520); void refresh(); }} aria-label=t("actions.refresh") title=t("actions.refresh") disabled={loading}>
+            <button className="icon-button" onClick={() => { playUiSound(520); void refresh(); }} aria-label={t("actions.refresh")} title={t("actions.refresh")} disabled={loading}>
               <RefreshCw size={16} className={loading ? "spin" : ""} />
             </button>
             <button className="icon-button" onClick={() => setSoundEnabled((enabled) => !enabled)} disabled={!preferencesReady} aria-label={soundEnabled ? t("actions.soundOff") : t("actions.soundOn")} title={soundEnabled ? t("actions.soundOn") : t("actions.soundOff")} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}</button>
