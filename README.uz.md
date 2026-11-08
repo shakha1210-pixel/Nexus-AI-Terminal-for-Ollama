@@ -134,6 +134,8 @@ Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida l
 | `DELETE` | `/api/agents/{agent_id}/permissions/read?path=notes.md` | Fayl uchun read ruxsatini bekor qilish |
 | `POST` | `/api/agents/{agent_id}/context` | Ruxsat berilgan tanlangan fayllarni agent konteksti uchun olish |
 | `POST` | `/api/agents/{agent_id}/run` | Agentni ishga tushirish; faqat read-grant tekshiruvidan o‘tgan `workspace_read_file` vositasi mavjud |
+| `GET` | `/api/agents/{agent_id}/approvals` | Agent uchun kutilayotgan fayl tahriri takliflarini ko‘rish |
+| `POST` | `/api/agents/{agent_id}/approvals/{request_id}/decision` | Taklifni tasdiqlash yoki rad etish; body: `{"approve":true}` yoki `{"approve":false}` |
 | `GET` | `/api/chat/conversations` | Suhbatlar ro‘yxatini olish |
 | `GET` | `/api/chat/conversations/{conversation_id}` | Suhbat tarixini olish |
 | `DELETE` | `/api/chat/conversations/{conversation_id}` | Suhbatni o‘chirish |
@@ -184,4 +186,6 @@ nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
 - `POST /api/agents/{agent_id}/isolate` — agentni qulflash va faol Ollama so‘rovini bekor qilish.
 - `POST /api/agents/{agent_id}/release` — izolyatsiyadan chiqarish; xavfsiz `read_only` rejimiga qaytaradi.
 
-Hozirgi runtime faqat ruxsatli matnli faylni o‘qiydi. Shu sabab `autopilot` ham hozircha shu tor vakolat doirasida ishlaydi; `approval_required` yozish amallari qo‘shilganda tasdiqlash darvozasi sifatida ishga tushadi. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
+`approval_required` rejimida agentga `workspace_propose_file_edit` vositasi beriladi. Bu vosita faqat mavjud UTF-8 matnli faylni almashtirish taklifini yaratadi; faylni o‘zi yozmaydi. Taklif Approval Queue’da to‘liq matn va fayl yo‘li bilan ko‘rsatiladi. Foydalanuvchi tasdiqlasa, aynan shu mazmun bir marta yoziladi; rad etsa yoki 10 daqiqada ko‘rib chiqilmasa, bajarilmaydi. Taklif yaratilgandan keyin asl fayl o‘zgargan bo‘lsa, tasdiq bekor qilinadi va yangi taklif talab etiladi. Hozircha yangi fayl yaratish, o‘chirish, papka o‘zgartirish yoki ko‘p faylli amallar tasdiqlash vositasida mavjud emas.
+
+`autopilot` hamon faqat mavjud read-only vositalar bilan cheklangan. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Tasdiqlash API’si hozirgi local-first backend arxitekturasiga tayanadi; backendni ishonchsiz tarmoqka ochmang, chunki autentifikatsiya qatlami hali mavjud emas. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
