@@ -42,12 +42,12 @@ class AgentProviderRoutingTests(unittest.IsolatedAsyncioTestCase):
         manager = ProviderManager()
         manager.register(FakeAgentAdapter())
         service = AgentRuntimeService()
-        with patch("app.services.agent_runtime_service.provider_manager", manager), \\
-             patch("app.services.agent_runtime_service.agent_control_service", FakeControl()):
-            events = [event async for event in service.run(
-                agent_id="default", model="agent-model", task="summarize",
-                provider_id="fake-provider",
-            )]
+        with patch("app.services.agent_runtime_service.provider_manager", manager):
+            with patch("app.services.agent_runtime_service.agent_control_service", FakeControl()):
+                events = [event async for event in service.run(
+                    agent_id="default", model="agent-model", task="summarize",
+                    provider_id="fake-provider",
+                )]
         self.assertTrue(any('"content": "agent-routed answer"' in event for event in events))
         self.assertTrue(any("event: done" in event for event in events))
 
