@@ -297,4 +297,5 @@ export const uz = {
   "diagnostics.noBlockingWait": "Kutish serverni band qilmaydi; qolgan vaqt avtomatik yangilanadi.",
   "settings.restartNote": "OpenAI-compatible kaliti saqlanganda provider qayta sozlanadi. Endpoint manzili .env orqali belgilanadi."
 
+  "diagnostics.connection": "Ulanish",
 } as const;
