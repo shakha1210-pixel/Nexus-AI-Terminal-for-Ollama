@@ -88,8 +88,8 @@ function App() {
       })));
       setUpdatedAt(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Noma’lum xatolik yuz berdi.");
-      setStatus({ connected: false, version: null, mode: "local", message: "Backend API bilan aloqa yo‘q." });
+      setError(err instanceof Error ? err.message : t("status.unknownError"));
+      setStatus({ connected: false, version: null, mode: "local", message: t("status.backendUnavailable") });
       setModels([]);
       setProviderModels([]);
       setProviderConnected(false);
@@ -153,7 +153,7 @@ function App() {
     const timer = window.setTimeout(() => {
       void api.savePreferences({ theme, sound_enabled: soundEnabled })
         .catch((err: unknown) => {
-          setError(err instanceof Error ? `Preferences could not be saved: ${err.message}` : "Preferences could not be saved.");
+          setError(err instanceof Error ? `${t("settings.preferencesSaveError")}: ${err.message}` : t("settings.preferencesSaveError"));
         });
     }, 250);
     return () => window.clearTimeout(timer);
@@ -172,7 +172,7 @@ function App() {
 
         <button className="workspace-switcher">
           <span className="workspace-avatar">N</span>
-          <span className="workspace-copy"><strong>Personal workspace</strong><small>Local environment</small></span>
+          <span className="workspace-copy"><strong>{t("workspace.personal")}</strong><small>{t("workspace.local")}</small></span>
           <ChevronDown size={15} />
         </button>
 
@@ -202,11 +202,11 @@ function App() {
         <div className="sidebar-bottom">
           <div className="local-card">
             <div className="local-card-icon"><ShieldCheck size={16} /></div>
-            <div><strong>Local-first</strong><span>Your data stays on device</span></div>
+            <div><strong>{t("workspace.localFirst")}</strong><span>{t("workspace.dataLocal")}</span></div>
           </div>
           <div className="profile-row">
             <div className="profile-avatar">U</div>
-            <div className="profile-copy"><strong>Local User</strong><span>Administrator</span></div>
+            <div className="profile-copy"><strong>{t("workspace.localUser")}</strong><span>{t("workspace.admin")}</span></div>
             <button className="icon-button small" aria-label="Help"><CircleHelp size={17} /></button>
           </div>
         </div>
@@ -217,7 +217,7 @@ function App() {
           <div className="breadcrumbs"><span>{t("nav.workspaceTitle")}</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? t("nav.dashboard") : activeView === "explorer" ? t("nav.explorer") : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? t("nav.providers") : t("nav.aiChat")}</strong></div>
           <div className="topbar-actions">
             <label className="language-switch" aria-label={t("actions.language")}><span>{t("actions.language")}</span><select value={language} onChange={(event) => setLanguage(event.target.value as "uz" | "en")}><option value="uz">O‘zbekcha</option><option value="en">English</option></select></label>
-            <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
+            <div className="environment"><span className="environment-dot" />{t("workspace.environment")}</div>
             <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label={t("actions.changeTheme")} title={t("actions.changeTheme")}>
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
             </button>
@@ -235,7 +235,7 @@ function App() {
             <div>
               <p className="eyebrow">{t("dashboard.overview")}</p>
               <h1>{t("nav.dashboard")}</h1>
-              <p className="page-subtitle">Your local AI environment at a glance.</p>
+              <p className="page-subtitle">{t("dashboard.subtitle")}</p>
             </div>
             <button className="primary-button" onClick={() => setActiveView("agents")}><Plus size={16} />{t("dashboard.createAgent")}</button>
           </div>
@@ -249,24 +249,24 @@ function App() {
 
           <div className="stats-grid">
             <article className="stat-card">
-              <div className="stat-top"><span>Ollama runtime</span><div className="stat-icon"><Activity size={17} /></div></div>
+              <div className="stat-top"><span>{t("dashboard.ollamaRuntime")}</span><div className="stat-icon"><Activity size={17} /></div></div>
               <div className="stat-value status-value"><span className={`status-dot ${ollamaConnected ? "online" : "offline"}`} />{loading && !status ? t("dashboard.checking") : ollamaConnected ? t("status.connected") : t("status.offline")}</div>
               <p className="stat-foot">{status?.version ? `Version ${status.version}` : t("dashboard.localRuntime")}</p>
             </article>
             <article className="stat-card">
-              <div className="stat-top"><span>Installed models</span><div className="stat-icon"><Boxes size={17} /></div></div>
+              <div className="stat-top"><span>{t("dashboard.installedModels")}</span><div className="stat-icon"><Boxes size={17} /></div></div>
               <div className="stat-value">{models.length}</div>
               <p className="stat-foot">{status?.mode === "kaggle" ? t("dashboard.kaggleModels") : t("dashboard.localModels")}</p>
             </article>
             <article className="stat-card">
-              <div className="stat-top"><span>AI agents</span><div className="stat-icon"><Bot size={17} /></div></div>
+              <div className="stat-top"><span>{t("dashboard.aiAgents")}</span><div className="stat-icon"><Bot size={17} /></div></div>
               <div className="stat-value">—</div>
-              <p className="stat-foot">Permission-scoped agent runtime</p>
+              <p className="stat-foot">{t("dashboard.agentRuntime")}</p>
             </article>
             <article className="stat-card">
               <div className="stat-top"><span>{t("nav.workflows")}</span><div className="stat-icon"><Workflow size={17} /></div></div>
               <div className="stat-value">—</div>
-              <p className="stat-foot">Automation pipeline</p>
+              <p className="stat-foot">{t("dashboard.automationPipeline")}</p>
             </article>
           </div>
 
@@ -282,7 +282,7 @@ function App() {
               <div className="detail-row"><span>{t("dashboard.service")}</span><strong>Ollama</strong></div>
               <div className="detail-row"><span>{t("dashboard.selectedRuntime")}</span><code>{status?.mode === "kaggle" ? "Kaggle GPU" : "127.0.0.1:11434"}</code></div>
               <div className="detail-row"><span>{t("dashboard.apiGateway")}</span><code>127.0.0.1:8000</code></div>
-              <div className="runtime-hint"><ShieldCheck size={15} /><span>Requests are routed through the local NEXUS API.</span></div>
+              <div className="runtime-hint"><ShieldCheck size={15} /><span>{t("dashboard.routedLocally")}</span></div>
             </section>
           </div>
 
@@ -290,7 +290,7 @@ function App() {
             <KagglePanel status={kaggleStatus} onStatusChange={setKaggleStatus} onModeChange={() => { void refresh(); }} />
           </div>
 
-          <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>Local-first intelligence workspace</span></div>
+          <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>{t("dashboard.localFirstWorkspace")}</span></div>
         </section>
         ) : activeView === "explorer" ? (
           <section className="page-content workstation-page">
@@ -307,7 +307,7 @@ function App() {
                 setActiveProvider(result.provider_id);
                 void refresh(true);
               }).catch((err: unknown) => {
-                setError(err instanceof Error ? err.message : "Provider selection failed.");
+                setError(err instanceof Error ? err.message : t("providers.selectionError"));
               });
             }} />
           </section>
