@@ -113,16 +113,19 @@ class ChatService:
                 user_content += f"\n\n[Workspace file: {item['path']}]\n{item['content']}\n[End file]"
             elif item["kind"] == "image":
                 image_data.append(item["content_base64"])
+                user_content += f"\n\n[Image attachment: {item['path']}]"
         user_message = {"role": "user", "content": user_content}
+        request_message = dict(user_message)
         if image_data:
-            user_message["images"] = image_data
+            request_message["images"] = image_data
         data["messages"].append(user_message)
         data["updated_at"] = datetime.now(timezone.utc).isoformat()
         with self._lock:
             self._write(data)
 
         yield "event: meta\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\n\n"
-        payload = {"model": model, "messages": data["messages"], "stream": True}
+        request_messages = [*data["messages"][:-1], request_message]
+        payload = {"model": model, "messages": request_messages, "stream": True}
         assistant_text = ""
         try:
             async with httpx.AsyncClient(timeout=None, auth=ollama_service.auth) as client:
