@@ -5,11 +5,11 @@ import type { ProviderCatalog, ProviderPolicy } from "../types/providers";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
-async function request<T>(path: string, init?: { method: "POST" | "PUT"; body: unknown }): Promise<T> {
+async function request<T>(path: string, init?: { method: "POST" | "PUT" | "DELETE"; body?: unknown }): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, init ? {
     method: init.method,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(init.body),
+    ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
   } : undefined);
   if (!response.ok) {
     let message = `API xatosi: ${response.status}`;
@@ -36,4 +36,7 @@ export const api = {
   saveProviderPolicy: (policy: ProviderPolicy) => request<ProviderPolicy>("/api/providers/policy", { method: "PUT", body: policy }),
   getProviderCatalog: () => request<ProviderCatalog>("/api/providers/catalog"),
   setActiveProvider: (provider_id: string) => request<{ provider_id: string }>("/api/providers/active", { method: "PUT", body: { provider_id } }),
+  getSecretStatus: () => request<Record<"kaggle-key" | "tunnel-password" | "openai-compatible-api-key", boolean>>("/api/secrets"),
+  saveSecret: (name: string, value: string) => request<{ saved: boolean }>("/api/secrets", { method: "PUT", body: { name, value } }),
+  deleteSecret: (name: string) => request<{ deleted: boolean }>(`/api/secrets/${encodeURIComponent(name)}`, { method: "DELETE" }),
 };
