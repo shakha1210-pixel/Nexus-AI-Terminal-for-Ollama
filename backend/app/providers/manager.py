@@ -1,8 +1,12 @@
 from typing import Any
 
-from app.providers.base import BaseAdapter, ProviderModel
+from app.providers.base import BaseAdapter, ProviderCapabilities, ProviderModel
 from app.providers.policy import FailureKind, ProviderSwitchPolicy, ProviderSwitchingEngine, SwitchDecision
 from app.providers.registry import ProviderRegistry
+
+
+class ProviderCapabilityError(ValueError):
+    pass
 
 
 class ProviderManager:
@@ -25,6 +29,19 @@ class ProviderManager:
 
     async def health(self, provider_id: str) -> bool:
         return await self.registry.get(provider_id).health_check()
+
+    def require_capabilities(
+        self, provider_id: str, model: ProviderModel, required: ProviderCapabilities
+    ) -> None:
+        adapter = self.registry.get(provider_id)
+        actual = model.capabilities
+        missing = [name for name in ProviderCapabilities.__dataclass_fields__
+                   if getattr(required, name) and not getattr(actual, name)]
+        if missing:
+            raise ProviderCapabilityError(
+                f"Provider '{adapter.provider_id}' model '{model.id}' lacks required capabilities: "
+                + ", ".join(missing)
+            )
 
     def evaluate_fallback(
         self,
