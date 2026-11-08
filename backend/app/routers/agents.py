@@ -6,6 +6,7 @@ from typing import Literal
 from app.services.agent_access_service import AgentAccessError, agent_access_service
 from app.services.agent_runtime_service import AgentRuntimeError, agent_runtime_service
 from app.services.agent_control_service import AgentControlError, agent_control_service
+from app.services.agent_sandbox_service import AgentSandboxError, agent_sandbox_service
 
 router = APIRouter(prefix="/api/agents", tags=["Agent Access"])
 
@@ -29,6 +30,10 @@ class AgentModeRequest(BaseModel):
 
 class IsolationRequest(BaseModel):
     reason: str = Field(default="Manual isolation", max_length=500)
+
+
+class SandboxStartRequest(BaseModel):
+    paths: list[str] = Field(min_length=1, max_length=10)
 
 
 def _error(exc: AgentAccessError) -> HTTPException:
@@ -66,6 +71,7 @@ async def prepare_context(agent_id: str, payload: ContextRequest) -> dict:
     except AgentAccessError as exc:
         raise _error(exc) from exc
 
+
 @router.post("/{agent_id}/run")
 async def run_agent(agent_id: str, payload: AgentRunRequest) -> StreamingResponse:
     try:
@@ -81,13 +87,13 @@ async def run_agent(agent_id: str, payload: AgentRunRequest) -> StreamingRespons
                 yield event
         except AgentRuntimeError as exc:
             import json
-            yield "event: error\ndata: " + json.dumps({"message": str(exc)}, ensure_ascii=False) + "\n\n"
+            yield "event: error\\ndata: " + json.dumps({"message": str(exc)}, ensure_ascii=False) + "\\n\\n"
 
     return StreamingResponse(events(), media_type="text/event-stream", headers={
         "Cache-Control": "no-cache", "X-Accel-Buffering": "no",
     })
 
- 
+
 @router.get("/{agent_id}/control")
 async def get_agent_control(agent_id: str) -> dict:
     try:
@@ -118,3 +124,24 @@ async def release_agent(agent_id: str) -> dict:
         return agent_control_service.release(agent_id)
     except AgentControlError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/{agent_id}/sandbox")
+async def get_agent_sandbox(agent_id: str) -> dict:
+    return agent_sandbox_service.status(agent_id)
+
+
+@router.post("/{agent_id}/sandbox/start")
+async def start_agent_sandbox(agent_id: str, payload: SandboxStartRequest) -> dict:
+    try:
+        return agent_sandbox_service.start(agent_id, payload.paths)
+    except AgentSandboxError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post("/{agent_id}/sandbox/stop")
+async def stop_agent_sandbox(agent_id: str) -> dict:
+    try:
+        return agent_sandbox_service.stop(agent_id)
+    except AgentSandboxError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
