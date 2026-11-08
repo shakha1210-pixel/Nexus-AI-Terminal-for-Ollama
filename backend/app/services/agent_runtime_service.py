@@ -94,6 +94,8 @@ class AgentRuntimeService:
             provider_manager.require_capabilities(
                 selected_provider, model_info, ProviderCapabilities(tool_calling=True)
             )
+        except AgentRuntimeError:
+            raise
         except AgentControlError as exc:
             raise AgentRuntimeError(str(exc)) from exc
         except ProviderCapabilityError as exc:
@@ -114,24 +116,18 @@ class AgentRuntimeService:
                 if control["isolated"] or control["mode"] == "locked":
                     raise AgentRuntimeError("Agent izolyatsiya qilindi; bajarilish to‘xtatildi.")
                 available_tools = self.tools_for_mode(control["mode"])
-                payload = {
-                    "model": model,
-                    "messages": messages,
-                    "tools": available_tools,
-                    "stream": False,
-                }
                 request_task = asyncio.create_task(provider_manager.chat(selected_provider, messages, model, tools=available_tools))
                 agent_control_service.register_request(agent, request_task)
                 try:
                     response = await request_task
                 except asyncio.CancelledError as exc:
-                    raise AgentRuntimeError("Agent izolyatsiya qilindi; faol Ollama so‘rovi bekor qilindi.") from exc
+                    raise AgentRuntimeError("Agent izolyatsiya qilindi; faol provider so‘rovi bekor qilindi.") from exc
                 finally:
                     agent_control_service.unregister_request(agent, request_task)
                 result = response
                 assistant_message = result.get("message") or {}
                 if not isinstance(assistant_message, dict):
-                    raise AgentRuntimeError("Ollama agent javobi noto‘g‘ri formatda.")
+                    raise AgentRuntimeError("Provider agent javobi noto‘g‘ri formatda.")
                 calls = assistant_message.get("tool_calls") or []
                 if not calls:
                     answer = assistant_message.get("content") or "Model bo‘sh javob qaytardi."
