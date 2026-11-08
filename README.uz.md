@@ -177,11 +177,23 @@ nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
 ```
 
 
-### Agent access modes va isolation
+### Agent access modes, isolation va Docker sandbox
+
+Access Control endpointlari:
 
 - `GET /api/agents/{agent_id}/control` — joriy rejim va izolyatsiya holati.
 - `PUT /api/agents/{agent_id}/control/mode` — `read_only`, `approval_required`, `autopilot` yoki `locked` rejimini tanlash.
-- `POST /api/agents/{agent_id}/isolate` — agentni qulflash va faol Ollama so‘rovini bekor qilish.
+- `POST /api/agents/{agent_id}/isolate` — agentni qulflash, faol Ollama so‘rovini bekor qilish va mavjud sandbox konteynerini to‘xtatishga urinish.
 - `POST /api/agents/{agent_id}/release` — izolyatsiyadan chiqarish; xavfsiz `read_only` rejimiga qaytaradi.
 
-Hozirgi runtime faqat ruxsatli matnli faylni o‘qiydi. Shu sabab `autopilot` ham hozircha shu tor vakolat doirasida ishlaydi; `approval_required` yozish amallari qo‘shilganda tasdiqlash darvozasi sifatida ishga tushadi. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
+Docker sandbox endpointlari:
+
+- `GET /api/agents/{agent_id}/sandbox` — Docker sandbox holati.
+- `POST /api/agents/{agent_id}/sandbox/start` — body: `{"paths":["notes.md"]}`; faqat agentga oldindan read ruxsati berilgan fayllarning alohida nusxasi bilan konteyner yaratadi.
+- `POST /api/agents/{agent_id}/sandbox/stop` — konteynerni majburan to‘xtatib, vaqtinchalik nusxalarni o‘chiradi.
+
+Sandbox uchun Docker Engine va oldindan yuklangan image kerak. Standart image `python:3.12-slim`; uni hostda oldindan `docker pull python:3.12-slim` bilan yuklang. Image yoki Docker CLI nomini mos ravishda `NEXUS_SANDBOX_IMAGE` va `NEXUS_DOCKER_BINARY` orqali o‘zgartirish mumkin. NEXUS image’ni o‘zi internetdan yuklamaydi; `--pull=never` ishlatiladi.
+
+Konteyner `--network none`, read-only root filesystem, faqat read-only grant snapshot, non-root UID, barcha Linux capabilities olib tashlangan holat, `no-new-privileges`, 512 MB RAM, 1 CPU va 64 process limiti bilan ishga tushadi. Host workspace ildizi, Docker socket va boshqa host papkalari konteynerga mount qilinmaydi. `/tmp` 64 MB cheklangan tmpfs.
+
+**Muhim:** bu birinchi sandbox bosqichi konteynerni xavfsiz tayyorlaydi va lifecycle’ni boshqaradi, lekin hozircha Agent Runtime ichidagi model chaqiruvlarini konteynerga ko‘chirmaydi; konteyner ichida faqat kutib turuvchi jarayon ishlaydi. Shell yoki kod bajarish vositasi yo‘q. Agent Runtime hanuz faqat ruxsatli matnli faylni o‘qiydi. `autopilot` ham hozircha shu tor vakolat doirasida; `approval_required` yozish amallari qo‘shilganda tasdiqlash darvozasi bo‘ladi. Docker mavjud bo‘lmasa, sandbox start xato bilan to‘xtaydi va host rejimiga fallback qilmaydi.
