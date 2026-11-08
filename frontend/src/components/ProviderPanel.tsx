@@ -3,6 +3,7 @@ import { AlertCircle, Check, ChevronRight, Cpu, Network, Save, ShieldCheck, Work
 import { api } from "../services/api";
 import type { FailureKind, ProviderCatalog, ProviderPolicy, SwitchingMode } from "../types/providers";
 import { useTranslation } from "../i18n";
+import ProviderDiagnostics from "./ProviderDiagnostics";
 
 const DEFAULT_POLICY: ProviderPolicy = {
   mode: "manual_only", max_switches_per_request: 1, allowed_transitions: {},
@@ -131,6 +132,7 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
         <div className="provider-save-row">{saved && <span className="provider-saved"><Check size={14} />{t("actions.saved")}</span>}<button className="primary-button" onClick={() => void save()} disabled={loading || saving}><Save size={14} />{saving ? t("actions.saving") : t("providers.savePolicy")}</button></div>
       </div>
     </section>
+    <ProviderDiagnostics />
     <div className="provider-footnote"><ChevronRight size={14} /> {t("providers.serverEnforced")}</div>
   </div>;
 }
