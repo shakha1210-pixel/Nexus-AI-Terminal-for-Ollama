@@ -12,6 +12,7 @@ import ModelsPanel from "./components/ModelsPanel";
 import ProviderPanel from "./components/ProviderPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
+import type { KaggleStatus } from "./types/kaggle";
 import { useTranslation } from "./i18n";
 import "./providers-styles.css";
 
@@ -23,6 +24,7 @@ function App() {
   const [theme, setTheme] = useState<Theme>("dark");
   const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
+  const [kaggleStatus, setKaggleStatus] = useState<KaggleStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [providerModels, setProviderModels] = useState<OllamaModel[]>([]);
   const [activeProvider, setActiveProvider] = useState("ollama");
@@ -103,6 +105,23 @@ function App() {
     }, 15000);
     return () => window.clearInterval(timer);
   }, [refresh]);
+
+  const refreshKaggle = useCallback(async () => {
+    try { setKaggleStatus(await api.getKaggleStatus()); }
+    catch { /* Kaggle is optional; keep the last known state when unavailable. */ }
+  }, []);
+
+  useEffect(() => {
+    if (activeView === "dashboard") void refreshKaggle();
+  }, [activeView, refreshKaggle]);
+
+  useEffect(() => {
+    if (activeView !== "dashboard" || !kaggleStatus || !["pushing", "queued", "starting"].includes(kaggleStatus.state)) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refreshKaggle();
+    }, 15000);
+    return () => window.clearInterval(timer);
+  }, [activeView, kaggleStatus?.state, refreshKaggle]);
 
   useEffect(() => {
     let active = true;
@@ -264,7 +283,7 @@ function App() {
           </div>
 
           <div className="kaggle-section">
-            <KagglePanel onModeChange={() => void refresh()} />
+            <KagglePanel status={kaggleStatus} onStatusChange={setKaggleStatus} onModeChange={() => { void refresh(); }} />
           </div>
 
           <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>Local-first intelligence workspace</span></div>
