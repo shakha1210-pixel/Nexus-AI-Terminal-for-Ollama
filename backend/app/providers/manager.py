@@ -17,6 +17,9 @@ class ProviderManager:
         self.switching = ProviderSwitchingEngine(policy or ProviderSwitchPolicy())
         self.active_provider_id: str | None = None
 
+    def set_policy(self, policy: ProviderSwitchPolicy) -> None:
+        self.switching = ProviderSwitchingEngine(policy)
+
     def register(self, adapter: BaseAdapter) -> None:
         self.registry.register(adapter)
 
@@ -63,3 +66,6 @@ class ProviderManager:
 
     async def chat(self, provider_id: str, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
         return await self.registry.get(provider_id).chat(messages, model, **kwargs)
+
+
+provider_manager = ProviderManager()
