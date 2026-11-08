@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Check, ChevronRight, Cloud, Cpu, Network, Save, ShieldCheck, Workflow } from "lucide-react";
+import { AlertCircle, Check, ChevronRight, Cpu, Network, Save, ShieldCheck, Workflow } from "lucide-react";
 import { api } from "../services/api";
 import type { FailureKind, ProviderCatalog, ProviderPolicy, SwitchingMode } from "../types/providers";
 
@@ -46,10 +46,10 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
     }).catch((e: unknown) => {
       if (active) setError(e instanceof Error ? e.message : "Policy could not be loaded.");
     }).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-    void api.getProviderCatalog().then(setCatalog).catch((e: unknown) => {
+    void api.getProviderCatalog().then((value) => { if (active) setCatalog(value); }).catch((e: unknown) => {
       if (active) setError(e instanceof Error ? e.message : "Provider catalog could not be loaded.");
     });
+    return () => { active = false; };
   }, []);
 
   const path = useMemo(() => pathText.split("→").map((part) => part.trim()).filter(Boolean), [pathText]);
@@ -96,7 +96,7 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
           {(catalog?.providers ?? []).map((provider) => <option key={provider.id} value={provider.id}>{provider.name}{provider.connected ? " · Connected" : " · Offline"}</option>)}
         </select>
       </label><small>Both Chat and Agent use this same provider selection.</small></div>
-      <div className="provider-note"><AlertCircle size={15} /><span>Registry and adapter contracts are in place. Provider credentials, live connection tests and Chat/Agent routing will be connected in the next integration step.</span></div>
+      <div className="provider-note"><AlertCircle size={15} /><span>Ollama and configured OpenAI-compatible endpoints are connected through the same backend manager. Anthropic and Gemini adapters remain planned.</span></div>
     </section>
 
     <section className="panel switching-panel">
