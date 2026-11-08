@@ -1,6 +1,6 @@
 # NEXUS AI
 
-NEXUS AI is a local-first Ollama dashboard with an optional Kaggle GPU runtime.
+NEXUS AI is a local-first AI workspace with a shared Provider Manager for native Ollama (local/Kaggle) and optional OpenAI-compatible inference endpoints.
 The repository's integrated application is in `backend/` and `frontend/`.
 
 ## Documentation
