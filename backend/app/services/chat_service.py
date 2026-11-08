@@ -135,35 +135,24 @@ class ChatService:
 
         yield "event: meta\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\n\n"
         request_messages = [*data["messages"][:-1], request_message]
-        payload = {"model": model, "messages": request_messages, "stream": True}
         assistant_text = ""
         try:
-            async with httpx.AsyncClient(timeout=None, auth=ollama_service.auth) as client:
-                async with client.stream("POST", f"{ollama_service.base_url}/api/chat", json=payload) as response:
-                    response.raise_for_status()
-                    async for line in response.aiter_lines():
-                        if not line:
-                            continue
-                        try:
-                            chunk = json.loads(line)
-                        except json.JSONDecodeError:
-                            continue
-                        if chunk.get("error"):
-                            raise ChatError(str(chunk["error"])[:500])
-                        content = (chunk.get("message") or {}).get("content", "")
-                        if content:
-                            assistant_text += content
-                            yield "event: token\ndata: " + json.dumps({"content": content}, ensure_ascii=False) + "\n\n"
-                        if chunk.get("done"):
-                            break
+            async for chunk in provider_manager.stream(selected_provider, request_messages, model):
+                content = (chunk.get("message") or {}).get("content", "")
+                if content:
+                    assistant_text += content
+                    yield "event: token\\ndata: " + json.dumps({"content": content}, ensure_ascii=False) + "\\n\\n"
+                if chunk.get("done"):
+                    break
             if assistant_text:
                 data["messages"].append({"role": "assistant", "content": assistant_text})
                 data["updated_at"] = datetime.now(timezone.utc).isoformat()
                 with self._lock:
                     self._write(data)
-            yield "event: done\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\n\n"
-        except (httpx.HTTPError, ChatError) as exc:
-            yield "event: error\ndata: " + json.dumps({"message": f"Ollama chat xatosi: {type(exc).__name__}" if isinstance(exc, httpx.HTTPError) else str(exc)}, ensure_ascii=False) + "\n\n"
+            yield "event: done\\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\\n\\n"
+        except (httpx.HTTPError, ChatError, ValueError, RuntimeError, KeyError) as exc:
+            message_text = str(exc) if isinstance(exc, ChatError) else f"Provider chat xatosi: {type(exc).__name__}"
+            yield "event: error\\ndata: " + json.dumps({"message": message_text}, ensure_ascii=False) + "\\n\\n"
 
 
 chat_service = ChatService()
