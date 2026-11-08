@@ -562,3 +562,17 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 .agent-approval-actions button:disabled { opacity:.45; cursor:wait; }
 .agent-approval-actions .secondary-button { color:var(--text); background:var(--surface-2); border:1px solid var(--border); }
 @media(max-width:520px) { .agent-approval-meta { flex-direction:column; } .agent-approval-actions { flex-wrap:wrap; } }
+
+/* Kaggle runtime panel */
+.kaggle-section { margin-top: 14px; }
+.kaggle-body { display: grid; gap: 14px; padding: 17px; }
+.kaggle-state { display: flex; align-items: center; gap: 9px; font-size: 12px; flex-wrap: wrap; }
+.kaggle-msg { color: var(--muted); font-size: 11px; }
+.kaggle-field { display: grid; gap: 6px; font-size: 11px; color: var(--muted); }
+.kaggle-field select { height: 36px; padding: 0 10px; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.kaggle-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.primary-button:disabled, .secondary-button:disabled { opacity: .5; cursor: default; }
+.secondary-button { height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 13px; color: var(--text); background: transparent; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
+.secondary-button:hover:not(:disabled) { background: var(--hover); }
+.kaggle-error { margin: 0; }
+.kaggle-panel .detail-row { padding-left: 0; padding-right: 0; }
