@@ -137,7 +137,7 @@ def start_vite() -> subprocess.Popen:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    os.chdir(PROJECT_ROOT)
+    os.chdir(BACKEND_DIR)
     instance = SingleInstance()
     if not instance.acquire():
         print("NEXUS AI is already running.")
