@@ -94,12 +94,14 @@ class AgentRuntimeService:
                         raise AgentRuntimeError("Agent vositalaridan foydalanish limiti tugadi.")
                     messages.append(assistant_message)
                     for call in calls:
+                        call = call if isinstance(call, dict) else {}
                         function = call.get("function") or {}
+                        function = function if isinstance(function, dict) else {}
                         name = function.get("name")
                         arguments = function.get("arguments") or {}
                         if name != "workspace_read_file" or not isinstance(arguments, dict):
                             tool_result = {"error": "Bu vositaga ruxsat berilmagan."}
-                            tool_name = str(name or "unknown")
+                            tool_name = "workspace_read_file"
                         else:
                             path = arguments.get("path")
                             if not isinstance(path, str) or not path or len(path) > 500:
