@@ -254,5 +254,8 @@ export const en = {
   "providers.ollamaDetail": "Native Ollama API · local or Kaggle GPU",
   "providers.openaiDetail": "OpenAI /v1-compatible endpoints",
   "providers.anthropicDetail": "Native Messages API",
-  "providers.geminiDetail": "Native Gemini API"
+  "providers.geminiDetail": "Native Gemini API",
+  "chat.sharedProvider": "SHARED PROVIDER",
+  "agent.tool": "Tool",
+  "agent.completed": "Completed · {count} tool calls"
 } as const;
