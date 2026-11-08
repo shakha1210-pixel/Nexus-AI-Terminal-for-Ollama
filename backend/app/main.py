@@ -61,7 +61,7 @@ def create_app(frontend_dist: Path | None = None) -> FastAPI:
     index_file = static_dir / "index.html"
     if static_dir.is_dir() and index_file.is_file():
         @application.get("/{path:path}", include_in_schema=False)
-        async def frontend_fallback(path: str = "") -> FileResponse | JSONResponse:
+        async def frontend_fallback(path: str = ""):
             requested = (static_dir / path).resolve()
             try:
                 requested.relative_to(static_dir)
