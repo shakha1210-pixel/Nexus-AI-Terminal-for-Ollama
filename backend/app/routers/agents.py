@@ -128,7 +128,10 @@ async def release_agent(agent_id: str) -> dict:
 
 @router.get("/{agent_id}/sandbox")
 async def get_agent_sandbox(agent_id: str) -> dict:
-    return agent_sandbox_service.status(agent_id)
+    try:
+        return agent_sandbox_service.status(agent_id)
+    except AgentSandboxError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/{agent_id}/sandbox/start")
