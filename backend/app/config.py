@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     ngrok_domain: str = ""
     tunnel_user: str = "nexus"
     tunnel_password: str = ""
+    openai_compatible_base_url: str = ""
+    openai_compatible_api_key: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
