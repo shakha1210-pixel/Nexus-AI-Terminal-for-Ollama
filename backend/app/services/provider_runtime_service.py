@@ -5,14 +5,18 @@ from threading import RLock
 from app.config import settings
 from app.providers.adapters import OllamaAdapter, OpenAICompatibleAdapter
 from app.providers.manager import provider_manager
+from app.services.app_data import get_store_path
 from app.services.ollama_service import ollama_service
+from app.services.secrets_service import secrets_service
+
+_LEGACY_DIR = Path(__file__).resolve().parents[2] / ".nexus"
 
 
 class ProviderRuntimeService:
     """Configures the shared adapter registry and persists the active provider choice."""
 
     def __init__(self, store_path: Path | None = None) -> None:
-        self.store_path = store_path or (Path(__file__).resolve().parents[2] / ".nexus" / "provider_runtime.json")
+        self.store_path = store_path or get_store_path("provider_runtime.json", _LEGACY_DIR / "provider_runtime.json")
         self._lock = RLock()
         if not provider_manager.registry.has("ollama"):
             provider_manager.register(OllamaAdapter(
@@ -21,10 +25,11 @@ class ProviderRuntimeService:
                 timeout=settings.request_timeout_seconds,
                 provider_id="ollama",
             ))
+        api_key = settings.openai_compatible_api_key or secrets_service.get("openai-compatible-api-key")
         if settings.openai_compatible_base_url and not provider_manager.registry.has("openai-compatible"):
             provider_manager.register(OpenAICompatibleAdapter(
                 base_url=settings.openai_compatible_base_url,
-                api_key=settings.openai_compatible_api_key or None,
+                api_key=api_key or None,
                 timeout=settings.request_timeout_seconds,
             ))
         self._active_provider = "ollama"
