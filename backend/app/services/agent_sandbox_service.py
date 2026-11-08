@@ -70,6 +70,9 @@ class AgentSandboxService:
             raise AgentSandboxError(detail[:500])
         return result
 
+    def _ensure_docker(self) -> None:
+        self._docker(["info", "--format", "{{.ServerVersion}}"])
+
     def _container_status(self, name: str) -> str:
         result = self._docker(["inspect", "--format", "{{.State.Status}}", name], check=False)
         if result.returncode != 0:
@@ -138,6 +141,7 @@ class AgentSandboxService:
         if not paths or len(paths) > self.MAX_FILES or len(set(paths)) != len(paths):
             raise AgentSandboxError("Sandbox uchun 1–10 ta takrorlanmaydigan ruxsatli fayl tanlang.")
         name = self._name(agent)
+        self._ensure_docker()
         state = self._container_status(name)
         if state == "running":
             raise AgentSandboxError("Bu agent uchun sandbox allaqachon ishga tushgan.")
@@ -188,6 +192,7 @@ class AgentSandboxService:
     def stop(self, agent_id: str) -> dict[str, Any]:
         agent = self._agent_id(agent_id)
         name = self._name(agent)
+        self._ensure_docker()
         state = self._container_status(name)
         if state != "absent":
             self._docker(["rm", "--force", name])
@@ -199,6 +204,7 @@ class AgentSandboxService:
         agent = self._agent_id(agent_id)
         name = self._name(agent)
         try:
+            self._ensure_docker()
             state = self._container_status(name)
             return {"agent_id": agent, "container": name, "available": True, "status": state}
         except AgentSandboxError as exc:
