@@ -120,7 +120,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
     </aside>
     <div className="chat-main">
       <div className="chat-toolbar">
-        <div><p className="eyebrow">SHARED PROVIDER · {providerId}</p><h2>{t("nav.aiChat")}</h2></div>
+        <div><p className="eyebrow">{t("chat.sharedProvider")} · {providerId}</p><h2>{t("nav.aiChat")}</h2></div>
         <label>{t("models.model")}<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
       </div>
       <div className="chat-messages">
