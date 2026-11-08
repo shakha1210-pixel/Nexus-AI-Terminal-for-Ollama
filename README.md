@@ -22,5 +22,5 @@ UI model downloads, and workflows are not implemented.
 ```text
 backend/   FastAPI API, local/remote Ollama and Kaggle integration
 frontend/  React + TypeScript dashboard
-nexus-ai/  Earlier standalone UI prototype
+archive/nexus-ai-prototype/  Archived standalone UI prototype
 ```
