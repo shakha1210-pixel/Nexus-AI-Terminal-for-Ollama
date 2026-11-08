@@ -62,6 +62,13 @@ class AgentRuntimeService:
     )
 
     @staticmethod
+    def tools_for_mode(mode: str) -> list[dict]:
+        tools = [AgentRuntimeService.READ_TOOL]
+        if mode == "approval_required":
+            tools.append(AgentRuntimeService.PROPOSE_EDIT_TOOL)
+        return tools
+
+    @staticmethod
     def _validate_agent(agent_id: str) -> str:
         value = agent_id.strip()
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", value):
@@ -99,9 +106,7 @@ class AgentRuntimeService:
                     control = agent_control_service.get(agent)
                     if control["isolated"] or control["mode"] == "locked":
                         raise AgentRuntimeError("Agent izolyatsiya qilindi; bajarilish to‘xtatildi.")
-                    available_tools = [self.READ_TOOL]
-                    if control["mode"] == "approval_required":
-                        available_tools.append(self.PROPOSE_EDIT_TOOL)
+                    available_tools = self.tools_for_mode(control["mode"])
                     payload = {
                         "model": model,
                         "messages": messages,
