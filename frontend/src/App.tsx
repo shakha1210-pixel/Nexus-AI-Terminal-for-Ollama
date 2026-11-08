@@ -31,6 +31,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [preferencesReady, setPreferencesReady] = useState(false);
   const refreshing = useRef(false);
 
   const playUiSound = useCallback((frequency = 660) => {
@@ -89,8 +90,36 @@ function App() {
   }, [refresh]);
 
   useEffect(() => {
+    let active = true;
+    void api.getPreferences()
+      .then((preferences) => {
+        if (!active) return;
+        setTheme(preferences.theme);
+        setSoundEnabled(preferences.sound_enabled);
+      })
+      .catch(() => {
+        // Keep safe local defaults when the preferences endpoint is unavailable.
+      })
+      .finally(() => {
+        if (active) setPreferencesReady(true);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    if (!preferencesReady) return;
+    const timer = window.setTimeout(() => {
+      void api.savePreferences({ theme, sound_enabled: soundEnabled })
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? `Preferences could not be saved: ${err.message}` : "Preferences could not be saved.");
+        });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [theme, soundEnabled, preferencesReady]);
 
   const connected = status?.connected === true;
 
@@ -147,13 +176,13 @@ function App() {
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>Dashboard</strong></div>
           <div className="topbar-actions">
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
-            <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} aria-label="Change theme" title="Change theme">
+            <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label="Change theme" title="Change theme">
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
             </button>
             <button className="icon-button" onClick={() => { playUiSound(520); void refresh(); }} aria-label="Refresh data" title="Refresh data" disabled={loading}>
               <RefreshCw size={16} className={loading ? "spin" : ""} />
             </button>
-            <button className="icon-button" onClick={() => setSoundEnabled((enabled) => !enabled)} aria-label={soundEnabled ? "Disable sound effects" : "Enable sound effects"} title={soundEnabled ? "Sound effects on" : "Sound effects off"} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}</button>
+            <button className="icon-button" onClick={() => setSoundEnabled((enabled) => !enabled)} disabled={!preferencesReady} aria-label={soundEnabled ? "Disable sound effects" : "Enable sound effects"} title={soundEnabled ? "Sound effects on" : "Sound effects off"} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}</button>
             <div className="profile-avatar top-avatar">U</div>
           </div>
         </header>
