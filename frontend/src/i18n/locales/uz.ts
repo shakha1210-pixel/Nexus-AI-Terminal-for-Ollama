@@ -233,5 +233,8 @@ export const uz = {
   "workspace.imagePreview": "Lokal rasm ko‘rinishi · kelajakdagi agent biriktirish jarayoniga tayyor",
   "workspace.welcome": "Boshlash uchun fayl oching, papka yarating yoki fayl yuklang.",
   "workspace.directoryNote": "Fayl amallari sozlangan workspace katalogi ichida qoladi.",
-  "workspace.folder": "Papka"
+  "workspace.folder": "Papka",
+  "actions.saved": "Saqlandi",
+  "actions.saving": "Saqlanmoqda…",
+  "actions.save": "Saqlash"
 } as const;
