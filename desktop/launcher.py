@@ -52,6 +52,7 @@ class SingleInstance:
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
         kernel32.CreateMutexW.argtypes = [ctypes.c_void_p, ctypes.c_bool, ctypes.c_wchar_p]
         kernel32.CreateMutexW.restype = ctypes.c_void_p
+        ctypes.set_last_error(0)
         handle = kernel32.CreateMutexW(None, False, self.name)
         if not handle:
             raise ctypes.WinError(ctypes.get_last_error())
@@ -84,7 +85,13 @@ def webview2_is_available() -> bool:
         Path(os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)")) / "Microsoft/EdgeWebView/Application",
         Path(os.environ.get("PROGRAMFILES", r"C:\Program Files")) / "Microsoft/EdgeWebView/Application",
     ]
-    return any(path.is_dir() and any(child.is_dir() for child in path.iterdir()) for path in candidates)
+    for path in candidates:
+        try:
+            if path.is_dir() and any(child.is_dir() for child in path.iterdir()):
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def start_backend(port: int):
