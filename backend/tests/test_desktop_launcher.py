@@ -10,7 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from desktop.launcher import SingleInstance, parse_args, port_is_available
+from desktop.launcher import SingleInstance, parse_args, port_is_available, webview2_is_available
 from desktop.ollama_manager import check_ollama
 
 
@@ -43,6 +43,10 @@ class DesktopLauncherTests(unittest.TestCase):
         if __import__("os").name != "nt":
             self.assertTrue(instance.acquire())
             instance.release()
+
+    def test_webview2_detection_is_windows_only(self) -> None:
+        if __import__("os").name != "nt":
+            self.assertFalse(webview2_is_available())
 
     @patch("desktop.ollama_manager.shutil.which", return_value="/usr/bin/ollama")
     @patch("desktop.ollama_manager.urllib.request.urlopen", side_effect=OSError("offline"))
