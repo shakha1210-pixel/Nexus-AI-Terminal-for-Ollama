@@ -8,6 +8,8 @@ The repository's integrated application is in `backend/` and `frontend/`.
 - [English guide](README.en.md)
 - [O‘zbekcha qo‘llanma](README.uz.md)
 - [Terminal commands and workflows](terminal%20commands.md)
+- [Windows desktop launcher (English)](README.en.md#windows-desktop-launcher-stage-2)
+- [Windows desktop launcher (O‘zbekcha)](README.uz.md#windows-desktop-launcher-stage-2)
 - [MIT License](LICENSE)
 
 ## Current status
