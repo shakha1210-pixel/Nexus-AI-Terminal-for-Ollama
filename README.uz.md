@@ -7,8 +7,8 @@ brauzerdagi interfeys bilan Ollama o‘rtasida API gateway vazifasini bajaradi.
 > **Loyiha holati:** Lokal dashboard, backend health/status endpointlari,
 > Ollama modellarini ko‘rish, ixtiyoriy Kaggle GPU boshqaruvi va lokal workspace Explorer ishlaydi.
 > Kaggle uchun operator o‘z hisob ma’lumotlari va notebook secret’larini
-> sozlashi kerak. Chat, agentni ishga tushirish, UI orqali model yuklash va
-> workflow funksiyalari hali mavjud emas.
+> sozlashi kerak. Chat, agentni ishga tushirish, agent ruxsatlari va workflow funksiyalari hali mavjud emas.
+> Ollama modellarini UI orqali yuklash va o‘chirish mavjud.
 
 Loyiha [MIT litsenziyasi](LICENSE) ostida tarqatiladi.
 
