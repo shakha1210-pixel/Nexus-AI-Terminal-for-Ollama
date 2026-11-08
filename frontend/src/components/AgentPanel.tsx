@@ -4,6 +4,16 @@ import type { OllamaModel } from "../types/ollama";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
+type ApprovalRequest = {
+  request_id: string;
+  path: string;
+  operation: string;
+  proposed_content: string;
+  status: string;
+  created_at: string;
+  expires_at: string;
+};
+
 export default function AgentPanel({ models, connected }: { models: OllamaModel[]; connected: boolean }) {
   const [agentId, setAgentId] = useState("default");
   const [model, setModel] = useState("");
@@ -16,6 +26,36 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
   const [isolated, setIsolated] = useState(false);
   const [controlBusy, setControlBusy] = useState(false);
   const [controlMessage, setControlMessage] = useState("");
+  const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
+  const [approvalBusy, setApprovalBusy] = useState<string | null>(null);
+  const [approvalMessage, setApprovalMessage] = useState("");
+
+  const loadApprovals = async () => {
+    try {
+      const response = await fetch(API_BASE + "/api/agents/" + encodeURIComponent(agentId) + "/approvals");
+      if (!response.ok) return;
+      const data = await response.json();
+      setApprovals(Array.isArray(data.requests) ? data.requests : []);
+    } catch { /* queue remains unavailable until backend responds */ }
+  };
+
+  const decideApproval = async (requestId: string, approve: boolean) => {
+    setApprovalBusy(requestId);
+    setApprovalMessage("");
+    try {
+      const response = await fetch(API_BASE + "/api/agents/" + encodeURIComponent(agentId) + "/approvals/" + requestId + "/decision", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approve }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail ?? "Approval decision failed.");
+      setApprovalMessage(approve ? "Approved: the exact proposed content was written." : "Proposal rejected; the file was not changed.");
+      await loadApprovals();
+    } catch (err) {
+      setApprovalMessage(err instanceof Error ? err.message : "Approval error.");
+      await loadApprovals();
+    } finally { setApprovalBusy(null); }
+  };
 
   const loadControl = async () => {
     try {
@@ -28,6 +68,7 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
   };
 
   useEffect(() => { void loadControl(); }, [agentId]);
+  useEffect(() => { void loadApprovals(); }, [agentId, mode]);
 
   const updateMode = async (nextMode: typeof mode) => {
     setControlBusy(true);
@@ -99,6 +140,10 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
           if (eventName === "status") setStatus(payload.message);
           if (eventName === "tool") setStatus(`Tool: ${payload.name} — ${payload.result}`);
           if (eventName === "token") setOutput((current) => current + payload.content);
+          if (eventName === "approval") {
+            setStatus(payload.message ?? "Edit proposal submitted for approval.");
+            void loadApprovals();
+          }
           if (eventName === "error") setError(payload.message ?? "Agent xatoligi.");
           if (eventName === "done") setStatus(`Completed · ${payload.tool_calls} tool calls`);
         }
@@ -124,6 +169,19 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
       <div className="agent-control-actions"><button className={isolated ? "secondary-button" : "danger-button"} onClick={() => void setIsolation(!isolated)} disabled={controlBusy}>{isolated ? "Release agent" : "Isolate agent"}</button><span className={isolated ? "agent-isolation-state active" : "agent-isolation-state"}>{isolated ? "ISOLATED" : mode.toUpperCase()}</span></div>
     </div>
     {controlMessage && <p className="agent-control-message" role="status">{controlMessage}</p>}
+    {mode === "approval_required" && <section className="agent-approval-queue" aria-label="File edit approval queue">
+      <div className="agent-approval-heading"><div><strong>Approval Queue</strong><small>Har bir tasdiq faqat ko‘rsatilgan fayl va mazmun uchun bir marta amal qiladi.</small></div><button type="button" onClick={() => void loadApprovals()}>Refresh</button></div>
+      {approvalMessage && <p className="agent-control-message" role="status">{approvalMessage}</p>}
+      {!approvals.length && <p className="agent-approval-empty">Pending approval yo‘q.</p>}
+      {approvals.map((item) => <article className="agent-approval-item" key={item.request_id}>
+        <div className="agent-approval-meta"><strong>{item.path}</strong><span>Expires: {new Date(item.expires_at).toLocaleTimeString()}</span></div>
+        <pre>{item.proposed_content}</pre>
+        <div className="agent-approval-actions">
+          <button type="button" className="secondary-button" disabled={approvalBusy !== null} onClick={() => void decideApproval(item.request_id, false)}>Reject</button>
+          <button type="button" className="primary-button" disabled={approvalBusy !== null} onClick={() => void decideApproval(item.request_id, true)}>{approvalBusy === item.request_id ? "Applying…" : "Approve exact edit"}</button>
+        </div>
+      </article>)}
+    </section>}
     <label className="agent-task-label">Task<textarea value={task} onChange={(event) => setTask(event.target.value)} rows={5} maxLength={12000} placeholder="Example: Read the files I have granted access to and summarize the project structure." disabled={running || !connected || isolated || mode === "locked"} /></label>
     <div className="agent-runtime-actions"><span className="agent-runtime-status">{running ? <><span className="agent-pulse" />{status}</> : status || "Ready"}</span><button className="primary-button" onClick={() => void runAgent()} disabled={!connected || running || isolated || mode === "locked" || !model || !task.trim()}><Play size={15} />{running ? "Running…" : "Run agent"}</button></div>
     <div className="agent-capabilities">
