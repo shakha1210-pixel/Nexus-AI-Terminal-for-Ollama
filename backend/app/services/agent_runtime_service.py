@@ -119,13 +119,21 @@ class AgentRuntimeService:
                         function = function if isinstance(function, dict) else {}
                         name = function.get("name")
                         arguments = function.get("arguments") or {}
-                        if name != "workspace_read_file" or not isinstance(arguments, dict):
-                            tool_result = {"error": "Bu vositaga ruxsat berilmagan."}
+                        if name != "workspace_read_file":
+                            agent_control_service.isolate(agent, "Blocked unsupported tool request: " + str(name)[:80])
+                            yield "event: isolation\ndata: " + json.dumps({"reason": "Unsupported tool request"}) + "\n\n"
+                            raise AgentRuntimeError("Agent ruxsat etilmagan vositani chaqirdi va avtomatik izolyatsiya qilindi.")
+                        if not isinstance(arguments, dict):
+                            tool_result = {"error": "Vositaga argumentlar noto‘g‘ri."}
                             tool_name = "workspace_read_file"
                         else:
                             path = arguments.get("path")
                             if not isinstance(path, str) or not path or len(path) > 500:
                                 tool_result = {"error": "Fayl yo‘li noto‘g‘ri."}
+                            elif re.search(r"(^[\\/]|(^|[\\/])\.\.([\\/]|$)|^[A-Za-z]:)", path):
+                                agent_control_service.isolate(agent, "Blocked path traversal attempt")
+                                yield "event: isolation\ndata: " + json.dumps({"reason": "Unsafe workspace path"}) + "\n\n"
+                                raise AgentRuntimeError("Xavfli fayl yo‘li aniqlandi; agent avtomatik izolyatsiya qilindi.")
                             else:
                                 try:
                                     context = agent_access_service.build_context(agent, [path])
