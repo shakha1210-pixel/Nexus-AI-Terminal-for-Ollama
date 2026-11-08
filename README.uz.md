@@ -107,12 +107,17 @@ parollarni Git’ga qo‘shmang.
 
 ## API endpointlari
 
+Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida lokal saqlanadi. Bu fayl `.gitignore` orqali repozitoriyga kiritilmaydi.
+
+
 | Method | Manzil | Vazifasi |
 |---|---|---|
 | `GET` | `/api/health` | Backend javob berayotganini tekshirish |
 | `GET` | `/api/ollama/status` | Tanlangan Ollama runtime holatini tekshirish |
 | `GET` | `/api/ollama/models` | Tanlangan Ollama runtime’dagi modellarni olish |
 | `GET` | `/api/kaggle/status` | Kaggle ishga tushishi va ulanish holatini olish |
+| `GET` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini olish |
+| `PUT` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini saqlash; body: `{"theme":"dark","sound_enabled":false}` |
 | `POST` | `/api/kaggle/start` | Kaggle runtime’ni boshlash; body: `{"model":"llama3.2"}` |
 | `POST` | `/api/kaggle/mode` | `local` yoki tayyor `kaggle` runtime tanlash |
 
