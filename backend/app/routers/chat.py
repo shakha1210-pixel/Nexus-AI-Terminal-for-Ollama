@@ -9,6 +9,7 @@ router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
 class ChatRequest(BaseModel):
     model: str = Field(min_length=1, max_length=160)
+    provider_id: str | None = Field(default=None, max_length=80)
     message: str = Field(min_length=1, max_length=20000)
     conversation_id: str | None = None
     agent_id: str = Field(default="default", min_length=1, max_length=64)
@@ -46,7 +47,7 @@ async def stream_chat(payload: ChatRequest) -> StreamingResponse:
         generator = chat_service.stream_chat(
             model=payload.model, message=payload.message,
             conversation_id=payload.conversation_id, agent_id=payload.agent_id,
-            paths=payload.paths,
+            paths=payload.paths, provider_id=payload.provider_id,
         )
         # Validate request and installed model before returning the stream.
         first = await generator.__anext__()
