@@ -7,7 +7,7 @@ from typing import AsyncIterator
 
 import httpx
 
-from app.services.agent_access_service import AgentAccessError, agent_access_service
+from app.services.agent_sandbox_service import AgentSandboxError, agent_sandbox_service
 from app.services.agent_control_service import AgentControlError, agent_control_service
 from app.services.ollama_service import ollama_service
 
@@ -136,13 +136,8 @@ class AgentRuntimeService:
                                 raise AgentRuntimeError("Xavfli fayl yo‘li aniqlandi; agent avtomatik izolyatsiya qilindi.")
                             else:
                                 try:
-                                    context = agent_access_service.build_context(agent, [path])
-                                    item = context["attachments"][0]
-                                    if item["kind"] != "text":
-                                        tool_result = {"error": "Hozircha agent vositasi faqat matnli fayllarni o‘qiydi."}
-                                    else:
-                                        tool_result = {"path": item["path"], "content": item["content"]}
-                                except AgentAccessError as exc:
+                                    tool_result = await agent_sandbox_service.read_granted_file(agent, path)
+                                except AgentSandboxError as exc:
                                     tool_result = {"error": str(exc)}
                             tool_name = "workspace_read_file"
                         tool_calls_total += 1
