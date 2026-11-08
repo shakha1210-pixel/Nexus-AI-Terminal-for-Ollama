@@ -536,3 +536,12 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 .agent-output-title { color:var(--subtle); font-size:8px; font-weight:700; letter-spacing:.12em; }
 .agent-output pre { margin:10px 0 0; color:var(--text); font:inherit; font-size:11px; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; }
 @media(max-width:640px) { .agent-runtime-controls,.agent-capabilities { grid-template-columns:1fr; } .agent-runtime { padding:14px; } }
+
+.agent-control-actions { display:flex; align-items:center; gap:9px; min-height:34px; }
+.agent-control-actions button { min-height:32px; padding:0 10px; border-radius:6px; cursor:pointer; font-size:10px; }
+.agent-control-actions .danger-button { color:var(--red); background:color-mix(in srgb,var(--red) 9%,var(--surface)); border:1px solid color-mix(in srgb,var(--red) 32%,var(--border)); }
+.agent-control-actions .danger-button:hover:not(:disabled) { background:color-mix(in srgb,var(--red) 16%,var(--surface)); }
+.agent-isolation-state { color:var(--muted); font:700 8px "DM Mono",monospace; letter-spacing:.1em; }
+.agent-isolation-state.active { color:var(--red); }
+.agent-control-message { margin:0 0 10px; color:var(--muted); font-size:9px; }
+.agent-runtime-controls select:disabled { opacity:.55; }
