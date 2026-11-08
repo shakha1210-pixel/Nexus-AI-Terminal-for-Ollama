@@ -89,7 +89,7 @@ def webview2_is_available() -> bool:
     ]
     for path in candidates:
         try:
-            if path.is_dir() and any(child.is_dir() for child in path.iterdir()):
+            if path.is_dir() and any(child.is_dir() and (child / "msedgewebview2.exe").is_file() for child in path.iterdir()):
                 return True
         except OSError:
             continue
