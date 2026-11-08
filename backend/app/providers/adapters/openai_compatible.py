@@ -60,13 +60,40 @@ class OpenAICompatibleAdapter(BaseAdapter):
                     arguments = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
                 except json.JSONDecodeError:
                     arguments = {}
-                normalized["tool_calls"].append({"function": {
-                    "name": function.get("name"), "arguments": arguments,
-                }})
+                normalized["tool_calls"].append({
+                    "id": call.get("id"),
+                    "function": {"name": function.get("name"), "arguments": arguments},
+                })
         return normalized
 
+    @staticmethod
+    def _to_openai_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        converted: list[dict[str, Any]] = []
+        tool_ids: dict[str, str] = {}
+        for message in messages:
+            item = dict(message)
+            role = item.get("role")
+            if role == "assistant" and item.get("tool_calls"):
+                calls = []
+                for index, call in enumerate(item["tool_calls"]):
+                    function = call.get("function") or {}
+                    call_id = call.get("id") or f"nexus_call_{len(converted)}_{index}"
+                    tool_ids[str(function.get("name") or "")] = call_id
+                    arguments = function.get("arguments") or {}
+                    calls.append({"id": call_id, "type": "function", "function": {
+                        "name": function.get("name"),
+                        "arguments": json.dumps(arguments, ensure_ascii=False),
+                    }})
+                converted.append({"role": "assistant", "content": item.get("content") or None, "tool_calls": calls})
+            elif role == "tool":
+                name = str(item.get("tool_name") or "")
+                converted.append({"role": "tool", "tool_call_id": tool_ids.get(name, "nexus_tool_call"), "content": item.get("content", "")})
+            else:
+                converted.append({key: value for key, value in item.items() if key in ("role", "content")})
+        return converted
+
     async def chat(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
-        payload = {**kwargs, "model": model, "messages": messages, "stream": False}
+        payload = {**kwargs, "model": model, "messages": self._to_openai_messages(messages), "stream": False}
         async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers) as client:
             response = await client.post(f"{self.base_url}/chat/completions", json=payload)
             response.raise_for_status()
