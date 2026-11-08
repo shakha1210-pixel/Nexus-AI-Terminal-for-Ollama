@@ -169,8 +169,9 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
       <div className="agent-control-actions"><button className={isolated ? "secondary-button" : "danger-button"} onClick={() => void setIsolation(!isolated)} disabled={controlBusy}>{isolated ? "Release agent" : "Isolate agent"}</button><span className={isolated ? "agent-isolation-state active" : "agent-isolation-state"}>{isolated ? "ISOLATED" : mode.toUpperCase()}</span></div>
     </div>
     {controlMessage && <p className="agent-control-message" role="status">{controlMessage}</p>}
-    {mode === "approval_required" && <section className="agent-approval-queue" aria-label="File edit approval queue">
+    {(mode === "approval_required" || approvals.length > 0) && <section className="agent-approval-queue" aria-label="File edit approval queue">
       <div className="agent-approval-heading"><div><strong>Approval Queue</strong><small>Har bir tasdiq faqat ko‘rsatilgan fayl va mazmun uchun bir marta amal qiladi.</small></div><button type="button" onClick={() => void loadApprovals()}>Refresh</button></div>
+      {mode !== "approval_required" && <p className="agent-approval-empty">Agent rejimi o‘zgargan. Yangi tasdiq berish bloklangan; mavjud takliflarni rad etishingiz mumkin.</p>}
       {approvalMessage && <p className="agent-control-message" role="status">{approvalMessage}</p>}
       {!approvals.length && <p className="agent-approval-empty">Pending approval yo‘q.</p>}
       {approvals.map((item) => <article className="agent-approval-item" key={item.request_id}>
@@ -178,7 +179,7 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
         <pre>{item.proposed_content}</pre>
         <div className="agent-approval-actions">
           <button type="button" className="secondary-button" disabled={approvalBusy !== null} onClick={() => void decideApproval(item.request_id, false)}>Reject</button>
-          <button type="button" className="primary-button" disabled={approvalBusy !== null} onClick={() => void decideApproval(item.request_id, true)}>{approvalBusy === item.request_id ? "Applying…" : "Approve exact edit"}</button>
+          <button type="button" className="primary-button" disabled={approvalBusy !== null || mode !== "approval_required" || isolated} onClick={() => void decideApproval(item.request_id, true)}>{approvalBusy === item.request_id ? "Applying…" : "Approve exact edit"}</button>
         </div>
       </article>)}
     </section>}
