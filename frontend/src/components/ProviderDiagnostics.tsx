@@ -61,7 +61,7 @@ export default function ProviderDiagnostics() {
           {item.state === "cooldown" && <strong>{t("diagnostics.remaining").replace("{seconds}", item.cooldown_remaining_seconds.toFixed(0))}</strong>}
           {item.last_error_kind && <span>{t("diagnostics.lastError")}: {item.last_error_kind}</span>}
         </div>
-        {item.recommendations.map((tip) => <div className={tip.level === "error" ? "diagnostic-tip is-error" : "diagnostic-tip"} key={tip.code}><AlertTriangle size={14} /><span>{tip.message}</span></div>)}
+        {item.recommendations.map((tip) => <div className={tip.level === "error" ? "diagnostic-tip is-error" : "diagnostic-tip"} key={tip.code}><AlertTriangle size={14} /><span>{t(`diagnostics.tip.${tip.code}`)}</span></div>)}
       </article>)}
       {!loading && items.length === 0 && <p className="diagnostics-empty">{t("diagnostics.empty")}</p>}
     </div>
