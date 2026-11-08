@@ -7,7 +7,7 @@ brauzerdagi interfeys bilan Ollama o‘rtasida API gateway vazifasini bajaradi.
 > **Loyiha holati:** Lokal dashboard, backend health/status endpointlari,
 > Ollama modellarini ko‘rish, ixtiyoriy Kaggle GPU boshqaruvi va lokal workspace Explorer ishlaydi.
 > Kaggle uchun operator o‘z hisob ma’lumotlari va notebook secret’larini
-> sozlashi kerak. Ollama bilan streaming chat va suhbat tarixini saqlash mavjud. Agent runtime va workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va chatga tanlangan fayllarni kontekst sifatida biriktirish mavjud.
+> sozlashi kerak. Ollama bilan streaming chat va suhbat tarixini saqlash mavjud. Agent Runtime dastlabki versiyasi mavjud: agent faqat ruxsat berilgan workspace matnli fayllarini o‘qiy oladi. Workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va chatga tanlangan fayllarni kontekst sifatida biriktirish mavjud.
 > Ollama modellarini UI orqali yuklash va o‘chirish mavjud.
 
 Loyiha [MIT litsenziyasi](LICENSE) ostida tarqatiladi.
