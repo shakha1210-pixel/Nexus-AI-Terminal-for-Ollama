@@ -233,5 +233,8 @@ export const en = {
   "workspace.imagePreview": "Local image preview · ready for a future agent attachment flow",
   "workspace.welcome": "Open a file, create a folder, or upload files to begin.",
   "workspace.directoryNote": "File operations stay inside the configured workspace directory.",
-  "workspace.folder": "Folder"
+  "workspace.folder": "Folder",
+  "actions.saved": "Saved",
+  "actions.saving": "Saving…",
+  "actions.save": "Save"
 } as const;
