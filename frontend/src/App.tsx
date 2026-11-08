@@ -5,6 +5,7 @@ import {
   Plus, RefreshCw, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
 } from "lucide-react";
 import KagglePanel from "./components/KagglePanel";
+import WorkspacePanel from "./components/WorkspacePanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
 import "./kaggle-styles.css";
@@ -140,6 +141,7 @@ function App() {
         <div className="nav-group">
           <p className="nav-label">WORKSPACE</p>
           <a className="nav-item active" href="#dashboard"><LayoutDashboard size={17} />Dashboard</a>
+          <a className="nav-item" href="#explorer"><HardDrive size={17} />Explorer</a>
           <a className="nav-item" href="#conversations"><MessageSquare size={17} />Conversations</a>
           <a className="nav-item" href="#agents"><Bot size={17} />My Agents</a>
           <a className="nav-item" href="#workflows"><Workflow size={17} />Workflows</a>
