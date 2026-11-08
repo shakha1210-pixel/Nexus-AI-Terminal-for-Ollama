@@ -71,12 +71,13 @@ class AgentSandboxServiceTests(unittest.TestCase):
 
     def test_start_rejects_ungranted_files(self) -> None:
         with patch.object(self.service, "_container_status", return_value="absent"):
-            with patch(
+            with patch.object(self.service, "_docker", return_value=subprocess.CompletedProcess([], 0, "", "")):
+                with patch(
                 "app.services.agent_sandbox_service.agent_access_service.build_context",
                 side_effect=AgentAccessError("read grant missing"),
             ):
-                with self.assertRaisesRegex(AgentSandboxError, "read grant missing"):
-                    self.service.start("agent-a", ["secret.txt"])
+                    with self.assertRaisesRegex(AgentSandboxError, "read grant missing"):
+                        self.service.start("agent-a", ["secret.txt"])
 
     def test_stop_removes_container_and_read_only_snapshot(self) -> None:
         stage = self.service._stage_path("agent-a")
@@ -94,10 +95,11 @@ class AgentSandboxServiceTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "stopped")
         self.assertFalse(stage.exists())
-        docker.assert_called_once_with(["rm", "--force", self.service._name("agent-a")])
+        self.assertEqual(docker.call_args_list[0].args[0], ["info", "--format", "{{.ServerVersion}}"])
+        self.assertEqual(docker.call_args_list[1].args[0], ["rm", "--force", self.service._name("agent-a")])
 
     def test_status_reports_unavailable_docker(self) -> None:
-        with patch.object(self.service, "_container_status", side_effect=AgentSandboxError("Docker unavailable")):
+        with patch.object(self.service, "_ensure_docker", side_effect=AgentSandboxError("Docker unavailable")):
             result = self.service.status("agent-a")
         self.assertFalse(result["available"])
         self.assertEqual(result["status"], "unavailable")
