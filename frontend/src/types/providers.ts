@@ -10,3 +10,20 @@ export interface ProviderPolicy {
   require_confirmation: boolean;
   updated?: boolean;
 }
+export interface ProviderModelInfo {
+  name: string;
+  display_name: string;
+  capabilities: { streaming: boolean; tool_calling: boolean; vision: boolean; embeddings: boolean; json_mode: boolean };
+  metadata: Record<string, unknown>;
+}
+export interface ProviderInfo {
+  id: string;
+  name: string;
+  configured: boolean;
+  connected: boolean;
+  models: ProviderModelInfo[];
+}
+export interface ProviderCatalog {
+  active_provider: string;
+  providers: ProviderInfo[];
+}
