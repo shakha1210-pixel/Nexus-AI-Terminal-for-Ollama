@@ -173,6 +173,7 @@ class AgentRuntimeService:
                         messages.append({
                             "role": "tool",
                             "tool_name": tool_name,
+                            "tool_call_id": call.get("id"),
                             "content": json.dumps(tool_result, ensure_ascii=False),
                         })
                         yield "event: done\ndata: " + json.dumps({"tool_calls": tool_calls_total}) + "\n\n"
@@ -208,6 +209,7 @@ class AgentRuntimeService:
                     messages.append({
                         "role": "tool",
                         "tool_name": tool_name,
+                        "tool_call_id": call.get("id"),
                         "content": json.dumps(tool_result, ensure_ascii=False),
                     })
         except (httpx.HTTPError, RuntimeError, ValueError, KeyError) as exc:
