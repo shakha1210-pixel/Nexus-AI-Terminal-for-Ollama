@@ -241,5 +241,18 @@ export const en = {
   "status.backendUnavailable": "Backend API is unavailable.",
   "settings.preferencesSaveError": "Could not save preferences",
   "providers.selectionError": "Provider selection failed.",
-  "dashboard.localFirstWorkspace": "Local-first intelligence workspace"
+  "dashboard.localFirstWorkspace": "Local-first intelligence workspace",
+  "providers.failureTimeout": "Timeout",
+  "providers.failureRateLimit": "Rate limit (429)",
+  "providers.failureServer": "Server error (5xx)",
+  "providers.failureNetwork": "Network error",
+  "providers.failureUnknown": "Unknown exception",
+  "providers.ollamaName": "Ollama Runtime",
+  "providers.openaiName": "OpenAI-compatible",
+  "providers.anthropicName": "Anthropic",
+  "providers.geminiName": "Google Gemini",
+  "providers.ollamaDetail": "Native Ollama API · local or Kaggle GPU",
+  "providers.openaiDetail": "OpenAI /v1-compatible endpoints",
+  "providers.anthropicDetail": "Native Messages API",
+  "providers.geminiDetail": "Native Gemini API"
 } as const;
