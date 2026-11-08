@@ -23,6 +23,8 @@ export default function WorkspacePanel() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("");
+  const [agentId, setAgentId] = useState("default");
+  const [readGranted, setReadGranted] = useState(false);
   const uploadRef = useRef<HTMLInputElement>(null);
   const loadTree = useCallback(async (path = currentPath) => {
     setBusy(true);
@@ -96,6 +98,45 @@ export default function WorkspacePanel() {
     } catch (error) { setMessage(error instanceof Error ? error.message : "Yuklash amalga oshmadi."); }
     finally { setBusy(false); if (uploadRef.current) uploadRef.current.value = ""; }
   };
+  useEffect(() => {
+    let active = true;
+    setReadGranted(false);
+    if (!activeFile) return () => { active = false; };
+    void apiRequest<{ permissions: { path: string; access: string }[] }>(`/api/agents/${encodeURIComponent(agentId)}/permissions`)
+      .then((result) => {
+        if (active) setReadGranted(result.permissions.some((permission) => permission.path === activeFile.path && permission.access === "read"));
+      })
+      .catch(() => { if (active) setReadGranted(false); });
+    return () => { active = false; };
+  }, [agentId, activeFile?.path]);
+
+  const grantAgentRead = async () => {
+    if (!activeFile) return;
+    try {
+      const result = await apiRequest<{ permissions: { path: string; access: string }[] }>(`/api/agents/${encodeURIComponent(agentId)}/permissions/read`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: activeFile.path }),
+      });
+      setReadGranted(result.permissions.some((permission) => permission.path === activeFile.path));
+      setMessage(`Read ruxsati ${agentId} agentiga berildi.`);
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Ruxsat berilmadi."); }
+  };
+  const revokeAgentRead = async () => {
+    if (!activeFile) return;
+    try {
+      await apiRequest(`/api/agents/${encodeURIComponent(agentId)}/permissions/read?path=${encodeURIComponent(activeFile.path)}`, { method: "DELETE" });
+      setReadGranted(false);
+      setMessage("Agentning ushbu faylga ruxsati bekor qilindi.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Ruxsat bekor qilinmadi."); }
+  };
+  const prepareAgentContext = async () => {
+    if (!activeFile || !readGranted) return;
+    try {
+      const result = await apiRequest<{ attachments: { name: string; kind: string }[] }>(`/api/agents/${encodeURIComponent(agentId)}/context`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paths: [activeFile.path] }),
+      });
+      setMessage(`${result.attachments.length} ta fayl agent konteksti uchun tayyorlandi. Hozircha modelga yuborilmadi.`);
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Kontekst tayyorlanmadi."); }
+  };
   const visibleEntries = useMemo(() => (tree?.entries ?? []).filter((entry) => entry.name.toLowerCase().includes(filter.toLowerCase())), [tree, filter]);
   const crumbs = currentPath ? currentPath.split("/") : [];
 
@@ -122,6 +163,12 @@ export default function WorkspacePanel() {
       </aside>
       <div className="workspace-editor">
         {activeFile ? <><div className="editor-tab"><File size={14} /><span>{activeFile.path.split("/").pop()}</span>{activeFile.dirty && <i /> }<button title="Close file" onClick={() => { if (!activeFile.dirty || window.confirm("Saqlanmagan o‘zgarishlarni bekor qilasizmi?")) setActiveFile(null); }}><X size={14} /></button><button className="save-file-button" onClick={() => void saveFile()} disabled={!activeFile.dirty || busy}><Save size={14} /> Save</button></div>
+          <div className="agent-handoff-bar">
+            <label>Agent ID <input value={agentId} maxLength={64} onChange={(event) => setAgentId(event.target.value)} /></label>
+            <button onClick={() => void (readGranted ? revokeAgentRead() : grantAgentRead())}>{readGranted ? "Revoke read" : "Grant read"}</button>
+            <button onClick={() => void prepareAgentContext()} disabled={!readGranted}>Prepare context</button>
+            <span>{readGranted ? "Read access granted" : "No access granted"}</span>
+          </div>
           {activeFile.path.match(/\.(png|jpe?g|gif|webp|svg)$/i) ? <div className="workspace-preview"><img className="workspace-image-preview" src={`${API_BASE}/api/workspace/asset?path=${encodeURIComponent(activeFile.path)}`} alt={activeFile.path.split("/").pop()} /><p>Local image preview · ready for a future agent attachment flow</p></div> :
           <textarea className="workspace-code-editor" spellCheck={false} value={activeFile.content} onChange={(event) => setActiveFile({ ...activeFile, content: event.target.value, dirty: true })} />}
         </> : <div className="workspace-welcome"><HardDrive size={32} /><strong>Local workspace</strong><p>Open a file, create a folder, or upload files to begin.</p><span>File operations stay inside the configured workspace directory.</span></div>}
