@@ -10,6 +10,7 @@ import httpx
 
 from app.config import settings
 from app.services.ollama_service import ollama_service
+from app.services.secrets_service import secrets_service
 
 TEMPLATE = Path(__file__).resolve().parent.parent / "kaggle_templates" / "server.py.tpl"
 
@@ -25,6 +26,14 @@ class KaggleService:
         self.message = "Kaggle ishga tushirilmagan."
 
     @property
+    def kaggle_key(self) -> str:
+        return settings.kaggle_key or secrets_service.get("kaggle-key") or ""
+
+    @property
+    def tunnel_password(self) -> str:
+        return settings.tunnel_password or secrets_service.get("tunnel-password") or ""
+
+    @property
     def slug(self) -> str:
         return f"{settings.kaggle_username}/{settings.kaggle_kernel_name}"
 
@@ -33,20 +42,20 @@ class KaggleService:
         return f"https://{settings.ngrok_domain}" if settings.ngrok_domain else None
 
     def _auth(self) -> tuple[str, str]:
-        return (settings.tunnel_user, settings.tunnel_password)
+        return (settings.tunnel_user, self.tunnel_password)
 
     def _check_config(self) -> None:
         missing = [n for n, v in {
             "KAGGLE_USERNAME": settings.kaggle_username,
-            "KAGGLE_KEY": settings.kaggle_key,
+            "KAGGLE_KEY": self.kaggle_key,
             "NGROK_DOMAIN": settings.ngrok_domain,
-            "TUNNEL_PASSWORD": settings.tunnel_password,
+            "TUNNEL_PASSWORD": self.tunnel_password,
         }.items() if not v]
         if missing:
             raise KaggleError("backend/.env da to‘ldirilmagan: " + ", ".join(missing))
 
     def _run(self, args: list[str]) -> str:
-        env = {**os.environ, "KAGGLE_USERNAME": settings.kaggle_username, "KAGGLE_KEY": settings.kaggle_key}
+        env = {**os.environ, "KAGGLE_USERNAME": settings.kaggle_username, "KAGGLE_KEY": self.kaggle_key}
         try:
             proc = subprocess.run(["kaggle", *args], env=env, capture_output=True, text=True, timeout=120)
         except FileNotFoundError as exc:
