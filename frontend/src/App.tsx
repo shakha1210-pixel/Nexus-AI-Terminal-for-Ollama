@@ -26,6 +26,7 @@ function formatBytes(bytes: number | null): string {
 
 function App() {
   const [theme, setTheme] = useState<Theme>("dark");
+  const [activeView, setActiveView] = useState<"dashboard" | "explorer">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,8 +141,8 @@ function App() {
 
         <div className="nav-group">
           <p className="nav-label">WORKSPACE</p>
-          <a className="nav-item active" href="#dashboard"><LayoutDashboard size={17} />Dashboard</a>
-          <a className="nav-item" href="#explorer"><HardDrive size={17} />Explorer</a>
+          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" onClick={() => setActiveView("dashboard")}><LayoutDashboard size={17} />Dashboard</a>
+          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" onClick={() => setActiveView("explorer")}><HardDrive size={17} />Explorer</a>
           <a className="nav-item" href="#conversations"><MessageSquare size={17} />Conversations</a>
           <a className="nav-item" href="#agents"><Bot size={17} />My Agents</a>
           <a className="nav-item" href="#workflows"><Workflow size={17} />Workflows</a>
@@ -175,7 +176,7 @@ function App() {
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>Dashboard</strong></div>
+          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : "Explorer"}</strong></div>
           <div className="topbar-actions">
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
             <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label="Change theme" title="Change theme">
@@ -189,6 +190,7 @@ function App() {
           </div>
         </header>
 
+        {activeView === "dashboard" ? (
         <section className="page-content">
           <div className="page-heading">
             <div>
@@ -280,10 +282,16 @@ function App() {
             <KagglePanel onModeChange={() => void refresh()} />
           </div>
 
-          <div className="workstation-section"><WorkspacePanel /></div>
-
           <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>Local-first intelligence workspace</span></div>
         </section>
+        ) : (
+          <section className="page-content workstation-page">
+            <div className="page-heading">
+              <div><p className="eyebrow">LOCAL DEVELOPMENT</p><h1>Explorer</h1><p className="page-subtitle">Manage project files and prepare context for your AI agents.</p></div>
+            </div>
+            <WorkspacePanel />
+          </section>
+        )}
       </main>
     </div>
   );
