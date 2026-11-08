@@ -437,3 +437,5 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 .workspace-message { padding: 8px 13px; color: var(--muted); background: var(--surface-2); border-top: 1px solid var(--border); font-size: 10px; }
 @media (max-width: 760px) { .workspace-body { grid-template-columns: 1fr; } .workspace-file-list { border-right: 0; border-bottom: 1px solid var(--border); max-height: 220px; overflow: auto; } .workspace-editor { min-height: 280px; } }
 @media (prefers-reduced-motion: reduce) { .workspace-panel *, .workspace-panel *::before, .workspace-panel *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+
+.workspace-image-preview { display: block; max-width: min(100%, 720px); max-height: 420px; object-fit: contain; border: 1px solid var(--border); border-radius: 7px; }
