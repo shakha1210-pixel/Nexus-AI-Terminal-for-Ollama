@@ -158,6 +158,8 @@ def main(argv: list[str] | None = None) -> int:
     tray = None
     stop_event = threading.Event()
     try:
+        if not args.dev and not (PROJECT_ROOT / "frontend" / "dist" / "index.html").is_file():
+            raise RuntimeError("Frontend build is missing. Run `npm ci` and `npm run build` in frontend/, or launch with --dev.")
         if not port_is_available(DEFAULT_HOST, args.port):
             raise RuntimeError(
                 f"Port {args.port} is already in use. Close the other service or choose another port with --port."
