@@ -19,6 +19,22 @@ class ProviderPolicyUpdate(BaseModel):
                 raise ValueError("Provider path entries cannot be empty.")
             if source in targets or len(set(targets)) != len(targets):
                 raise ValueError("Provider path cannot contain self-transitions or duplicates.")
+        visiting: set[str] = set()
+        visited: set[str] = set()
+
+        def visit(provider: str) -> None:
+            if provider in visiting:
+                raise ValueError("Provider switching paths cannot contain cycles.")
+            if provider in visited:
+                return
+            visiting.add(provider)
+            for target in self.allowed_transitions.get(provider, []):
+                visit(target)
+            visiting.remove(provider)
+            visited.add(provider)
+
+        for provider in self.allowed_transitions:
+            visit(provider)
         return self
 
 
