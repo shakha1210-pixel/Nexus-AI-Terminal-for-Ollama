@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://127.0.0.1:11434"
     frontend_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     request_timeout_seconds: float = 8.0
+    kaggle_api_token: str | None = None
+    kaggle_username: str | None = None
+    kaggle_key: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
