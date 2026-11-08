@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.services.secrets_service import secrets_service
+from app.services.provider_runtime_service import provider_runtime_service
 
 router = APIRouter(prefix="/api/secrets", tags=["Secrets"])
 
@@ -20,7 +21,8 @@ async def get_secret_status() -> dict[str, bool]:
 async def save_secret(body: SecretUpdate) -> dict[str, bool]:
     try:
         secrets_service.set(body.name, body.value)
-        return {"saved": True}
+        runtime = provider_runtime_service.refresh_openai_adapter() if body.name == "openai-compatible-api-key" else None
+        return {"saved": True, "provider_runtime": runtime}
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
@@ -30,7 +32,9 @@ async def save_secret(body: SecretUpdate) -> dict[str, bool]:
 @router.delete("/{name}")
 async def delete_secret(name: str) -> dict[str, bool]:
     try:
-        return {"deleted": secrets_service.delete(name)}
+        deleted = secrets_service.delete(name)
+        runtime = provider_runtime_service.refresh_openai_adapter() if name == "openai-compatible-api-key" else None
+        return {"deleted": deleted, "provider_runtime": runtime}
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
