@@ -50,9 +50,7 @@ class ProviderAdapterNormalizationTests(unittest.TestCase):
             "tool_call_id": "call_abc", "content": "ok",
         }]
         # The native adapter only serializes fields understood by Ollama's chat schema.
-        sanitized = [{key: value for key, value in message.items()
-                      if key in ("role", "content", "images", "tool_name", "tool_calls")}
-                     for message in messages]
+        sanitized = adapter._normalize_messages(messages)
         self.assertNotIn("tool_call_id", sanitized[0])
         self.assertEqual(sanitized[0]["tool_name"], "workspace_read_file")
 
