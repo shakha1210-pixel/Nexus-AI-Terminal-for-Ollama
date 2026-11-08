@@ -81,5 +81,8 @@ class ProviderManager:
     async def chat(self, provider_id: str, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
         return await self.registry.get(provider_id).chat(messages, model, **kwargs)
 
+    def stream(self, provider_id: str, messages: list[dict[str, Any]], model: str, **kwargs: Any):
+        return self.registry.get(provider_id).stream(messages, model, **kwargs)
+
 
 provider_manager = ProviderManager()
