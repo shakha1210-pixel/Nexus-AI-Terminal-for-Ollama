@@ -3,6 +3,7 @@ from pathlib import Path
 from threading import RLock
 
 from app.providers.policy import ProviderSwitchPolicy
+from app.providers.manager import provider_manager
 from app.schemas.providers import ProviderPolicyUpdate
 
 
@@ -11,6 +12,7 @@ class ProviderPolicyService:
         self.store_path = store_path or (Path(__file__).resolve().parents[2] / ".nexus" / "provider_policy.json")
         self._lock = RLock()
         self._policy = self._load()
+        provider_manager.set_policy(self._to_policy(self._policy))
 
     @staticmethod
     def _to_policy(config: ProviderPolicyUpdate) -> ProviderSwitchPolicy:
@@ -47,6 +49,7 @@ class ProviderPolicyService:
             temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
             temporary.replace(self.store_path)
             self._policy = config
+            provider_manager.set_policy(policy)
         return payload | {"updated": True}
 
     def runtime_policy(self) -> ProviderSwitchPolicy:
