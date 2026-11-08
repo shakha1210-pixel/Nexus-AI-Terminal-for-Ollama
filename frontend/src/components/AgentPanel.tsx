@@ -14,7 +14,7 @@ type ApprovalRequest = {
   expires_at: string;
 };
 
-export default function AgentPanel({ models, connected }: { models: OllamaModel[]; connected: boolean }) {
+export default function AgentPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const [agentId, setAgentId] = useState("default");
   const [model, setModel] = useState("");
   const [task, setTask] = useState("");
@@ -116,7 +116,7 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
       const response = await fetch(`${API_BASE}/api/agents/${encodeURIComponent(agentId)}/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model, task: task.trim() }),
+        body: JSON.stringify({ provider_id: providerId, model, task: task.trim() }),
       });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
@@ -162,7 +162,7 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
     </div>
     <div className="agent-runtime-controls">
       <label>Agent ID<input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
-      <label>Local model<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
+      <label>Provider model · {providerId}<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
       <label>Access mode<select value={mode} onChange={(event) => void updateMode(event.target.value as typeof mode)} disabled={controlBusy || isolated}>
         <option value="read_only">Read-only</option><option value="approval_required">Approval required</option><option value="autopilot">Autopilot</option><option value="locked">Locked</option>
       </select></label>
