@@ -62,5 +62,20 @@ export const uz = {
   "status.connected": "Ulangan",
   "status.offline": "O‘chiq",
   "nav.workspaceTitle": "Ish maydoni",
-  "dashboard.updated": "Yangilandi"
+  "dashboard.updated": "Yangilandi",
+  "kaggle.title": "Kaggle GPU",
+  "kaggle.subtitle": "Masofaviy Ollama (OpenAI-mos /v1)",
+  "kaggle.idle": "Ishga tushirilmagan",
+  "kaggle.pushing": "Yuborilmoqda",
+  "kaggle.queued": "Navbatda",
+  "kaggle.starting": "Ishga tushmoqda",
+  "kaggle.online": "Onlayn",
+  "kaggle.stopped": "To‘xtatilgan",
+  "kaggle.error": "Xatolik",
+  "kaggle.model": "Model",
+  "kaggle.start": "Kaggle’da ishga tushirish",
+  "kaggle.returnLocal": "Lokalga qaytish",
+  "kaggle.useRemote": "Kaggle’dan foydalanish",
+  "kaggle.baseUrl": "OpenAI base URL",
+  "kaggle.unknownError": "Noma’lum xatolik"
 } as const;
