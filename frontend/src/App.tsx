@@ -191,7 +191,7 @@ function App() {
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? "Model Providers" : t("nav.aiChat")}</strong></div>
+          <div className="breadcrumbs"><span>{t("nav.workspaceTitle")}</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? t("nav.dashboard") : activeView === "explorer" ? t("nav.explorer") : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? t("nav.providers") : t("nav.aiChat")}</strong></div>
           <div className="topbar-actions">
             <label className="language-switch" aria-label={t("actions.language")}><span>{t("actions.language")}</span><select value={language} onChange={(event) => setLanguage(event.target.value as "uz" | "en")}><option value="uz">O‘zbekcha</option><option value="en">English</option></select></label>
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
@@ -221,7 +221,7 @@ function App() {
 
           <div className="section-heading">
             <h2>{t("dashboard.systemOverview")}</h2>
-            <span className="muted-note">{updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : t("dashboard.waiting")}</span>
+            <span className="muted-note">{updatedAt ? `${t("dashboard.updated")} ${updatedAt.toLocaleTimeString()}` : t("dashboard.waiting")}</span>
           </div>
 
           <div className="stats-grid">
@@ -272,13 +272,13 @@ function App() {
         ) : activeView === "explorer" ? (
           <section className="page-content workstation-page">
             <div className="page-heading">
-              <div><p className="eyebrow">LOCAL DEVELOPMENT</p><h1>{t("nav.explorer")}</h1><p className="page-subtitle">Manage project files and prepare context for your AI agents.</p></div>
+              <div><p className="eyebrow">{t("pages.localDevelopment")}</p><h1>{t("nav.explorer")}</h1><p className="page-subtitle">{t("pages.explorerSubtitle")}</p></div>
             </div>
             <WorkspacePanel />
           </section>
         ) : activeView === "providers" ? (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">INFERENCE BACKENDS</p><h1>{t("nav.providers")}</h1><p className="page-subtitle">Manage provider adapters and guarded fallback behavior.</p></div></div>
+            <div className="page-heading"><div><p className="eyebrow">{t("pages.inferenceBackends")}</p><h1>{t("nav.providers")}</h1><p className="page-subtitle">{t("pages.providersSubtitle")}</p></div></div>
             <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
               void api.setActiveProvider(providerId).then((result) => {
                 setActiveProvider(result.provider_id);
@@ -290,12 +290,12 @@ function App() {
           </section>
         ) : activeView === "agents" ? (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>{t("nav.agents")}</h1><p className="page-subtitle">Run an agent through the shared provider with tightly scoped workspace access.</p></div></div>
+            <div className="page-heading"><div><p className="eyebrow">{t("pages.controlledExecution")}</p><h1>{t("nav.agents")}</h1><p className="page-subtitle">{t("pages.agentsSubtitle")}</p></div></div>
             <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         ) : (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>{t("nav.conversations")}</h1><p className="page-subtitle">Chat with the model selected in Model Providers.</p></div></div>
+            <div className="page-heading"><div><p className="eyebrow">{t("pages.localInference")}</p><h1>{t("nav.conversations")}</h1><p className="page-subtitle">{t("pages.chatSubtitle")}</p></div></div>
             <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         )}
