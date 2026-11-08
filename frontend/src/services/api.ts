@@ -1,0 +1,23 @@
+import type { OllamaModel, OllamaStatus } from "../types/ollama";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+
+async function request<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`);
+  if (!response.ok) {
+    let message = `API xatosi: ${response.status}`;
+    try {
+      const body = await response.json();
+      if (typeof body.detail === "string") message = body.detail;
+    } catch {
+      // Javob JSON bo‘lmasa, standart xabar ishlatiladi.
+    }
+    throw new Error(message);
+  }
+  return response.json() as Promise<T>;
+}
+
+export const api = {
+  getOllamaStatus: () => request<OllamaStatus>("/api/ollama/status"),
+  getModels: () => request<OllamaModel[]>("/api/ollama/models"),
+};
