@@ -5,6 +5,7 @@ import json
 import os
 import re
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +21,7 @@ class AgentControlService:
         root = storage_dir or (Path(__file__).resolve().parents[2] / ".nexus")
         self.file_path = root / "agent_controls.json"
         self._lock = threading.RLock()
-        self._active_requests: dict[str, asyncio.Task[Any]] = {}
+        self._active_requests: dict[str, set[asyncio.Task[Any]]] = {}
 
     @staticmethod
     def _agent_id(agent_id: str) -> str:
@@ -70,7 +71,13 @@ class AgentControlService:
             current = all_data.get(agent, {})
             current = current if isinstance(current, dict) else {}
             current["mode"] = mode
-            current["updated_at"] = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+            if mode == "locked":
+                current["isolated"] = True
+                current["reason"] = "Locked by access policy"
+                for active in self._active_requests.get(agent, set()):
+                    if not active.done():
+                        active.cancel()
+            current["updated_at"] = datetime.now(timezone.utc).isoformat()
             all_data[agent] = current
             self._write(all_data)
         return self.get(agent)
@@ -86,13 +93,13 @@ class AgentControlService:
                 "mode": "locked",
                 "isolated": True,
                 "reason": reason or "Manual isolation",
-                "updated_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
             })
             all_data[agent] = current
             self._write(all_data)
-            active = self._active_requests.get(agent)
-            if active and not active.done():
-                active.cancel()
+            for active in self._active_requests.get(agent, set()):
+                if not active.done():
+                    active.cancel()
         return self.get(agent)
 
     def release(self, agent_id: str) -> dict[str, Any]:
@@ -104,7 +111,7 @@ class AgentControlService:
             current["isolated"] = False
             current["reason"] = None
             current["mode"] = "read_only"
-            current["updated_at"] = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+            current["updated_at"] = datetime.now(timezone.utc).isoformat()
             all_data[agent] = current
             self._write(all_data)
         return self.get(agent)
@@ -112,13 +119,16 @@ class AgentControlService:
     def register_request(self, agent_id: str, task: asyncio.Task[Any]) -> None:
         agent = self._agent_id(agent_id)
         with self._lock:
-            self._active_requests[agent] = task
+            self._active_requests.setdefault(agent, set()).add(task)
 
     def unregister_request(self, agent_id: str, task: asyncio.Task[Any]) -> None:
         agent = self._agent_id(agent_id)
         with self._lock:
-            if self._active_requests.get(agent) is task:
-                self._active_requests.pop(agent, None)
+            tasks = self._active_requests.get(agent)
+            if tasks is not None:
+                tasks.discard(task)
+                if not tasks:
+                    self._active_requests.pop(agent, None)
 
 
 agent_control_service = AgentControlService()
