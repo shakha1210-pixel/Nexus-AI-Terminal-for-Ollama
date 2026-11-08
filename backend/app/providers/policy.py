@@ -73,6 +73,7 @@ class ProviderSwitchingEngine:
     def __init__(self, policy: ProviderSwitchPolicy) -> None:
         self.policy = policy
         self._last_switch_at: float | None = None
+        self._pending_decision: SwitchDecision | None = None
 
     def evaluate(
         self,
@@ -111,7 +112,8 @@ class ProviderSwitchingEngine:
         target = targets[0]
         needs_confirmation = self.policy.mode == SwitchingMode.GUIDED or self.policy.require_confirmation
         if needs_confirmation:
-            return SwitchDecision(True, target, True, "Fallback is eligible and awaits user confirmation.")
+            self._pending_decision = SwitchDecision(True, target, True, "Fallback is eligible and awaits user confirmation.")
+            return self._pending_decision
         self._last_switch_at = monotonic()
         return SwitchDecision(True, target, False, "Fallback is permitted by policy.")
 
@@ -119,11 +121,13 @@ class ProviderSwitchingEngine:
         self, decision: SwitchDecision, *, isolated: bool = False,
         approval_pending: bool = False, stream_started: bool = False,
     ) -> SwitchDecision:
-        if not decision.allowed or not decision.requires_confirmation or not decision.target_provider:
-            return SwitchDecision(False, reason="There is no pending provider switch to confirm.")
+        if (not decision.allowed or not decision.requires_confirmation or not decision.target_provider
+                or decision != self._pending_decision):
+            return SwitchDecision(False, reason="There is no matching pending provider switch to confirm.")
         if isolated or approval_pending:
             return SwitchDecision(False, reason="Agent security state blocks provider switching.")
         if stream_started:
             return SwitchDecision(False, reason="A response stream has started; switching is locked for this request.")
         self._last_switch_at = monotonic()
+        self._pending_decision = None
         return SwitchDecision(True, decision.target_provider, False, "Provider switch confirmed.")
