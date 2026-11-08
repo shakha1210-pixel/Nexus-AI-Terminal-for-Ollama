@@ -254,5 +254,8 @@ export const uz = {
   "providers.ollamaDetail": "Native Ollama API · lokal yoki Kaggle GPU",
   "providers.openaiDetail": "OpenAI /v1 bilan mos endpointlar",
   "providers.anthropicDetail": "Native Messages API",
-  "providers.geminiDetail": "Native Gemini API"
+  "providers.geminiDetail": "Native Gemini API",
+  "chat.sharedProvider": "UMUMIY PROVAYDER",
+  "agent.tool": "Vosita",
+  "agent.completed": "{count} ta vosita chaqiruvi bilan yakunlandi"
 } as const;
