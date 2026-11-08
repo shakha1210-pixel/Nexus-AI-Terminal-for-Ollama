@@ -21,6 +21,7 @@ class ContextRequest(BaseModel):
 
 class AgentRunRequest(BaseModel):
     model: str = Field(min_length=1, max_length=160)
+    provider_id: str | None = Field(default=None, max_length=80)
     task: str = Field(min_length=1, max_length=12000)
 
 
@@ -74,7 +75,7 @@ async def prepare_context(agent_id: str, payload: ContextRequest) -> dict:
 @router.post("/{agent_id}/run")
 async def run_agent(agent_id: str, payload: AgentRunRequest) -> StreamingResponse:
     try:
-        generator = agent_runtime_service.run(agent_id=agent_id, model=payload.model, task=payload.task)
+        generator = agent_runtime_service.run(agent_id=agent_id, model=payload.model, task=payload.task, provider_id=payload.provider_id)
         first = await generator.__anext__()
     except AgentRuntimeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
