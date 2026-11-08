@@ -173,7 +173,7 @@ class AgentRuntimeService:
                                 "tool_name": tool_name,
                                 "content": json.dumps(tool_result, ensure_ascii=False),
                             })
-                            yield "event: done\\ndata: " + json.dumps({"tool_calls": tool_calls_total}) + "\\n\\n"
+                            yield "event: done\ndata: " + json.dumps({"tool_calls": tool_calls_total}) + "\n\n"
                             return
                         if name != "workspace_read_file":
                             agent_control_service.isolate(agent, "Blocked unsupported tool request: " + str(name)[:80])
