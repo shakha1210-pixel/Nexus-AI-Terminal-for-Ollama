@@ -151,7 +151,8 @@ class AgentApprovalService:
         agent = self._agent_id(agent_id)
         if not re.fullmatch(r"[a-f0-9]{32}", request_id or ""):
             raise AgentApprovalError("Tasdiqlash so‘rovi ID noto‘g‘ri.")
-        self._mode_check(agent)
+        if approve:
+            self._mode_check(agent)
         with self._lock:
             data = self._load()
             item = data.get(request_id)
