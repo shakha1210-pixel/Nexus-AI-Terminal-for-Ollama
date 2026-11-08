@@ -284,5 +284,17 @@ export const uz = {
   "settings.credentialSaved": "Maxfiy qiymat xavfsiz saqlandi.",
   "settings.credentialSaveError": "Maxfiy qiymatni saqlab bo‘lmadi.",
   "settings.credentialDeleted": "Maxfiy qiymat o‘chirildi.",
-  "settings.credentialDeleteError": "Maxfiy qiymatni o‘chirib bo‘lmadi."
+  "settings.credentialDeleteError": "Maxfiy qiymatni o‘chirib bo‘lmadi.",
+  "diagnostics.title": "Holat va tavsiyalar",
+  "diagnostics.subtitle": "Provider xatolari, cooldown va keyingi amaliy qadamlar",
+  "diagnostics.cooldown": "Vaqtincha kutish",
+  "diagnostics.available": "Mavjud",
+  "diagnostics.failures": "Ketma-ket xatolar",
+  "diagnostics.remaining": "{seconds} soniya qoldi",
+  "diagnostics.lastError": "Oxirgi xato",
+  "diagnostics.loadError": "Diagnostika ma’lumotlarini yuklab bo‘lmadi.",
+  "diagnostics.empty": "Hozircha diagnostika ma’lumoti yo‘q.",
+  "diagnostics.noBlockingWait": "Kutish serverni band qilmaydi; qolgan vaqt avtomatik yangilanadi.",
+  "settings.restartNote": "OpenAI-compatible kaliti saqlanganda provider qayta sozlanadi. Endpoint manzili .env orqali belgilanadi."
+
 } as const;
