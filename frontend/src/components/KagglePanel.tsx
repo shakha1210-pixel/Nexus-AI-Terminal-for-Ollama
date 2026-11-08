@@ -48,7 +48,7 @@ export default function KagglePanel({ status, onStatusChange, onModeChange }: { 
           </button>
           <button className="secondary-button" disabled={busy || (state !== "online" && status?.mode !== "kaggle")}
             onClick={() => void act(() => api.setMode(status?.mode === "kaggle" ? "local" : "kaggle"))}>
-            <Repeat size={15} />{status?.mode === "kaggle" ? "{t("kaggle.returnLocal")}" : "{t("kaggle.useRemote")}"}
+            <Repeat size={15} />{status?.mode === "kaggle" ? {t("kaggle.returnLocal")} : {t("kaggle.useRemote")}}
           </button>
         </div>
         {status?.openai_base_url && <div className="detail-row"><span>{t("kaggle.baseUrl")}</span><code>{status.openai_base_url}</code></div>}
