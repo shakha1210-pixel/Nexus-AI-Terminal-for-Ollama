@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Activity, Bot, Boxes, ChevronDown, CircleHelp, Command,
   Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
@@ -11,8 +11,7 @@ import AgentPanel from "./components/AgentPanel";
 import ModelsPanel from "./components/ModelsPanel";
 import ProviderPanel from "./components/ProviderPanel";
 import { api } from "./services/api";
-import type { OllamaModel, OllamaStatus } from "./types/ollama";
-import "./kaggle-styles.css";
+import { useRuntimeStatus } from "./hooks/useRuntimeStatus";
 import "./providers-styles.css";
 
 type Theme = "dark" | "light";
@@ -21,17 +20,13 @@ type Theme = "dark" | "light";
 function App() {
   const [theme, setTheme] = useState<Theme>("dark");
   const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers">("dashboard");
-  const [status, setStatus] = useState<OllamaStatus | null>(null);
-  const [models, setModels] = useState<OllamaModel[]>([]);
-  const [providerModels, setProviderModels] = useState<OllamaModel[]>([]);
-  const [activeProvider, setActiveProvider] = useState("ollama");
-  const [providerConnected, setProviderConnected] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const {
+    status, kaggleStatus, setKaggleStatus, models, providerModels,
+    activeProvider, setActiveProvider, providerConnected, loading,
+    error, setError, updatedAt, refresh,
+  } = useRuntimeStatus();
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [preferencesReady, setPreferencesReady] = useState(false);
-  const refreshing = useRef(false);
 
   const playUiSound = useCallback((frequency = 660) => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -55,53 +50,6 @@ function App() {
       // Audio feedback is optional; UI actions must work without it.
     }
   }, [soundEnabled]);
-
-  const refresh = useCallback(async (silent = false) => {
-    if (refreshing.current) return;
-    refreshing.current = true;
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const nextStatus = await api.getOllamaStatus();
-      setStatus(nextStatus);
-      if (nextStatus.connected) {
-        setModels(await api.getModels());
-      } else {
-        setModels([]);
-      }
-      const catalog = await api.getProviderCatalog();
-      setActiveProvider(catalog.active_provider);
-      const selected = catalog.providers.find((provider) => provider.id === catalog.active_provider);
-      setProviderConnected(Boolean(selected?.connected));
-      setProviderModels((selected?.models ?? []).map((item) => ({
-        name: item.name,
-        size: typeof item.metadata.size === "number" ? item.metadata.size : null,
-        modified_at: typeof item.metadata.modified_at === "string" ? item.metadata.modified_at : null,
-        digest: typeof item.metadata.digest === "string" ? item.metadata.digest : null,
-        family: typeof item.metadata.family === "string" ? item.metadata.family : null,
-        parameter_size: typeof item.metadata.parameter_size === "string" ? item.metadata.parameter_size : null,
-        quantization_level: typeof item.metadata.quantization_level === "string" ? item.metadata.quantization_level : null,
-      })));
-      setUpdatedAt(new Date());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Noma’lum xatolik yuz berdi.");
-      setStatus({ connected: false, version: null, mode: "local", message: "Backend API bilan aloqa yo‘q." });
-      setModels([]);
-      setProviderModels([]);
-      setProviderConnected(false);
-    } finally {
-      refreshing.current = false;
-      if (!silent) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh(true);
-    }, 15000);
-    return () => window.clearInterval(timer);
-  }, [refresh]);
 
   useEffect(() => {
     let active = true;
@@ -262,7 +210,7 @@ function App() {
           </div>
 
           <div className="kaggle-section">
-            <KagglePanel onModeChange={() => void refresh()} />
+            <KagglePanel status={kaggleStatus} onStatusChange={setKaggleStatus} onModeChange={() => void refresh(true)} />
           </div>
 
           <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>Local-first intelligence workspace</span></div>
