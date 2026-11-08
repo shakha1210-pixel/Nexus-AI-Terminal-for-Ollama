@@ -33,9 +33,16 @@ export default function ProviderPanel() {
     void api.getProviderPolicy().then((value) => {
       if (!active) return;
       setPolicy(value);
-      const path = Object.entries(value.allowed_transitions)
-        .flatMap(([source, targets]) => targets.length ? [[source, ...targets]] : []);
-      setPathText(path[0]?.join(" → ") ?? "");
+      const transitions = value.allowed_transitions;
+      const allTargets = Object.values(transitions).flat();
+      const start = Object.keys(transitions).find((source) => !allTargets.includes(source));
+      const chain: string[] = [];
+      let current = start;
+      while (current && !chain.includes(current)) {
+        chain.push(current);
+        current = transitions[current]?.[0];
+      }
+      setPathText(chain.join(" → "));
     }).catch((e: unknown) => {
       if (active) setError(e instanceof Error ? e.message : "Policy could not be loaded.");
     }).finally(() => { if (active) setLoading(false); });
@@ -51,7 +58,10 @@ export default function ProviderPanel() {
   const save = async () => {
     setSaving(true); setError(null); setSaved(false);
     try {
-      const allowed_transitions = path.length >= 2 ? { [path[0]]: path.slice(1) } : {};
+      const allowed_transitions: Record<string, string[]> = {};
+      for (let index = 0; index < path.length - 1; index += 1) {
+        allowed_transitions[path[index]] = [path[index + 1]];
+      }
       const next = await api.saveProviderPolicy({ ...policy, allowed_transitions });
       setPolicy(next); setSaved(true);
     } catch (e) { setError(e instanceof Error ? e.message : "Policy could not be saved."); }
