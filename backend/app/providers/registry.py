@@ -15,6 +15,15 @@ class ProviderRegistry:
             raise ValueError(f"Provider already registered: {provider_id}")
         self._adapters[provider_id] = adapter
 
+    def replace(self, adapter: BaseAdapter) -> None:
+        provider_id = getattr(adapter, "provider_id", "")
+        if not isinstance(provider_id, str) or not provider_id.strip():
+            raise ValueError("Adapter provider_id must be a non-empty string.")
+        self._adapters[provider_id] = adapter
+
+    def remove(self, provider_id: str) -> BaseAdapter | None:
+        return self._adapters.pop(provider_id, None)
+
     def get(self, provider_id: str) -> BaseAdapter:
         try:
             return self._adapters[provider_id]
