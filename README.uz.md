@@ -128,7 +128,11 @@ Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida l
 | `POST` | `/api/workspace/file` | Yangi matnli fayl yaratish |
 | `PUT` | `/api/workspace/file` | Matnli faylni saqlash |
 | `POST` | `/api/workspace/directory` | Papka yaratish |
-| `POST` | `/api/workspace/upload` | Faylni base64 orqali yuklash |\n| `GET` | `/api/agents/{agent_id}/permissions` | Agentning aniq fayllarga read ruxsatlarini ko‘rish |\n| `POST` | `/api/agents/{agent_id}/permissions/read` | Agentga bitta workspace faylini o‘qish ruxsatini berish; body: `{"path":"notes.md"}` |\n| `DELETE` | `/api/agents/{agent_id}/permissions/read?path=notes.md` | Fayl uchun read ruxsatini bekor qilish |\n| `POST` | `/api/agents/{agent_id}/context` | Ruxsat berilgan tanlangan fayllarni agent konteksti uchun olish; body: `{"paths":["notes.md"]}` |
+| `POST` | `/api/workspace/upload` | Faylni base64 orqali yuklash |
+| `GET` | `/api/agents/{agent_id}/permissions` | Agentning aniq fayllarga read ruxsatlarini ko‘rish |
+| `POST` | `/api/agents/{agent_id}/permissions/read` | Agentga bitta workspace faylini o‘qish ruxsatini berish |
+| `DELETE` | `/api/agents/{agent_id}/permissions/read?path=notes.md` | Fayl uchun read ruxsatini bekor qilish |
+| `POST` | `/api/agents/{agent_id}/context` | Ruxsat berilgan tanlangan fayllarni agent konteksti uchun olish |
 | `GET` | `/api/chat/conversations` | Suhbatlar ro‘yxatini olish |
 | `GET` | `/api/chat/conversations/{conversation_id}` | Suhbat tarixini olish |
 | `DELETE` | `/api/chat/conversations/{conversation_id}` | Suhbatni o‘chirish |
