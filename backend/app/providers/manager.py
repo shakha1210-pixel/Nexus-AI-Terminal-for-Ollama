@@ -57,12 +57,27 @@ class ProviderManager:
         isolated: bool = False,
         approval_pending: bool = False,
     ) -> SwitchDecision:
-        return self.switching.evaluate(
+        decision = self.switching.evaluate(
             source_provider=source_provider, failure=failure,
             switches_used=switches_used, attempts=attempts,
             stream_started=stream_started, isolated=isolated,
             approval_pending=approval_pending,
         )
+        if decision.allowed and decision.target_provider and not self.registry.has(decision.target_provider):
+            return SwitchDecision(False, reason="The configured fallback provider is not registered or available.")
+        return decision
+
+    def confirm_fallback(
+        self, decision: SwitchDecision, *, isolated: bool = False,
+        approval_pending: bool = False, stream_started: bool = False,
+    ) -> SwitchDecision:
+        confirmed = self.switching.confirm(
+            decision, isolated=isolated, approval_pending=approval_pending,
+            stream_started=stream_started,
+        )
+        if confirmed.allowed and confirmed.target_provider and not self.registry.has(confirmed.target_provider):
+            return SwitchDecision(False, reason="The confirmed fallback provider is no longer registered.")
+        return confirmed
 
     async def chat(self, provider_id: str, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
         return await self.registry.get(provider_id).chat(messages, model, **kwargs)
