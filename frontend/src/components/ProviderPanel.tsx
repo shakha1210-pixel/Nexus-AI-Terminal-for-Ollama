@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Check, ChevronRight, Cpu, Network, Save, ShieldCheck, Workflow } from "lucide-react";
 import { api } from "../services/api";
 import type { FailureKind, ProviderCatalog, ProviderPolicy, SwitchingMode } from "../types/providers";
+import { useTranslation } from "../i18n";
 
 const DEFAULT_POLICY: ProviderPolicy = {
   mode: "manual_only", max_switches_per_request: 1, allowed_transitions: {},
@@ -20,6 +21,7 @@ const PROVIDERS = [
 ];
 
 export default function ProviderPanel({ activeProvider, onProviderChange }: { activeProvider: string; onProviderChange: (providerId: string) => void }) {
+  const { t } = useTranslation();
   const [policy, setPolicy] = useState<ProviderPolicy>(DEFAULT_POLICY);
   const [catalog, setCatalog] = useState<ProviderCatalog | null>(null);
   const [pathText, setPathText] = useState("");
@@ -44,10 +46,10 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
       }
       setPathText(chain.join(" → "));
     }).catch((e: unknown) => {
-      if (active) setError(e instanceof Error ? e.message : "Policy could not be loaded.");
+      if (active) setError(e instanceof Error ? e.message : t("providers.policyLoadError"));
     }).finally(() => { if (active) setLoading(false); });
     void api.getProviderCatalog().then((value) => { if (active) setCatalog(value); }).catch((e: unknown) => {
-      if (active) setError(e instanceof Error ? e.message : "Provider catalog could not be loaded.");
+      if (active) setError(e instanceof Error ? e.message : t("providers.catalogLoadError"));
     });
     return () => { active = false; };
   }, []);
@@ -67,7 +69,7 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
       }
       const next = await api.saveProviderPolicy({ ...policy, allowed_transitions });
       setPolicy(next); setSaved(true);
-    } catch (e) { setError(e instanceof Error ? e.message : "Policy could not be saved."); }
+    } catch (e) { setError(e instanceof Error ? e.message : t("providers.policySaveError")); }
     finally { setSaving(false); }
   };
 
@@ -79,53 +81,53 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
 
   return <div className="provider-page">
     <section className="panel provider-panel">
-      <div className="panel-header"><div><h2>Provider registry</h2><p>One normalized interface for independent inference backends</p></div><Network size={18} className="panel-muted-icon" /></div>
+      <div className="panel-header"><div><h2>{t("providers.registry")}</h2><p>{t("providers.registrySubtitle")}</p></div><Network size={18} className="panel-muted-icon" /></div>
       <div className="provider-grid">
         {PROVIDERS.map(({ id, name, detail, icon: Icon, state }) => {
           const live = catalog?.providers.find((provider) => provider.id === id);
-          const label = live ? (live.connected ? "Connected" : "Offline") : state === "Planned" ? "Planned" : "Not configured";
+          const label = live ? (live.connected ? t("status.connected") : t("status.offline")) : state === "Planned" ? t("providers.planned") : t("providers.notConfigured");
           return <article className="provider-card" key={id}>
             <div className="provider-card-top"><span className="provider-icon"><Icon size={17} /></span><span className={live?.connected ? "provider-state connected" : "provider-state"}>{label}</span></div>
             <strong>{name}</strong><p>{detail}</p><code>{id}</code>
-            {live && <small className="provider-model-count">{live.models.length} models available</small>}
+            {live && <small className="provider-model-count">{t("providers.modelsAvailable").replace("{count}", String(live.models.length))}</small>}
           </article>;
         })}
       </div>
-      <div className="provider-active-row"><label className="provider-field"><span>Shared active provider · Chat + Agent</span>
+      <div className="provider-active-row"><label className="provider-field"><span>{t("providers.sharedProvider")}</span>
         <select value={activeProvider} onChange={(event) => onProviderChange(event.target.value)}>
-          {(catalog?.providers ?? []).map((provider) => <option key={provider.id} value={provider.id}>{provider.name}{provider.connected ? " · Connected" : " · Offline"}</option>)}
+          {(catalog?.providers ?? []).map((provider) => <option key={provider.id} value={provider.id}>{provider.name}{provider.connected ? ` · ${t("status.connected")}` : ` · ${t("status.offline")}`}</option>)}
         </select>
-      </label><small>Both Chat and Agent use this same provider selection.</small></div>
-      <div className="provider-note"><AlertCircle size={15} /><span>Ollama and configured OpenAI-compatible endpoints are connected through the same backend manager. Anthropic and Gemini adapters remain planned.</span></div>
+      </label><small>{t("providers.sharedProviderNote")}</small></div>
+      <div className="provider-note"><AlertCircle size={15} /><span>{t("providers.adapterNote")}</span></div>
     </section>
 
     <section className="panel switching-panel">
-      <div className="panel-header"><div><h2>Switching policy</h2><p>Control exactly when NEXUS may move to another provider</p></div><ShieldCheck size={18} className="panel-muted-icon" /></div>
+      <div className="panel-header"><div><h2>{t("providers.switchingPolicy")}</h2><p>{t("providers.switchingSubtitle")}</p></div><ShieldCheck size={18} className="panel-muted-icon" /></div>
       <div className="provider-settings">
-        <label className="provider-field"><span>Automatic switching mode</span>
+        <label className="provider-field"><span>{t("providers.switchMode")}</span>
           <select value={policy.mode} onChange={(e) => update("mode", e.target.value as SwitchingMode)}>
-            <option value="disabled">Disabled</option><option value="manual_only">Manual only</option>
-            <option value="error_triggered">Error-triggered</option><option value="exception_based">Exception allowlist</option>
-            <option value="guided">Guided · ask before switching</option>
+            <option value="disabled">{t("providers.disabled")}</option><option value="manual_only">{t("providers.manualOnly")}</option>
+            <option value="error_triggered">{t("providers.errorTriggered")}</option><option value="exception_based">{t("providers.exceptionAllowlist")}</option>
+            <option value="guided">{t("providers.guided")}</option>
           </select>
         </label>
         <div className="provider-number-grid">
-          <label className="provider-field"><span>Max switches / request</span><input type="number" min={0} max={5} value={policy.max_switches_per_request} onChange={(e) => update("max_switches_per_request", Number(e.target.value))} /></label>
-          <label className="provider-field"><span>Retries before fallback</span><input type="number" min={0} max={10} value={policy.retry_limit} onChange={(e) => update("retry_limit", Number(e.target.value))} /></label>
-          <label className="provider-field"><span>Cooldown (seconds)</span><input type="number" min={0} max={3600} value={policy.cooldown_seconds} onChange={(e) => update("cooldown_seconds", Number(e.target.value))} /></label>
+          <label className="provider-field"><span>{t("providers.maxSwitches")}</span><input type="number" min={0} max={5} value={policy.max_switches_per_request} onChange={(e) => update("max_switches_per_request", Number(e.target.value))} /></label>
+          <label className="provider-field"><span>{t("providers.retries")}</span><input type="number" min={0} max={10} value={policy.retry_limit} onChange={(e) => update("retry_limit", Number(e.target.value))} /></label>
+          <label className="provider-field"><span>{t("providers.cooldown")}</span><input type="number" min={0} max={3600} value={policy.cooldown_seconds} onChange={(e) => update("cooldown_seconds", Number(e.target.value))} /></label>
         </div>
-        <label className="provider-field"><span>Allowed switching path</span><input value={pathText} onChange={(e) => { setPathText(e.target.value); setSaved(false); }} placeholder="openai-compatible → ollama" />
-          <small>Only the listed order is eligible. Leave empty to block all automatic transitions.</small>
+        <label className="provider-field"><span>{t("providers.allowedPath")}</span><input value={pathText} onChange={(e) => { setPathText(e.target.value); setSaved(false); }} placeholder="openai-compatible → ollama" />
+          <small>{t("providers.pathHelp")}</small>
         </label>
-        {policy.mode === "exception_based" && <fieldset className="provider-exceptions"><legend>Allowed failure types</legend>
+        {policy.mode === "exception_based" && <fieldset className="provider-exceptions"><legend>{t("providers.failureTypes")}</legend>
           {FAILURE_OPTIONS.map(({ value, label }) => <label key={value}><input type="checkbox" checked={policy.exception_allowlist.includes(value)} onChange={(e) => toggleFailure(value, e.target.checked)} />{label}</label>)}
         </fieldset>}
-        <label className="provider-toggle"><input type="checkbox" checked={policy.require_confirmation} onChange={(e) => update("require_confirmation", e.target.checked)} /><span><strong>Require confirmation</strong><small>Ask before every automatic fallback, regardless of mode.</small></span></label>
-        <div className="provider-safety"><ShieldCheck size={16} /><span>Isolation, pending approvals, authentication failures, security blocks and user cancellation always stop fallback. Switching after a response stream begins is prohibited.</span></div>
+        <label className="provider-toggle"><input type="checkbox" checked={policy.require_confirmation} onChange={(e) => update("require_confirmation", e.target.checked)} /><span><strong>{t("providers.requireConfirmation")}</strong><small>{t("providers.confirmationHelp")}</small></span></label>
+        <div className="provider-safety"><ShieldCheck size={16} /><span>{t("providers.safetyNote")}</span></div>
         {error && <div className="error-banner provider-error">{error}</div>}
-        <div className="provider-save-row">{saved && <span className="provider-saved"><Check size={14} />Saved</span>}<button className="primary-button" onClick={() => void save()} disabled={loading || saving}><Save size={14} />{saving ? "Saving…" : "Save policy"}</button></div>
+        <div className="provider-save-row">{saved && <span className="provider-saved"><Check size={14} />{t("actions.saved")}</span>}<button className="primary-button" onClick={() => void save()} disabled={loading || saving}><Save size={14} />{saving ? t("actions.saving") : t("providers.savePolicy")}</button></div>
       </div>
     </section>
-    <div className="provider-footnote"><ChevronRight size={14} /> Provider policy is enforced server-side; UI settings are not a security boundary.</div>
+    <div className="provider-footnote"><ChevronRight size={14} /> {t("providers.serverEnforced")}</div>
   </div>;
 }
