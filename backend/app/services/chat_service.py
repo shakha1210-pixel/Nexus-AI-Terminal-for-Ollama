@@ -141,7 +141,7 @@ class ChatService:
                 content = (chunk.get("message") or {}).get("content", "")
                 if content:
                     assistant_text += content
-                    yield "event: token\\ndata: " + json.dumps({"content": content}, ensure_ascii=False) + "\\n\\n"
+                    yield "event: token\ndata: " + json.dumps({"content": content}, ensure_ascii=False) + "\n\n"
                 if chunk.get("done"):
                     break
             if assistant_text:
@@ -149,10 +149,10 @@ class ChatService:
                 data["updated_at"] = datetime.now(timezone.utc).isoformat()
                 with self._lock:
                     self._write(data)
-            yield "event: done\\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\\n\\n"
+            yield "event: done\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\n\n"
         except (httpx.HTTPError, ChatError, ValueError, RuntimeError, KeyError) as exc:
             message_text = str(exc) if isinstance(exc, ChatError) else f"Provider chat xatosi: {type(exc).__name__}"
-            yield "event: error\\ndata: " + json.dumps({"message": message_text}, ensure_ascii=False) + "\\n\\n"
+            yield "event: error\ndata: " + json.dumps({"message": message_text}, ensure_ascii=False) + "\n\n"
 
 
 chat_service = ChatService()
