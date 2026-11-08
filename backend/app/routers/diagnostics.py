@@ -16,7 +16,18 @@ async def provider_diagnostics() -> dict:
             "consecutive_failures": 0, "last_error_kind": None,
             "last_error": None, "last_success": False,
         })
+        connected = None
+        if state["state"] != "cooldown":
+            try:
+                connected = await provider_manager.health(provider_id)
+            except Exception:
+                connected = False
         recommendations = []
+        if connected is False:
+            recommendations.append({
+                "code": "connection_check", "level": "warning",
+                "message": "Provider javob bermadi. Xizmat holati, endpoint manzili va autentifikatsiyani tekshiring."
+            })
         if state["state"] == "cooldown":
             recommendations.append({
                 "code": "wait_or_switch",
@@ -41,5 +52,5 @@ async def provider_diagnostics() -> dict:
                 "level": "warning",
                 "message": "Ulanish yoki server holatini tekshiring. Vaqtinchalik xatolar uchun cooldown avtomatik qo‘llanadi.",
             })
-        providers.append({"provider_id": provider_id, **state, "recommendations": recommendations})
+        providers.append({"provider_id": provider_id, "connected": connected, **state, "recommendations": recommendations})
     return {"providers": providers}
