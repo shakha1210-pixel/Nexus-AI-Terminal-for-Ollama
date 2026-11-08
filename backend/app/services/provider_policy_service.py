@@ -5,11 +5,14 @@ from threading import RLock
 from app.providers.policy import ProviderSwitchPolicy
 from app.providers.manager import provider_manager
 from app.schemas.providers import ProviderPolicyUpdate
+from app.services.app_data import get_store_path
+
+_LEGACY_DIR = Path(__file__).resolve().parents[2] / ".nexus"
 
 
 class ProviderPolicyService:
     def __init__(self, store_path: Path | None = None) -> None:
-        self.store_path = store_path or (Path(__file__).resolve().parents[2] / ".nexus" / "provider_policy.json")
+        self.store_path = store_path or get_store_path("provider_policy.json", _LEGACY_DIR / "provider_policy.json")
         self._lock = RLock()
         self._policy = self._load()
         provider_manager.set_policy(self._to_policy(self._policy))
@@ -33,7 +36,6 @@ class ProviderPolicyService:
         except FileNotFoundError:
             return ProviderPolicyUpdate()
         except (OSError, ValueError):
-            # A corrupt settings file must not enable automatic switching.
             return ProviderPolicyUpdate()
 
     def snapshot(self) -> dict:
