@@ -7,11 +7,13 @@ from app.providers.base import BaseAdapter, ProviderCapabilities, ProviderModel
 
 
 class OllamaAdapter(BaseAdapter):
-    """Native Ollama API adapter; can target local or authenticated remote Ollama."""
+    """Native Ollama API adapter for local or authenticated remote endpoints."""
 
-    provider_id = "ollama"
-
-    def __init__(self, base_url: str, timeout: float = 30.0, auth: tuple[str, str] | None = None) -> None:
+    def __init__(self, base_url: str, timeout: float = 30.0, auth: tuple[str, str] | None = None,
+                 provider_id: str = "ollama") -> None:
+        if not provider_id.strip():
+            raise ValueError("provider_id must be non-empty")
+        self.provider_id = provider_id
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.auth = auth
@@ -41,14 +43,14 @@ class OllamaAdapter(BaseAdapter):
         ) for item in models if item.get("name") or item.get("model")]
 
     async def chat(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
-        payload = {"model": model, "messages": messages, "stream": False, **kwargs}
+        payload = {**kwargs, "model": model, "messages": messages, "stream": False}
         async with httpx.AsyncClient(timeout=self.timeout, auth=self.auth) as client:
             response = await client.post(f"{self.base_url}/api/chat", json=payload)
             response.raise_for_status()
             return response.json()
 
     async def stream(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
-        payload = {"model": model, "messages": messages, "stream": True, **kwargs}
+        payload = {**kwargs, "model": model, "messages": messages, "stream": True}
         async with httpx.AsyncClient(timeout=None, auth=self.auth) as client:
             async with client.stream("POST", f"{self.base_url}/api/chat", json=payload) as response:
                 response.raise_for_status()
