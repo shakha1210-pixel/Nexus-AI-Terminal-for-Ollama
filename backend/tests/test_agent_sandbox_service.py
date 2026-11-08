@@ -16,7 +16,7 @@ class AgentSandboxServiceTests(unittest.TestCase):
         for required in (
             "--network=none", "--read-only", "--cap-drop=ALL", "--name nexus-agent-read-test",
             "--security-opt=no-new-privileges", "--pids-limit=16",
-            "--memory=96m", "--cpus=0.50", "--user=65532:65532",
+            "--memory=96m", "--memory-swap=96m", "--cpus=0.50", "--user=65532:65532",
             "readonly", "nexus-agent-sandbox:py311",
         ):
             self.assertIn(required, joined)
