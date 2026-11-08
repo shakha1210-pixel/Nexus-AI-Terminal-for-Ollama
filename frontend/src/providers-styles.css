@@ -30,3 +30,9 @@
 .provider-footnote { display: flex; align-items: center; gap: 5px; color: var(--subtle); font-size: 9px; }
 @media (max-width: 900px) { .provider-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 620px) { .provider-grid, .provider-number-grid { grid-template-columns: 1fr; } }
+
+.provider-active-row { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(180px, 1fr); align-items: end; gap: 16px; padding: 0 16px 16px; }
+.provider-active-row > small { padding-bottom: 10px; color: var(--subtle); font-size: 9px; }
+.provider-model-count { display: block; margin-top: 8px; color: var(--subtle); font-size: 9px; }
+.provider-state.connected { color: var(--text); border: 1px solid var(--border); }
+@media (max-width: 620px) { .provider-active-row { grid-template-columns: 1fr; gap: 8px; } }
