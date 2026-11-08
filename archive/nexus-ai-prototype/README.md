@@ -1,23 +1,10 @@
-# Nexus AI
+# Archived NEXUS AI prototype
 
-A React + TypeScript dashboard prototype for a local Ollama-powered agent workspace.
-The current dashboard is presentation-only; Ollama connection and agent actions are
-not wired up yet.
+This directory contains the original standalone React/Vite presentation prototype.
+It has been preserved for reference and is no longer the active application.
 
-## Run locally
+The maintained application lives in the repository-level `backend/` and `frontend/`
+directories. Start from the root project README for current setup instructions.
 
-```powershell
-cd nexus-ai
-npm install
-npm run dev
-```
-
-## Project structure
-
-- `src/App.tsx` — dashboard layout and screen-level interactions.
-- `src/index.css` — Tailwind entry point and global browser styles.
-- `src/main.tsx` — React application entry point.
-- `vite.config.ts` — Vite, React, and Tailwind CSS integration.
-
-Run `npm run build` to type-check and create a production build, or `npm run lint`
-to run Oxlint.
+The archived prototype is intentionally kept separate so its dependencies,
+assets, and UI experiments do not interfere with the maintained application.
