@@ -457,3 +457,18 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 .model-delete-button:disabled { opacity: .4; cursor: default; }
 @keyframes pulse-dot { from { opacity: .45; } to { opacity: 1; } }
 @media (max-width: 460px) { .model-pull-bar { flex-direction: column; } .model-pull-button { min-height: 34px; } .model-size { display: none; } }
+
+
+/* Explicit, per-agent file handoff controls */
+.agent-handoff-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 65%, var(--surface));
+}
+.agent-handoff-bar label { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 9px; }
+.agent-handoff-bar input { width: 92px; height: 28px; padding: 0 7px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 5px; font: 10px "DM Mono", monospace; }
+.agent-handoff-bar button { min-height: 28px; padding: 0 9px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 5px; font-size: 9px; cursor: pointer; }
+.agent-handoff-bar button:hover:not(:disabled) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 38%, var(--border)); }
+.agent-handoff-bar button:disabled { opacity: .4; cursor: not-allowed; }
+.agent-handoff-bar > span { margin-left: auto; color: var(--subtle); font-size: 9px; }
+@media (max-width: 540px) { .agent-handoff-bar > span { width: 100%; margin-left: 0; } }
