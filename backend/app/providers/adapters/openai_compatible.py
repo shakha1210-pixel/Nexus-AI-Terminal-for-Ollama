@@ -7,7 +7,7 @@ from app.providers.base import BaseAdapter, ProviderCapabilities, ProviderModel
 
 
 class OpenAICompatibleAdapter(BaseAdapter):
-    """Adapter for OpenAI-compatible /v1 APIs; API keys stay backend-side."""
+    """Adapter for OpenAI-compatible /v1 APIs; normalizes responses for NEXUS runtimes."""
 
     provider_id = "openai-compatible"
 
@@ -38,18 +38,43 @@ class OpenAICompatibleAdapter(BaseAdapter):
         if not isinstance(data, list):
             raise ValueError("OpenAI-compatible API returned an invalid model list.")
         return [ProviderModel(
-            id=str(item["id"]),
-            display_name=str(item.get("name") or item["id"]),
-            capabilities=ProviderCapabilities(streaming=True),
+            id=str(item["id"]), display_name=str(item.get("name") or item["id"]),
+            # Tool calling is advertised by the OpenAI chat-completions contract; vision remains opt-in.
+            capabilities=ProviderCapabilities(streaming=True, tool_calling=True),
             metadata={"owned_by": item.get("owned_by")} if item.get("owned_by") else {},
         ) for item in data if isinstance(item, dict) and item.get("id")]
+
+    @staticmethod
+    def _normalize_message(message: dict[str, Any]) -> dict[str, Any]:
+        normalized: dict[str, Any] = {
+            "role": (message.get("role") or "assistant"),
+            "content": message.get("content") or "",
+        }
+        calls = message.get("tool_calls") or []
+        if calls:
+            normalized["tool_calls"] = []
+            for call in calls:
+                function = call.get("function") or {}
+                raw_args = function.get("arguments") or "{}"
+                try:
+                    arguments = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+                except json.JSONDecodeError:
+                    arguments = {}
+                normalized["tool_calls"].append({"function": {
+                    "name": function.get("name"), "arguments": arguments,
+                }})
+        return normalized
 
     async def chat(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
         payload = {**kwargs, "model": model, "messages": messages, "stream": False}
         async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers) as client:
             response = await client.post(f"{self.base_url}/chat/completions", json=payload)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+        choices = data.get("choices") or []
+        if not choices or not isinstance(choices[0].get("message"), dict):
+            raise ValueError("OpenAI-compatible API returned no assistant message.")
+        return {"message": self._normalize_message(choices[0]["message"]), "usage": data.get("usage")}
 
     async def stream(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
         payload = {**kwargs, "model": model, "messages": messages, "stream": True}
@@ -61,8 +86,17 @@ class OpenAICompatibleAdapter(BaseAdapter):
                         continue
                     raw = line[5:].strip()
                     if raw == "[DONE]":
+                        yield {"done": True}
                         break
                     try:
-                        yield json.loads(raw)
+                        chunk = json.loads(raw)
                     except json.JSONDecodeError:
                         continue
+                    for choice in chunk.get("choices", []):
+                        delta = choice.get("delta") or {}
+                        content = delta.get("content")
+                        if content:
+                            yield {"message": {"content": content}, "done": False}
+                        for call in delta.get("tool_calls", []):
+                            # Streaming tool-call deltas are not assembled here; runtimes use non-streaming tool calls.
+                            yield {"tool_call_delta": call, "done": False}
