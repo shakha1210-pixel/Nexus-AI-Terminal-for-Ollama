@@ -18,6 +18,13 @@ class TrayController:
     def _make_image():
         from PIL import Image, ImageDraw
 
+        from pathlib import Path
+
+        icon_path = Path(__file__).resolve().parent / "assets" / "icon.ico"
+        if icon_path.is_file():
+            with Image.open(icon_path) as icon:
+                return icon.convert("RGBA").resize((64, 64))
+
         image = Image.new("RGBA", (64, 64), (18, 24, 38, 255))
         draw = ImageDraw.Draw(image)
         draw.rounded_rectangle((5, 5, 59, 59), radius=13, outline=(74, 222, 128, 255), width=3)
