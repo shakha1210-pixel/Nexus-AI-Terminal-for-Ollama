@@ -60,5 +60,7 @@ export const en = {
   "pages.localInference": "LOCAL INFERENCE",
   "pages.chatSubtitle": "Chat with the model selected in Model Providers.",
   "status.connected": "Connected",
-  "status.offline": "Offline"
+  "status.offline": "Offline",
+  "nav.workspaceTitle": "Workspace",
+  "dashboard.updated": "Updated"
 } as const;
