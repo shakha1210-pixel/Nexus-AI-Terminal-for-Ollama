@@ -1,7 +1,7 @@
 import type { OllamaModel, OllamaStatus } from "../types/ollama";
 import type { KaggleStatus } from "../types/kaggle";
 import type { UIPreferences } from "../types/preferences";
-import type { ProviderPolicy } from "../types/providers";
+import type { ProviderCatalog, ProviderPolicy } from "../types/providers";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
@@ -34,4 +34,6 @@ export const api = {
   savePreferences: (preferences: UIPreferences) => request<UIPreferences>("/api/preferences", { method: "PUT", body: preferences }),
   getProviderPolicy: () => request<ProviderPolicy>("/api/providers/policy"),
   saveProviderPolicy: (policy: ProviderPolicy) => request<ProviderPolicy>("/api/providers/policy", { method: "PUT", body: policy }),
+  getProviderCatalog: () => request<ProviderCatalog>("/api/providers/catalog"),
+  setActiveProvider: (provider_id: string) => request<{ provider_id: string }>("/api/providers/active", { method: "PUT", body: { provider_id } }),
 };
