@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from pathlib import Path
 from pydantic import BaseModel, Field
 
 from app.services.workspace_service import WorkspaceError, workspace_service
@@ -39,6 +38,14 @@ async def get_tree(path: str = "") -> dict:
 async def get_file(path: str) -> dict:
     try:
         return workspace_service.read_file(path)
+    except WorkspaceError as exc:
+        raise _handle_workspace_error(exc) from exc
+
+
+@router.post("/file")
+async def create_file(payload: FileWrite) -> dict:
+    try:
+        return workspace_service.create_file(payload.path, payload.content)
     except WorkspaceError as exc:
         raise _handle_workspace_error(exc) from exc
 
