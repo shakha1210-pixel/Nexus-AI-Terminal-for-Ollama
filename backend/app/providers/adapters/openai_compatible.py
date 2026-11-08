@@ -40,20 +40,19 @@ class OpenAICompatibleAdapter(BaseAdapter):
         return [ProviderModel(
             id=str(item["id"]),
             display_name=str(item.get("name") or item["id"]),
-            # Capabilities are conservative unless explicitly supplied by a future provider manifest.
             capabilities=ProviderCapabilities(streaming=True),
             metadata={"owned_by": item.get("owned_by")} if item.get("owned_by") else {},
         ) for item in data if isinstance(item, dict) and item.get("id")]
 
     async def chat(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
-        payload = {"model": model, "messages": messages, "stream": False, **kwargs}
+        payload = {**kwargs, "model": model, "messages": messages, "stream": False}
         async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers) as client:
             response = await client.post(f"{self.base_url}/chat/completions", json=payload)
             response.raise_for_status()
             return response.json()
 
     async def stream(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
-        payload = {"model": model, "messages": messages, "stream": True, **kwargs}
+        payload = {**kwargs, "model": model, "messages": messages, "stream": True}
         async with httpx.AsyncClient(timeout=None, headers=self._headers) as client:
             async with client.stream("POST", f"{self.base_url}/chat/completions", json=payload) as response:
                 response.raise_for_status()
