@@ -6,6 +6,7 @@ from typing import Literal
 from app.services.agent_access_service import AgentAccessError, agent_access_service
 from app.services.agent_runtime_service import AgentRuntimeError, agent_runtime_service
 from app.services.agent_control_service import AgentControlError, agent_control_service
+from app.services.agent_approval_service import AgentApprovalError, agent_approval_service
 
 router = APIRouter(prefix="/api/agents", tags=["Agent Access"])
 
@@ -29,6 +30,10 @@ class AgentModeRequest(BaseModel):
 
 class IsolationRequest(BaseModel):
     reason: str = Field(default="Manual isolation", max_length=500)
+
+
+class ApprovalDecision(BaseModel):
+    approve: bool
 
 
 def _error(exc: AgentAccessError) -> HTTPException:
@@ -117,4 +122,20 @@ async def release_agent(agent_id: str) -> dict:
     try:
         return agent_control_service.release(agent_id)
     except AgentControlError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/{agent_id}/approvals")
+async def list_agent_approvals(agent_id: str, pending_only: bool = True) -> dict:
+    try:
+        return agent_approval_service.list_requests(agent_id, pending_only=pending_only)
+    except AgentApprovalError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/{agent_id}/approvals/{request_id}/decision")
+async def decide_agent_approval(agent_id: str, request_id: str, payload: ApprovalDecision) -> dict:
+    try:
+        return agent_approval_service.decide(agent_id, request_id, payload.approve)
+    except AgentApprovalError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
