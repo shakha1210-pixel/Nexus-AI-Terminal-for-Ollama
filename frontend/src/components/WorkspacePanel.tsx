@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { File, FileImage, FilePlus2, Folder, FolderPlus, HardDrive, Image, RefreshCw, Save, Upload, X } from "lucide-react";
+import { File, FileImage, FilePlus2, Folder, FolderPlus, HardDrive, RefreshCw, Save, Upload, X } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 type Entry = { name: string; path: string; kind: "file" | "directory"; size: number | null; modified_at: number };
@@ -68,7 +68,7 @@ export default function WorkspacePanel() {
     if (!name?.trim()) return;
     const path = [currentPath, name.trim()].filter(Boolean).join("/");
     try {
-      await apiRequest("/api/workspace/file", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path, content: "" }) });
+      await apiRequest("/api/workspace/file", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path, content: "" }) });
       await loadTree(currentPath);
       const entry = { name: name.trim(), path, kind: "file" as const, size: 0, modified_at: Date.now() / 1000 };
       await openFile(entry);
@@ -116,7 +116,7 @@ export default function WorkspacePanel() {
       </aside>
       <div className="workspace-editor">
         {activeFile ? <><div className="editor-tab"><File size={14} /><span>{activeFile.path.split("/").pop()}</span>{activeFile.dirty && <i /> }<button title="Close file" onClick={() => setActiveFile(null)}><X size={14} /></button><button className="save-file-button" onClick={() => void saveFile()} disabled={!activeFile.dirty || busy}><Save size={14} /> Save</button></div>
-          {activeFile.path.match(/\.(png|jpe?g|gif|webp)$/i) ? <div className="workspace-preview"><img className="workspace-image-preview" src={`${API_BASE}/api/workspace/asset?path=${encodeURIComponent(activeFile.path)}`} alt={activeFile.path.split("/").pop()} /><p>Local image preview · ready for a future agent attachment flow</p></div> :
+          {activeFile.path.match(/\.(png|jpe?g|gif|webp|svg)$/i) ? <div className="workspace-preview"><img className="workspace-image-preview" src={`${API_BASE}/api/workspace/asset?path=${encodeURIComponent(activeFile.path)}`} alt={activeFile.path.split("/").pop()} /><p>Local image preview · ready for a future agent attachment flow</p></div> :
           <textarea className="workspace-code-editor" spellCheck={false} value={activeFile.content} onChange={(event) => setActiveFile({ ...activeFile, content: event.target.value, dirty: true })} />}
         </> : <div className="workspace-welcome"><HardDrive size={32} /><strong>Local workspace</strong><p>Open a file, create a folder, or upload files to begin.</p><span>File operations stay inside the configured workspace directory.</span></div>}
       </div>
