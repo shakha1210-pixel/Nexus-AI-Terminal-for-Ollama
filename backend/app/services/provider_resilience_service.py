@@ -67,6 +67,10 @@ class ProviderResilienceService:
             return "network_error", True, None
         return "unknown", False, None
 
+    def reset(self, provider_id: str) -> None:
+        with self._lock:
+            self._states[provider_id] = ProviderState()
+
     def record_success(self, provider_id: str) -> None:
         with self._lock:
             state = self._state(provider_id)
