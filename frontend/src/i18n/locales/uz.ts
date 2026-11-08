@@ -236,5 +236,10 @@ export const uz = {
   "workspace.folder": "Papka",
   "actions.saved": "Saqlandi",
   "actions.saving": "Saqlanmoqda…",
-  "actions.save": "Saqlash"
+  "actions.save": "Saqlash",
+  "status.unknownError": "Noma’lum xatolik yuz berdi.",
+  "status.backendUnavailable": "Backend API bilan aloqa yo‘q.",
+  "settings.preferencesSaveError": "Sozlamalarni saqlab bo‘lmadi",
+  "providers.selectionError": "Provayder tanlovi bajarilmadi.",
+  "dashboard.localFirstWorkspace": "Lokal-first intellektual ish maydoni"
 } as const;
