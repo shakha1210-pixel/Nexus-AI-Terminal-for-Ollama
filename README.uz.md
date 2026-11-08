@@ -119,6 +119,8 @@ Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida l
 | `GET` | `/api/health` | Backend javob berayotganini tekshirish |
 | `GET` | `/api/ollama/status` | Tanlangan Ollama runtime holatini tekshirish |
 | `GET` | `/api/ollama/models` | Tanlangan Ollama runtime’dagi modellarni olish |
+| `POST` | `/api/ollama/models/pull` | Modelni Ollama orqali oqimli progress bilan yuklash; body: `{"name":"llama3.2"}` |
+| `DELETE` | `/api/ollama/models` | Modelni o‘chirish; body: `{"name":"llama3.2"}` |
 | `GET` | `/api/kaggle/status` | Kaggle ishga tushishi va ulanish holatini olish |
 | `GET` | `/api/workspace/tree` | Workspace papkasidagi fayl va papkalar ro‘yxati |
 | `GET` | `/api/workspace/file` | Matnli faylni o‘qish |
