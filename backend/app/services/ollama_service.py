@@ -61,10 +61,7 @@ class OllamaService:
             })
         return result
 
-
-ollama_service = OllamaService()
-
-
+    
     async def pull_model(self, model: str):
         import json
 
@@ -78,11 +75,11 @@ ollama_service = OllamaService()
                     response.raise_for_status()
                     async for line in response.aiter_lines():
                         if line:
-                            yield f"data: {line}\\n\\n"
+                            yield f"data: {line}\n\n"
             except httpx.HTTPError as exc:
                 payload = json.dumps({"error": f"Ollama model yuklashda xatolik: {type(exc).__name__}"})
-                yield f"data: {payload}\\n\\n"
-        yield "data: [DONE]\\n\\n"
+                yield f"data: {payload}\n\n"
+        yield "data: [DONE]\n\n"
 
     async def delete_model(self, model: str) -> dict:
         async with httpx.AsyncClient(timeout=self.timeout, auth=self.auth) as client:
@@ -93,3 +90,6 @@ ollama_service = OllamaService()
             )
             response.raise_for_status()
         return {"deleted": model}
+
+
+ollama_service = OllamaService()
