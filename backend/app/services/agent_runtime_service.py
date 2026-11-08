@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from typing import AsyncIterator
@@ -7,6 +8,7 @@ from typing import AsyncIterator
 import httpx
 
 from app.services.agent_access_service import AgentAccessError, agent_access_service
+from app.services.agent_control_service import AgentControlError, agent_control_service
 from app.services.ollama_service import ollama_service
 
 
@@ -55,7 +57,12 @@ class AgentRuntimeService:
         if not model or len(model) > 160 or not task or len(task) > 12000:
             raise AgentRuntimeError("Model yoki topshiriq bo‘sh, yoxud hajmi limitdan katta.")
         try:
+            control = agent_control_service.get(agent)
+            if control["isolated"] or control["mode"] == "locked":
+                raise AgentRuntimeError("Agent izolyatsiyada yoki Locked rejimida.")
             installed = {item["name"] for item in await ollama_service.get_models()}
+        except AgentControlError as exc:
+            raise AgentRuntimeError(str(exc)) from exc
         except (httpx.HTTPError, ValueError, KeyError) as exc:
             raise AgentRuntimeError("Ollama modellari bilan bog‘lanib bo‘lmadi.") from exc
         if model not in installed:
@@ -71,13 +78,23 @@ class AgentRuntimeService:
         try:
             async with httpx.AsyncClient(timeout=None, auth=ollama_service.auth) as client:
                 for round_index in range(self.MAX_TOOL_ROUNDS + 1):
+                    control = agent_control_service.get(agent)
+                    if control["isolated"] or control["mode"] == "locked":
+                        raise AgentRuntimeError("Agent izolyatsiya qilindi; bajarilish to‘xtatildi.")
                     payload = {
                         "model": model,
                         "messages": messages,
                         "tools": self.TOOL_DEFINITION,
                         "stream": False,
                     }
-                    response = await client.post(f"{ollama_service.base_url}/api/chat", json=payload)
+                    request_task = asyncio.create_task(client.post(f"{ollama_service.base_url}/api/chat", json=payload))
+                    agent_control_service.register_request(agent, request_task)
+                    try:
+                        response = await request_task
+                    except asyncio.CancelledError as exc:
+                        raise AgentRuntimeError("Agent izolyatsiya qilindi; faol Ollama so‘rovi bekor qilindi.") from exc
+                    finally:
+                        agent_control_service.unregister_request(agent, request_task)
                     response.raise_for_status()
                     result = response.json()
                     assistant_message = result.get("message") or {}
@@ -94,6 +111,9 @@ class AgentRuntimeService:
                         raise AgentRuntimeError("Agent vositalaridan foydalanish limiti tugadi.")
                     messages.append(assistant_message)
                     for call in calls:
+                        control = agent_control_service.get(agent)
+                        if control["isolated"] or control["mode"] == "locked":
+                            raise AgentRuntimeError("Agent izolyatsiya qilindi; vosita chaqiruvi bloklandi.")
                         call = call if isinstance(call, dict) else {}
                         function = call.get("function") or {}
                         function = function if isinstance(function, dict) else {}
