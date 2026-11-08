@@ -56,7 +56,7 @@ class AgentSandboxService:
             "--memory=96m", "--cpus=0.50", "--user=65532:65532",
             "--tmpfs", "/tmp:rw,noexec,nosuid,size=1m",
             "--mount", f"type=bind,source={source_text},target=/input/file,readonly",
-            self.IMAGE, "python", "-c", self.READ_SCRIPT,
+            self.IMAGE, "-c", self.READ_SCRIPT,
         ]
 
     async def read_granted_file(self, agent_id: str, relative_path: str) -> dict:
