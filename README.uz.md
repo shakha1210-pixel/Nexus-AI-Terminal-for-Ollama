@@ -175,3 +175,13 @@ backend/   FastAPI API, Ollama/Kaggle service’lari, schema va notebook shablon
 frontend/  React + TypeScript dashboard
 nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
 ```
+
+
+### Agent access modes va isolation
+
+- `GET /api/agents/{agent_id}/control` — joriy rejim va izolyatsiya holati.
+- `PUT /api/agents/{agent_id}/control/mode` — `read_only`, `approval_required`, `autopilot` yoki `locked` rejimini tanlash.
+- `POST /api/agents/{agent_id}/isolate` — agentni qulflash va faol Ollama so‘rovini bekor qilish.
+- `POST /api/agents/{agent_id}/release` — izolyatsiyadan chiqarish; xavfsiz `read_only` rejimiga qaytaradi.
+
+Hozirgi runtime faqat ruxsatli matnli faylni o‘qiydi. Shu sabab `autopilot` ham hozircha shu tor vakolat doirasida ishlaydi; `approval_required` yozish amallari qo‘shilganda tasdiqlash darvozasi sifatida ishga tushadi. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
