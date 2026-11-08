@@ -1,7 +1,7 @@
 """Provider abstraction and guarded switching policy for NEXUS."""
 
 from app.providers.base import BaseAdapter, ProviderCapabilities, ProviderModel
-from app.providers.manager import ProviderCapabilityError, ProviderManager
+from app.providers.manager import ProviderCapabilityError, ProviderManager, provider_manager
 from app.providers.policy import (
     FailureKind, ProviderSwitchPolicy, ProviderSwitchingEngine,
     SwitchDecision, SwitchingMode,
@@ -11,7 +11,7 @@ from app.providers.adapters import OllamaAdapter, OpenAICompatibleAdapter
 
 __all__ = [
     "BaseAdapter", "ProviderCapabilities", "ProviderModel", "ProviderManager",
-    "ProviderCapabilityError", "FailureKind", "ProviderSwitchPolicy",
+    "ProviderCapabilityError", "provider_manager", "FailureKind", "ProviderSwitchPolicy",
     "ProviderSwitchingEngine", "SwitchDecision", "SwitchingMode",
     "ProviderRegistry", "OllamaAdapter", "OpenAICompatibleAdapter",
 ]
