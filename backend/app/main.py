@@ -3,8 +3,7 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.config import settings
 from app.routers.agents import router as agents_router
@@ -58,13 +57,22 @@ def create_app(frontend_dist: Path | None = None) -> FastAPI:
     async def unknown_api_route(path: str = "") -> JSONResponse:
         return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
-    static_dir = frontend_dist or resolve_frontend_dist()
-    if static_dir.is_dir() and (static_dir / "index.html").is_file():
-        application.mount(
-            "/",
-            StaticFiles(directory=str(static_dir), html=True, check_dir=True),
-            name="frontend",
-        )
+    static_dir = (frontend_dist or resolve_frontend_dist()).resolve()
+    index_file = static_dir / "index.html"
+    if static_dir.is_dir() and index_file.is_file():
+        @application.get("/{path:path}", include_in_schema=False)
+        async def frontend_fallback(path: str = "") -> FileResponse | JSONResponse:
+            requested = (static_dir / path).resolve()
+            try:
+                requested.relative_to(static_dir)
+            except ValueError:
+                return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+            if requested.is_file():
+                return FileResponse(requested)
+            if path.startswith("assets/"):
+                return JSONResponse(status_code=404, content={"detail": "Not Found"})
+            return FileResponse(index_file)
 
     return application
 
