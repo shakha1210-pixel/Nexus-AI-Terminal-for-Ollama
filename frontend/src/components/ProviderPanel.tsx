@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Check, ChevronRight, Cloud, Cpu, Network, Save, ShieldCheck, Workflow } from "lucide-react";
 import { api } from "../services/api";
-import type { FailureKind, ProviderPolicy, SwitchingMode } from "../types/providers";
+import type { FailureKind, ProviderCatalog, ProviderPolicy, SwitchingMode } from "../types/providers";
 
 const DEFAULT_POLICY: ProviderPolicy = {
   mode: "manual_only", max_switches_per_request: 1, allowed_transitions: {},
@@ -13,15 +13,15 @@ const FAILURE_OPTIONS: { value: FailureKind; label: string }[] = [
   { value: "unknown", label: "Unknown exception" },
 ];
 const PROVIDERS = [
-  { id: "ollama-local", name: "Ollama Local", detail: "Native Ollama API · local runtime", icon: Cpu, state: "Adapter foundation" },
-  { id: "ollama-kaggle", name: "Kaggle Ollama", detail: "Native Ollama API · remote GPU", icon: Cloud, state: "Adapter foundation" },
+  { id: "ollama", name: "Ollama Runtime", detail: "Native Ollama API · local or Kaggle GPU", icon: Cpu, state: "Adapter foundation" },
   { id: "openai-compatible", name: "OpenAI-compatible", detail: "OpenAI /v1-compatible endpoints", icon: Network, state: "Adapter foundation" },
   { id: "anthropic", name: "Anthropic", detail: "Native Messages API", icon: Workflow, state: "Planned" },
   { id: "gemini", name: "Google Gemini", detail: "Native Gemini API", icon: Workflow, state: "Planned" },
 ];
 
-export default function ProviderPanel() {
+export default function ProviderPanel({ activeProvider, onProviderChange }: { activeProvider: string; onProviderChange: (providerId: string) => void }) {
   const [policy, setPolicy] = useState<ProviderPolicy>(DEFAULT_POLICY);
+  const [catalog, setCatalog] = useState<ProviderCatalog | null>(null);
   const [pathText, setPathText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -47,6 +47,9 @@ export default function ProviderPanel() {
       if (active) setError(e instanceof Error ? e.message : "Policy could not be loaded.");
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
+    void api.getProviderCatalog().then(setCatalog).catch((e: unknown) => {
+      if (active) setError(e instanceof Error ? e.message : "Provider catalog could not be loaded.");
+    });
   }, []);
 
   const path = useMemo(() => pathText.split("→").map((part) => part.trim()).filter(Boolean), [pathText]);
@@ -78,11 +81,21 @@ export default function ProviderPanel() {
     <section className="panel provider-panel">
       <div className="panel-header"><div><h2>Provider registry</h2><p>One normalized interface for independent inference backends</p></div><Network size={18} className="panel-muted-icon" /></div>
       <div className="provider-grid">
-        {PROVIDERS.map(({ id, name, detail, icon: Icon, state }) => <article className="provider-card" key={id}>
-          <div className="provider-card-top"><span className="provider-icon"><Icon size={17} /></span><span className={state === "Planned" ? "provider-state planned" : "provider-state"}>{state}</span></div>
-          <strong>{name}</strong><p>{detail}</p><code>{id}</code>
-        </article>)}
+        {PROVIDERS.map(({ id, name, detail, icon: Icon, state }) => {
+          const live = catalog?.providers.find((provider) => provider.id === id);
+          const label = live ? (live.connected ? "Connected" : "Offline") : state === "Planned" ? "Planned" : "Not configured";
+          return <article className="provider-card" key={id}>
+            <div className="provider-card-top"><span className="provider-icon"><Icon size={17} /></span><span className={live?.connected ? "provider-state connected" : "provider-state"}>{label}</span></div>
+            <strong>{name}</strong><p>{detail}</p><code>{id}</code>
+            {live && <small className="provider-model-count">{live.models.length} models available</small>}
+          </article>;
+        })}
       </div>
+      <div className="provider-active-row"><label className="provider-field"><span>Shared active provider · Chat + Agent</span>
+        <select value={activeProvider} onChange={(event) => onProviderChange(event.target.value)}>
+          {(catalog?.providers ?? []).map((provider) => <option key={provider.id} value={provider.id}>{provider.name}{provider.connected ? " · Connected" : " · Offline"}</option>)}
+        </select>
+      </label><small>Both Chat and Agent use this same provider selection.</small></div>
       <div className="provider-note"><AlertCircle size={15} /><span>Registry and adapter contracts are in place. Provider credentials, live connection tests and Chat/Agent routing will be connected in the next integration step.</span></div>
     </section>
 
