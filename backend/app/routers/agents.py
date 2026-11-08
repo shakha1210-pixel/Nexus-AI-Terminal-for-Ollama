@@ -71,7 +71,7 @@ async def run_agent(agent_id: str, payload: AgentRunRequest) -> StreamingRespons
                 yield event
         except AgentRuntimeError as exc:
             import json
-            yield "event: error\\ndata: " + json.dumps({"message": str(exc)}, ensure_ascii=False) + "\\n\\n"
+            yield "event: error\ndata: " + json.dumps({"message": str(exc)}, ensure_ascii=False) + "\n\n"
 
     return StreamingResponse(events(), media_type="text/event-stream", headers={
         "Cache-Control": "no-cache", "X-Accel-Buffering": "no",
