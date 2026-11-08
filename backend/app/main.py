@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from app.config import settings
 from app.routers.agents import router as agents_router
 from app.routers.chat import router as chat_router
+from app.routers.diagnostics import router as diagnostics_router
 from app.routers.kaggle import router as kaggle_router
 from app.routers.ollama import router as ollama_router
 from app.routers.preferences import router as preferences_router
@@ -40,6 +41,7 @@ def create_app(frontend_dist: Path | None = None) -> FastAPI:
     application.include_router(preferences_router)
     application.include_router(providers_router)
     application.include_router(secrets_router)
+    application.include_router(diagnostics_router)
     application.include_router(workspace_router)
     application.include_router(agents_router)
     application.include_router(chat_router)
