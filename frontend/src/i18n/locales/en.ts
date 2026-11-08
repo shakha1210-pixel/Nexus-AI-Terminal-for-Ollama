@@ -297,5 +297,11 @@ export const en = {
   "diagnostics.noBlockingWait": "Cooldown does not block the server; the remaining time updates automatically.",
   "settings.restartNote": "Saving an OpenAI-compatible key reloads the provider. The endpoint URL is configured through .env."
 
-  "diagnostics.connection": "Connection",
+  "diagnostics.connection": "Connection",,
+  "diagnostics.tip.wait_or_switch": "This provider is temporarily cooling down. Wait for the timer or select another permitted provider.",
+  "diagnostics.tip.rate_limit": "The request limit was reached. Wait until Retry-After expires before sending another request.",
+  "diagnostics.tip.credentials": "Authentication was rejected. Check the API key and endpoint permissions; automatic retries are disabled.",
+  "diagnostics.tip.connectivity": "Check the network and provider status. Cooldown is applied automatically to transient failures.",
+  "diagnostics.tip.connection_check": "The provider did not respond. Check service status, endpoint URL, and authentication."
+
 } as const;
