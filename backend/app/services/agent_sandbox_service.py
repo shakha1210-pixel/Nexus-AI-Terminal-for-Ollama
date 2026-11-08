@@ -22,7 +22,7 @@ class AgentSandboxService:
     IMAGE = os.getenv("NEXUS_AGENT_SANDBOX_IMAGE", "nexus-agent-sandbox:py311")
     DOCKER_BIN = os.getenv("NEXUS_DOCKER_BIN", "docker")
     TIMEOUT_SECONDS = 12
-    MAX_OUTPUT_BYTES = 2 * 1024 * 1024 + 4096
+    MAX_OUTPUT_BYTES = 12 * 1024 * 1024 + 4096
     READ_SCRIPT = (
         "import json,pathlib,sys; "
         "p=pathlib.Path('/input/file'); "
@@ -54,7 +54,7 @@ class AgentSandboxService:
             self.DOCKER_BIN, "run", "--rm", "--pull=never", "--name", container_name,
             "--network=none", "--read-only", "--cap-drop=ALL",
             "--security-opt=no-new-privileges", "--pids-limit=16",
-            "--memory=96m", "--cpus=0.50", "--user=65532:65532",
+            "--memory=96m", "--memory-swap=96m", "--cpus=0.50", "--user=65532:65532",
             "--tmpfs", "/tmp:rw,noexec,nosuid,size=1m",
             "--mount", f"type=bind,source={source_text},target=/input/file,readonly",
             self.IMAGE, "-c", self.READ_SCRIPT,
