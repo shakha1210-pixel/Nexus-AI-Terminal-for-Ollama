@@ -17,6 +17,7 @@ type ApprovalRequest = {
 
 export default function AgentPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const { t } = useTranslation();
+  const modeLabel = mode === "read_only" ? t("agent.readOnly") : mode === "approval_required" ? t("agent.approvalRequired") : mode === "autopilot" ? t("agent.autopilot") : t("agent.locked");
   const [agentId, setAgentId] = useState("default");
   const [model, setModel] = useState("");
   const [task, setTask] = useState("");
@@ -140,14 +141,14 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
           if (!dataLine) continue;
           const payload = JSON.parse(dataLine.slice(6));
           if (eventName === "status") setStatus(payload.message);
-          if (eventName === "tool") setStatus(`Tool: ${payload.name} — ${payload.result}`);
+          if (eventName === "tool") setStatus(`${t("agent.tool")}: ${payload.name} — ${payload.result}`);
           if (eventName === "token") setOutput((current) => current + payload.content);
           if (eventName === "approval") {
             setStatus(payload.error ?? payload.message ?? t("agent.proposalSubmitted"));
             void loadApprovals();
           }
           if (eventName === "error") setError(payload.message ?? t("agent.runError"));
-          if (eventName === "done") setStatus(`Completed · ${payload.tool_calls} tool calls`);
+          if (eventName === "done") setStatus(t("agent.completed").replace("{count}", String(payload.tool_calls)));
         }
       }
     } catch (err) {
@@ -168,7 +169,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
       <label>{t("agent.accessMode")}<select value={mode} onChange={(event) => void updateMode(event.target.value as typeof mode)} disabled={controlBusy || isolated}>
         <option value="read_only">{t("agent.readOnly")}</option><option value="approval_required">{t("agent.approvalRequired")}</option><option value="autopilot">{t("agent.autopilot")}</option><option value="locked">{t("agent.locked")}</option>
       </select></label>
-      <div className="agent-control-actions"><button className={isolated ? "secondary-button" : "danger-button"} onClick={() => void setIsolation(!isolated)} disabled={controlBusy}>{isolated ? t("agent.release") : t("agent.isolate")}</button><span className={isolated ? "agent-isolation-state active" : "agent-isolation-state"}>{isolated ? t("agent.isolatedBadge") : mode.toUpperCase()}</span></div>
+      <div className="agent-control-actions"><button className={isolated ? "secondary-button" : "danger-button"} onClick={() => void setIsolation(!isolated)} disabled={controlBusy}>{isolated ? t("agent.release") : t("agent.isolate")}</button><span className={isolated ? "agent-isolation-state active" : "agent-isolation-state"}>{isolated ? t("agent.isolatedBadge") : modeLabel}</span></div>
     </div>
     {controlMessage && <p className="agent-control-message" role="status">{controlMessage}</p>}
     {(mode === "approval_required" || approvals.length > 0) && <section className="agent-approval-queue" aria-label={t("agent.approvalQueue")}>
