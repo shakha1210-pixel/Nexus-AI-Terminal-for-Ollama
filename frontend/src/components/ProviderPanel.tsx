@@ -22,6 +22,9 @@ const PROVIDERS = [
 
 export default function ProviderPanel({ activeProvider, onProviderChange }: { activeProvider: string; onProviderChange: (providerId: string) => void }) {
   const { t } = useTranslation();
+  const failureLabel = (value: FailureKind) => ({ timeout: t("providers.failureTimeout"), rate_limit: t("providers.failureRateLimit"), server_error: t("providers.failureServer"), network_error: t("providers.failureNetwork"), unknown: t("providers.failureUnknown") })[value];
+  const providerName = (id: string, fallback: string) => ({ ollama: t("providers.ollamaName"), "openai-compatible": t("providers.openaiName"), anthropic: t("providers.anthropicName"), gemini: t("providers.geminiName") }[id] ?? fallback);
+  const providerDetail = (id: string, fallback: string) => ({ ollama: t("providers.ollamaDetail"), "openai-compatible": t("providers.openaiDetail"), anthropic: t("providers.anthropicDetail"), gemini: t("providers.geminiDetail") }[id] ?? fallback);
   const [policy, setPolicy] = useState<ProviderPolicy>(DEFAULT_POLICY);
   const [catalog, setCatalog] = useState<ProviderCatalog | null>(null);
   const [pathText, setPathText] = useState("");
@@ -88,7 +91,7 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
           const label = live ? (live.connected ? t("status.connected") : t("status.offline")) : state === "Planned" ? t("providers.planned") : t("providers.notConfigured");
           return <article className="provider-card" key={id}>
             <div className="provider-card-top"><span className="provider-icon"><Icon size={17} /></span><span className={live?.connected ? "provider-state connected" : "provider-state"}>{label}</span></div>
-            <strong>{name}</strong><p>{detail}</p><code>{id}</code>
+            <strong>{providerName(id, name)}</strong><p>{providerDetail(id, detail)}</p><code>{id}</code>
             {live && <small className="provider-model-count">{t("providers.modelsAvailable").replace("{count}", String(live.models.length))}</small>}
           </article>;
         })}
@@ -120,7 +123,7 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
           <small>{t("providers.pathHelp")}</small>
         </label>
         {policy.mode === "exception_based" && <fieldset className="provider-exceptions"><legend>{t("providers.failureTypes")}</legend>
-          {FAILURE_OPTIONS.map(({ value, label }) => <label key={value}><input type="checkbox" checked={policy.exception_allowlist.includes(value)} onChange={(e) => toggleFailure(value, e.target.checked)} />{label}</label>)}
+          {FAILURE_OPTIONS.map(({ value, label }) => <label key={value}><input type="checkbox" checked={policy.exception_allowlist.includes(value)} onChange={(e) => toggleFailure(value, e.target.checked)} />{failureLabel(value)}</label>)}
         </fieldset>}
         <label className="provider-toggle"><input type="checkbox" checked={policy.require_confirmation} onChange={(e) => update("require_confirmation", e.target.checked)} /><span><strong>{t("providers.requireConfirmation")}</strong><small>{t("providers.confirmationHelp")}</small></span></label>
         <div className="provider-safety"><ShieldCheck size={16} /><span>{t("providers.safetyNote")}</span></div>
