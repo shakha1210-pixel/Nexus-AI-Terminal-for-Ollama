@@ -24,7 +24,7 @@ DEFAULT_PORT = 8000
 VITE_PORT = 5173
 WEBVIEW2_GUIDANCE = (
     "Microsoft Edge WebView2 Runtime is missing. Install the Evergreen WebView2 Runtime "
-    "from Microsoft's official download page, then restart NEXUS AI. "
+    "from https://developer.microsoft.com/microsoft-edge/webview2/, then restart NEXUS AI. "
     "You can use --browser as a temporary alternative."
 )
 
