@@ -22,7 +22,7 @@ const PROVIDERS = [
 
 export default function ProviderPanel({ activeProvider, onProviderChange }: { activeProvider: string; onProviderChange: (providerId: string) => void }) {
   const { t } = useTranslation();
-  const failureLabel = (value: FailureKind) => ({ timeout: t("providers.failureTimeout"), rate_limit: t("providers.failureRateLimit"), server_error: t("providers.failureServer"), network_error: t("providers.failureNetwork"), unknown: t("providers.failureUnknown") })[value];
+  const failureLabel = (value: FailureKind) => ({ timeout: t("providers.failureTimeout"), rate_limit: t("providers.failureRateLimit"), server_error: t("providers.failureServer"), network_error: t("providers.failureNetwork"), authentication: t("providers.failureAuthentication"), model_not_found: t("providers.failureModelMissing"), user_cancelled: t("providers.failureCancelled"), security_block: t("providers.failureSecurity"), unknown: t("providers.failureUnknown") })[value];
   const providerName = (id: string, fallback: string) => (({ ollama: t("providers.ollamaName"), "openai-compatible": t("providers.openaiName"), anthropic: t("providers.anthropicName"), gemini: t("providers.geminiName") } as Record<string, string>)[id] ?? fallback);
   const providerDetail = (id: string, fallback: string) => (({ ollama: t("providers.ollamaDetail"), "openai-compatible": t("providers.openaiDetail"), anthropic: t("providers.anthropicDetail"), gemini: t("providers.geminiDetail") } as Record<string, string>)[id] ?? fallback);
   const [policy, setPolicy] = useState<ProviderPolicy>(DEFAULT_POLICY);
@@ -123,7 +123,7 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
           <small>{t("providers.pathHelp")}</small>
         </label>
         {policy.mode === "exception_based" && <fieldset className="provider-exceptions"><legend>{t("providers.failureTypes")}</legend>
-          {FAILURE_OPTIONS.map(({ value, label }) => <label key={value}><input type="checkbox" checked={policy.exception_allowlist.includes(value)} onChange={(e) => toggleFailure(value, e.target.checked)} />{failureLabel(value)}</label>)}
+          {FAILURE_OPTIONS.map(({ value }) => <label key={value}><input type="checkbox" checked={policy.exception_allowlist.includes(value)} onChange={(e) => toggleFailure(value, e.target.checked)} />{failureLabel(value)}</label>)}
         </fieldset>}
         <label className="provider-toggle"><input type="checkbox" checked={policy.require_confirmation} onChange={(e) => update("require_confirmation", e.target.checked)} /><span><strong>{t("providers.requireConfirmation")}</strong><small>{t("providers.confirmationHelp")}</small></span></label>
         <div className="provider-safety"><ShieldCheck size={16} /><span>{t("providers.safetyNote")}</span></div>
