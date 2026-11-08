@@ -53,9 +53,18 @@ class OllamaAdapter(BaseAdapter):
             if not name:
                 continue
             details = item.get("details") or {}
+            lowered = str(name).lower()
+            tool_calling = any(token in lowered for token in (
+                "llama3.1", "llama3.2", "llama3.3", "qwen2.5", "qwen3",
+                "mistral-nemo", "command-r", "granite3", "firefunction", "hermes3",
+            ))
+            vision = any(token in lowered for token in (
+                "llava", "qwen-vl", "qwen2-vl", "minicpm-v", "moondream",
+                "llama3.2-vision", "gemma3",
+            ))
             result.append(ProviderModel(
                 id=str(name), display_name=str(name),
-                capabilities=ProviderCapabilities(streaming=True, tool_calling=True, vision=True),
+                capabilities=ProviderCapabilities(streaming=True, tool_calling=tool_calling, vision=vision),
                 metadata={key: value for key, value in {
                     "size": item.get("size"), "modified_at": item.get("modified_at"),
                     "digest": item.get("digest"), "family": details.get("family"),
