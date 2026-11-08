@@ -23,6 +23,9 @@ function App() {
   const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
+  const [providerModels, setProviderModels] = useState<OllamaModel[]>([]);
+  const [activeProvider, setActiveProvider] = useState("ollama");
+  const [providerConnected, setProviderConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
@@ -66,11 +69,26 @@ function App() {
       } else {
         setModels([]);
       }
+      const catalog = await api.getProviderCatalog();
+      setActiveProvider(catalog.active_provider);
+      const selected = catalog.providers.find((provider) => provider.id === catalog.active_provider);
+      setProviderConnected(Boolean(selected?.connected));
+      setProviderModels((selected?.models ?? []).map((item) => ({
+        name: item.name,
+        size: typeof item.metadata.size === "number" ? item.metadata.size : null,
+        modified_at: typeof item.metadata.modified_at === "string" ? item.metadata.modified_at : null,
+        digest: typeof item.metadata.digest === "string" ? item.metadata.digest : null,
+        family: typeof item.metadata.family === "string" ? item.metadata.family : null,
+        parameter_size: typeof item.metadata.parameter_size === "string" ? item.metadata.parameter_size : null,
+        quantization_level: typeof item.metadata.quantization_level === "string" ? item.metadata.quantization_level : null,
+      })));
       setUpdatedAt(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Noma’lum xatolik yuz berdi.");
       setStatus({ connected: false, version: null, mode: "local", message: "Backend API bilan aloqa yo‘q." });
       setModels([]);
+      setProviderModels([]);
+      setProviderConnected(false);
     } finally {
       refreshing.current = false;
       if (!silent) setLoading(false);
@@ -117,7 +135,8 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [theme, soundEnabled, preferencesReady]);
 
-  const connected = status?.connected === true;
+  const connected = providerConnected;
+  const ollamaConnected = status?.connected === true;
 
   return (
     <div className="app-shell">
@@ -227,7 +246,7 @@ function App() {
           </div>
 
           <div className="content-grid">
-            <ModelsPanel models={models} connected={connected} onRefresh={() => void refresh(true)} />
+            <ModelsPanel models={models} connected={ollamaConnected} onRefresh={() => void refresh(true)} />
 
             <section className="panel runtime-panel" id="runtime">
               <div className="panel-header"><div><h2>Runtime connection</h2><p>{status?.mode === "kaggle" ? "Kaggle inference service" : "Local inference service"}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
@@ -258,17 +277,21 @@ function App() {
         ) : activeView === "providers" ? (
           <section className="page-content workstation-page">
             <div className="page-heading"><div><p className="eyebrow">INFERENCE BACKENDS</p><h1>Model Providers</h1><p className="page-subtitle">Manage provider adapters and guarded fallback behavior.</p></div></div>
-            <ProviderPanel />
+            <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
+              void api.setActiveProvider(providerId).then(() => refresh(true)).catch((err: unknown) => {
+                setError(err instanceof Error ? err.message : "Provider selection failed.");
+              });
+            }} />
           </section>
         ) : activeView === "agents" ? (
           <section className="page-content workstation-page">
             <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>My Agents</h1><p className="page-subtitle">Run a local agent with tightly scoped workspace access.</p></div></div>
-            <AgentPanel models={models} connected={connected} />
+            <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         ) : (
           <section className="page-content workstation-page">
             <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>Conversations</h1><p className="page-subtitle">Chat with locally installed Ollama models.</p></div></div>
-            <ChatPanel models={models} connected={connected} />
+            <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         )}
       </main>
