@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Cloud, Play, Repeat } from "lucide-react";
 import { api } from "../services/api";
 import type { KaggleStatus } from "../types/kaggle";
@@ -11,26 +11,14 @@ const LABELS: Record<string, string> = {
   starting: "O‘rnatilmoqda", online: "Online", stopped: "To‘xtagan", error: "Xatolik",
 };
 
-export default function KagglePanel({ onModeChange }: { onModeChange: () => void }) {
-  const [status, setStatus] = useState<KaggleStatus | null>(null);
+export default function KagglePanel({ status, onStatusChange, onModeChange }: { status: KaggleStatus | null; onStatusChange: (status: KaggleStatus) => void; onModeChange: () => void }) {
   const [model, setModel] = useState(MODELS[0]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const poll = useCallback(async () => {
-    try { setStatus(await api.getKaggleStatus()); }
-    catch (e) { setError(e instanceof Error ? e.message : "Xatolik"); }
-  }, []);
-
-  useEffect(() => {
-    void poll();
-    const t = window.setInterval(() => void poll(), 5000);
-    return () => window.clearInterval(t);
-  }, [poll]);
-
   const act = async (fn: () => Promise<KaggleStatus>) => {
     setBusy(true); setError(null);
-    try { setStatus(await fn()); onModeChange(); }
+    try { onStatusChange(await fn()); onModeChange(); }
     catch (e) { setError(e instanceof Error ? e.message : "Xatolik"); }
     finally { setBusy(false); }
   };
