@@ -241,5 +241,18 @@ export const uz = {
   "status.backendUnavailable": "Backend API bilan aloqa yo‘q.",
   "settings.preferencesSaveError": "Sozlamalarni saqlab bo‘lmadi",
   "providers.selectionError": "Provayder tanlovi bajarilmadi.",
-  "dashboard.localFirstWorkspace": "Lokal-first intellektual ish maydoni"
+  "dashboard.localFirstWorkspace": "Lokal-first intellektual ish maydoni",
+  "providers.failureTimeout": "Vaqt tugadi",
+  "providers.failureRateLimit": "So‘rovlar limiti (429)",
+  "providers.failureServer": "Server xatoligi (5xx)",
+  "providers.failureNetwork": "Tarmoq xatoligi",
+  "providers.failureUnknown": "Noma’lum istisno",
+  "providers.ollamaName": "Ollama muhiti",
+  "providers.openaiName": "OpenAI-mos",
+  "providers.anthropicName": "Anthropic",
+  "providers.geminiName": "Google Gemini",
+  "providers.ollamaDetail": "Native Ollama API · lokal yoki Kaggle GPU",
+  "providers.openaiDetail": "OpenAI /v1 bilan mos endpointlar",
+  "providers.anthropicDetail": "Native Messages API",
+  "providers.geminiDetail": "Native Gemini API"
 } as const;
