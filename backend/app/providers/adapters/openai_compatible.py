@@ -87,7 +87,7 @@ class OpenAICompatibleAdapter(BaseAdapter):
                 converted.append({"role": "assistant", "content": item.get("content") or None, "tool_calls": calls})
             elif role == "tool":
                 name = str(item.get("tool_name") or "")
-                converted.append({"role": "tool", "tool_call_id": tool_ids.get(name, "nexus_tool_call"), "content": item.get("content", "")})
+                converted.append({"role": "tool", "tool_call_id": item.get("tool_call_id") or tool_ids.get(name, "nexus_tool_call"), "content": item.get("content", "")})
             else:
                 converted.append({key: value for key, value in item.items() if key in ("role", "content")})
         return converted
