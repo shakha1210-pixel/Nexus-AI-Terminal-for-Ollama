@@ -172,3 +172,17 @@ python desktop/launcher.py
 - A Windows named mutex prevents a second NEXUS instance from starting.
 
 PyWebView, tray, and WebView2 behavior still needs validation on a real Windows 10/11 machine; Linux CI cannot fully verify those platform integrations.
+
+
+### Windows preflight and application icon
+
+On a Windows 10/11 machine, run:
+
+```powershell
+python -m pip install -r desktop/requirements.txt
+python scripts/create_icon.py
+powershell -ExecutionPolicy Bypass -File scripts/windows-smoke-test.ps1
+python desktop/launcher.py
+```
+
+`create_icon.py` generates the multi-size `desktop/assets/icon.ico` file. The preflight script checks Python, the frontend build, WebView2 Runtime files, and the icon; it does not install anything or launch the app. Final WebView2, window close/minimize, tray, and reopen behavior still require manual testing on a real Windows machine.
