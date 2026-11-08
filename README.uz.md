@@ -198,3 +198,29 @@ nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
 `approval_required` rejimida agentga `workspace_propose_file_edit` vositasi beriladi. Bu vosita faqat mavjud UTF-8 matnli faylni almashtirish taklifini yaratadi; faylni o‘zi yozmaydi. Taklif Approval Queue’da to‘liq matn va fayl yo‘li bilan ko‘rsatiladi. Foydalanuvchi tasdiqlasa, aynan shu mazmun bir marta yoziladi; rad etsa yoki 10 daqiqada ko‘rib chiqilmasa, bajarilmaydi. Taklif yaratilgandan keyin asl fayl o‘zgargan bo‘lsa, tasdiq bekor qilinadi va yangi taklif talab etiladi. Hozircha yangi fayl yaratish, o‘chirish, papka o‘zgartirish yoki ko‘p faylli amallar tasdiqlash vositasida mavjud emas.
 
 `autopilot` hamon faqat mavjud read-only vositalar bilan cheklangan. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Provider Manager orqali tanlangan modelning tool-calling imkoniyati tekshiriladi; qo‘llab-quvvatlanmasa Agent ishga tushmaydi. Provider Manager orqali tanlangan modelning tool-calling imkoniyati tekshiriladi; qo‘llab-quvvatlanmasa Agent ishga tushmaydi. Tasdiqlash API’si hozirgi local-first backend arxitekturasiga tayanadi; backendni ishonchsiz tarmoqka ochmang, chunki autentifikatsiya qatlami hali mavjud emas. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
+
+
+## Windows desktop launcher (Stage 2)
+
+Desktop rejimi uchun avval backend va desktop bog‘liqliklarini o‘rnating:
+
+```powershell
+python -m pip install -r backend/requirements.txt
+python -m pip install -r desktop/requirements.txt
+```
+
+Frontend build tayyor bo‘lsa, repository root papkasidan ishga tushiring:
+
+```powershell
+python desktop/launcher.py
+```
+
+- `--browser` — PyWebView o‘rniga standart brauzerni ochadi.
+- `--dev` — Vite dev serverini (5173-port) ham ishga tushiradi.
+- `--port 8123` — FastAPI portini o‘zgartiradi (standart: 8000).
+- Windows’da WebView2 Runtime topilmasa, launcher rasmiy runtime’ni o‘rnatish bo‘yicha ko‘rsatma beradi va brauzerga o‘tadi.
+- Ollama alohida o‘rnatiladi; launcher uni paket ichiga qo‘shmaydi va avtomatik ishga tushirmaydi.
+- Tray menyusidan oynani qayta ochish yoki dasturni yopish mumkin. PyWebView/Pillow/pystray bo‘lmasa, brauzer fallback ishlatiladi.
+- Bir vaqtning o‘zida ikkinchi NEXUS nusxasini ochish Windows named mutex orqali bloklanadi.
+
+PyWebView, tray va WebView2 ishlashini haqiqiy Windows 10/11 qurilmasida tekshirish kerak; Linux CI bu platforma integratsiyasini to‘liq tasdiqlamaydi.
