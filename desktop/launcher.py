@@ -50,6 +50,7 @@ class SingleInstance:
         if os.name != "nt":
             return True
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.CreateMutexW.argtypes = [ctypes.c_void_p, ctypes.c_bool, ctypes.c_wchar_p]
         kernel32.CreateMutexW.restype = ctypes.c_void_p
         handle = kernel32.CreateMutexW(None, False, self.name)
         if not handle:
@@ -60,7 +61,9 @@ class SingleInstance:
 
     def release(self) -> None:
         if self.handle and os.name == "nt":
-            ctypes.WinDLL("kernel32", use_last_error=True).CloseHandle(self.handle)
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+            kernel32.CloseHandle(self.handle)
             self.handle = None
 
 
@@ -134,6 +137,7 @@ def start_vite() -> subprocess.Popen:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    os.chdir(PROJECT_ROOT)
     instance = SingleInstance()
     if not instance.acquire():
         print("NEXUS AI is already running.")
