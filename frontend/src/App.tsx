@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity, Bot, Boxes, ChevronDown, CircleHelp, Command, Cpu,
   Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
@@ -31,6 +31,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const refreshing = useRef(false);
 
   const playUiSound = useCallback((frequency = 660) => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -55,8 +56,10 @@ function App() {
     }
   }, [soundEnabled]);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (silent = false) => {
+    if (refreshing.current) return;
+    refreshing.current = true;
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const nextStatus = await api.getOllamaStatus();
@@ -72,14 +75,15 @@ function App() {
       setStatus({ connected: false, version: null, mode: "local", message: "Backend API bilan aloqa yo‘q." });
       setModels([]);
     } finally {
-      setLoading(false);
+      refreshing.current = false;
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
+      if (document.visibilityState === "visible") void refresh(true);
     }, 15000);
     return () => window.clearInterval(timer);
   }, [refresh]);
