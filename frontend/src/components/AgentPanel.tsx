@@ -17,7 +17,6 @@ type ApprovalRequest = {
 
 export default function AgentPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const { t } = useTranslation();
-  const modeLabel = mode === "read_only" ? t("agent.readOnly") : mode === "approval_required" ? t("agent.approvalRequired") : mode === "autopilot" ? t("agent.autopilot") : t("agent.locked");
   const [agentId, setAgentId] = useState("default");
   const [model, setModel] = useState("");
   const [task, setTask] = useState("");
@@ -32,6 +31,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [approvalBusy, setApprovalBusy] = useState<string | null>(null);
   const [approvalMessage, setApprovalMessage] = useState("");
+  const modeLabel = mode === "read_only" ? t("agent.readOnly") : mode === "approval_required" ? t("agent.approvalRequired") : mode === "autopilot" ? t("agent.autopilot") : t("agent.locked");
 
   const loadApprovals = async () => {
     try {
