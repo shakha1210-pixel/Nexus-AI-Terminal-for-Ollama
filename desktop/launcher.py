@@ -144,6 +144,30 @@ def start_vite() -> subprocess.Popen:
     raise RuntimeError("Vite development server did not become ready within 20 seconds.")
 
 
+def run_browser_mode(url: str, server, server_thread: threading.Thread, stop_event: threading.Event) -> None:
+    def request_exit() -> None:
+        stop_event.set()
+        server.should_exit = True
+
+    tray = None
+    try:
+        from desktop.tray import TrayController
+        tray = TrayController(on_show=lambda: webbrowser.open(url), on_exit=request_exit)
+        tray.start()
+    except Exception as exc:
+        print(f"System tray unavailable: {type(exc).__name__}")
+
+    webbrowser.open(url)
+    print(f"NEXUS AI is running at {url}. Use the tray menu to exit or press Ctrl+C.")
+    try:
+        while not stop_event.wait(0.5):
+            if not server_thread.is_alive():
+                break
+    finally:
+        if tray is not None:
+            tray.stop()
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     os.chdir(BACKEND_DIR)
@@ -179,30 +203,19 @@ def main(argv: list[str] | None = None) -> int:
             url = f"http://{DEFAULT_HOST}:{args.port}"
 
         if args.browser:
-            webbrowser.open(url)
-            print(f"NEXUS AI is running at {url}. Press Ctrl+C to stop.")
-            while not stop_event.wait(0.5):
-                if not server_thread.is_alive():
-                    break
+            run_browser_mode(url, server, server_thread, stop_event)
             return 0
 
         if os.name == "nt" and not webview2_is_available():
             print(WEBVIEW2_GUIDANCE)
-            webbrowser.open(url)
-            print(f"Opened browser fallback: {url}. Press Ctrl+C to stop.")
-            while not stop_event.wait(0.5):
-                if not server_thread.is_alive():
-                    break
+            run_browser_mode(url, server, server_thread, stop_event)
             return 0
 
         try:
             import webview
         except ImportError:
             print("PyWebView is not installed. Install desktop/requirements.txt or use --browser.")
-            webbrowser.open(url)
-            while not stop_event.wait(0.5):
-                if not server_thread.is_alive():
-                    break
+            run_browser_mode(url, server, server_thread, stop_event)
             return 0
 
         window = webview.create_window("NEXUS AI", url, width=1440, height=900, min_size=(960, 640))
