@@ -30,16 +30,18 @@ class OllamaService:
     async def get_status(self) -> dict:
         try:
             payload = await self._get("/api/version")
+            if not isinstance(payload, dict):
+                return {"connected": False, "version": None, "mode": self.mode, "message": "Ollama returned an invalid response format."}
             version = payload.get("version")
             if not isinstance(version, str) or not version:
-                return {"connected": False, "version": None, "mode": self.mode, "message": "Ollama javobi kutilgan formatda emas."}
-            return {"connected": True, "version": version, "mode": self.mode, "message": "Ollama bilan aloqa o‘rnatildi."}
+                return {"connected": False, "version": None, "mode": self.mode, "message": "Ollama returned an invalid response format."}
+            return {"connected": True, "version": version, "mode": self.mode, "message": "Connected to Ollama."}
         except (httpx.HTTPError, ValueError) as exc:
             return {
                 "connected": False,
                 "version": None,
                 "mode": self.mode,
-                "message": f"Ollama bilan bog‘lanib bo‘lmadi: {type(exc).__name__}",
+                "message": f"Could not connect to Ollama: {type(exc).__name__}",
             }
 
     async def get_models(self) -> list[dict]:
