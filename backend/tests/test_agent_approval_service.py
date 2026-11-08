@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -69,6 +70,24 @@ class AgentApprovalServiceTests(unittest.TestCase):
         request = self.service.create_request("agent-a", "notes.md", "proposed")
         with self.assertRaises(AgentApprovalError):
             self.service.decide("agent-b", request["request_id"], True)
+
+    def test_expired_request_cannot_be_approved(self) -> None:
+        request = self.service.create_request("agent-a", "notes.md", "proposed")
+        stored = json.loads(self.service.store_path.read_text(encoding="utf-8"))
+        stored[request["request_id"]]["expires_at"] = "2000-01-01T00:00:00+00:00"
+        self.service.store_path.write_text(json.dumps(stored), encoding="utf-8")
+        with self.assertRaises(AgentApprovalError):
+            self.service.decide("agent-a", request["request_id"], True)
+        self.assertEqual(self.workspace.read_file("notes.md")["content"], "original")
+
+    def test_symlink_target_is_rejected(self) -> None:
+        outside = Path(self.temp_dir.name) / "outside.md"
+        outside.write_text("outside", encoding="utf-8")
+        link = self.root / "linked.md"
+        link.symlink_to(outside)
+        with self.assertRaises(AgentApprovalError):
+            self.service.create_request("agent-a", "linked.md", "replacement")
+        self.assertEqual(outside.read_text(encoding="utf-8"), "outside")
 
 
 if __name__ == "__main__":
