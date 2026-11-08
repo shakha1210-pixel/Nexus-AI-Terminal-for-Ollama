@@ -60,5 +60,7 @@ export const uz = {
   "pages.localInference": "LOKAL INFERENSIYA",
   "pages.chatSubtitle": "Model provayderlarida tanlangan model bilan suhbatlashing.",
   "status.connected": "Ulangan",
-  "status.offline": "O‘chiq"
+  "status.offline": "O‘chiq",
+  "nav.workspaceTitle": "Ish maydoni",
+  "dashboard.updated": "Yangilandi"
 } as const;
