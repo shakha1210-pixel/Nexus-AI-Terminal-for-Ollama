@@ -222,7 +222,7 @@ function App() {
           </div>
 
           <div className="content-grid">
-            <ModelsPanel models={models} connected={connected} onRefresh={() => void refresh(true)} />  </section>
+            <ModelsPanel models={models} connected={connected} onRefresh={() => void refresh(true)} />
 
             <section className="panel runtime-panel" id="runtime">
               <div className="panel-header"><div><h2>Runtime connection</h2><p>{status?.mode === "kaggle" ? "Kaggle inference service" : "Local inference service"}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
