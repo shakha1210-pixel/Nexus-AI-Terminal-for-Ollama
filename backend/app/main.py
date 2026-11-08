@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers.agents import router as agents_router
+from app.routers.chat import router as chat_router
 from app.routers.kaggle import router as kaggle_router
 from app.routers.ollama import router as ollama_router
 from app.routers.preferences import router as preferences_router
@@ -23,6 +24,7 @@ app.include_router(kaggle_router)
 app.include_router(preferences_router)
 app.include_router(workspace_router)
 app.include_router(agents_router)
+app.include_router(chat_router)
 
 
 @app.get("/api/health")
