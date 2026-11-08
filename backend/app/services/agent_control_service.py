@@ -66,17 +66,13 @@ class AgentControlService:
         agent = self._agent_id(agent_id)
         if mode not in self.MODES:
             raise AgentControlError("Access mode noto‘g‘ri.")
+        if mode == "locked":
+            return self.isolate(agent, "Locked by access policy")
         with self._lock:
             all_data = self._read()
             current = all_data.get(agent, {})
             current = current if isinstance(current, dict) else {}
             current["mode"] = mode
-            if mode == "locked":
-                current["isolated"] = True
-                current["reason"] = "Locked by access policy"
-                for active in self._active_requests.get(agent, set()):
-                    if not active.done():
-                        active.cancel()
             current["updated_at"] = datetime.now(timezone.utc).isoformat()
             all_data[agent] = current
             self._write(all_data)
@@ -100,7 +96,13 @@ class AgentControlService:
             for active in self._active_requests.get(agent, set()):
                 if not active.done():
                     active.cancel()
-        return self.get(agent)
+        result = self.get(agent)
+        try:
+            from app.services.agent_sandbox_service import agent_sandbox_service
+            result["sandbox_stop"] = agent_sandbox_service.stop(agent)
+        except Exception as exc:
+            result["sandbox_stop"] = {"status": "error", "reason": str(exc)[:300]}
+        return result
 
     def release(self, agent_id: str) -> dict[str, Any]:
         agent = self._agent_id(agent_id)
