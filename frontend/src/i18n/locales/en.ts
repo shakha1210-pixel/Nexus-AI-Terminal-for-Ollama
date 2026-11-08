@@ -236,5 +236,10 @@ export const en = {
   "workspace.folder": "Folder",
   "actions.saved": "Saved",
   "actions.saving": "Saving…",
-  "actions.save": "Save"
+  "actions.save": "Save",
+  "status.unknownError": "An unknown error occurred.",
+  "status.backendUnavailable": "Backend API is unavailable.",
+  "settings.preferencesSaveError": "Could not save preferences",
+  "providers.selectionError": "Provider selection failed.",
+  "dashboard.localFirstWorkspace": "Local-first intelligence workspace"
 } as const;
