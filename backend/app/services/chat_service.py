@@ -11,7 +11,8 @@ from typing import AsyncIterator
 import httpx
 
 from app.services.agent_access_service import AgentAccessError, agent_access_service
-from app.services.ollama_service import ollama_service
+from app.providers.base import ProviderCapabilities
+from app.providers.manager import ProviderCapabilityError, provider_manager
 
 
 class ChatError(ValueError):
@@ -78,18 +79,20 @@ class ChatService:
 
     async def stream_chat(
         self, *, model: str, message: str, conversation_id: str | None,
-        agent_id: str, paths: list[str],
+        agent_id: str, paths: list[str], provider_id: str | None = None,
     ) -> AsyncIterator[str]:
         model = model.strip()
         message = message.strip()
         if not model or len(model) > 160 or not message or len(message) > 20000:
             raise ChatError("Model yoki xabar bo‘sh, yoxud ruxsat etilgan hajmdan katta.")
+        selected_provider = provider_id or provider_manager.active_provider_id or "ollama"
         try:
-            installed = {item["name"] for item in await ollama_service.get_models()}
+            provider_models = await provider_manager.list_models(selected_provider)
         except (httpx.HTTPError, ValueError, KeyError) as exc:
-            raise ChatError("Ollama modellari bilan bog‘lanib bo‘lmadi.") from exc
-        if model not in installed:
-            raise ChatError("Tanlangan model lokal Ollama’da o‘rnatilmagan.")
+            raise ChatError(f"'{selected_provider}' provider bilan bog‘lanib bo‘lmadi.") from exc
+        model_info = next((item for item in provider_models if item.id == model), None)
+        if model_info is None:
+            raise ChatError("Tanlangan model joriy provider’da mavjud emas.")
 
         if conversation_id:
             data = self._read(conversation_id)
@@ -114,6 +117,13 @@ class ChatService:
             elif item["kind"] == "image":
                 image_data.append(item["content_base64"])
                 user_content += f"\n\n[Image attachment: {item['path']}]"
+        if image_data:
+            try:
+                provider_manager.require_capabilities(
+                    selected_provider, model_info, ProviderCapabilities(vision=True)
+                )
+            except ProviderCapabilityError as exc:
+                raise ChatError(str(exc)) from exc
         user_message = {"role": "user", "content": user_content}
         request_message = dict(user_message)
         if image_data:
