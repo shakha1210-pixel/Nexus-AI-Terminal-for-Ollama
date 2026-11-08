@@ -5,6 +5,7 @@ from app.config import settings
 from app.routers.kaggle import router as kaggle_router
 from app.routers.ollama import router as ollama_router
 from app.routers.preferences import router as preferences_router
+from app.routers.workspace import router as workspace_router
 
 app = FastAPI(title=settings.app_name, version="0.2.0")
 
@@ -19,6 +20,7 @@ app.add_middleware(
 app.include_router(ollama_router)
 app.include_router(kaggle_router)
 app.include_router(preferences_router)
+app.include_router(workspace_router)
 
 
 @app.get("/api/health")
