@@ -278,7 +278,10 @@ function App() {
           <section className="page-content workstation-page">
             <div className="page-heading"><div><p className="eyebrow">INFERENCE BACKENDS</p><h1>Model Providers</h1><p className="page-subtitle">Manage provider adapters and guarded fallback behavior.</p></div></div>
             <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
-              void api.setActiveProvider(providerId).then(() => refresh(true)).catch((err: unknown) => {
+              void api.setActiveProvider(providerId).then((result) => {
+                setActiveProvider(result.provider_id);
+                void refresh(true);
+              }).catch((err: unknown) => {
                 setError(err instanceof Error ? err.message : "Provider selection failed.");
               });
             }} />
