@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity, Bot, Boxes, ChevronDown, CircleHelp, Command, Cpu,
   Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
-  Plus, RefreshCw, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
+  Plus, RefreshCw, HardDrive, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
 } from "lucide-react";
 import KagglePanel from "./components/KagglePanel";
 import WorkspacePanel from "./components/WorkspacePanel";
@@ -279,6 +279,8 @@ function App() {
           <div className="kaggle-section">
             <KagglePanel onModeChange={() => void refresh()} />
           </div>
+
+          <div className="workstation-section"><WorkspacePanel /></div>
 
           <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>Local-first intelligence workspace</span></div>
         </section>
