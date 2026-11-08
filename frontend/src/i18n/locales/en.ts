@@ -284,5 +284,17 @@ export const en = {
   "settings.credentialSaved": "Credential securely stored.",
   "settings.credentialSaveError": "Could not save credential.",
   "settings.credentialDeleted": "Credential deleted.",
-  "settings.credentialDeleteError": "Could not delete credential."
+  "settings.credentialDeleteError": "Could not delete credential.",
+  "diagnostics.title": "Status & recommendations",
+  "diagnostics.subtitle": "Provider failures, cooldown state, and practical next steps",
+  "diagnostics.cooldown": "Cooling down",
+  "diagnostics.available": "Available",
+  "diagnostics.failures": "Consecutive failures",
+  "diagnostics.remaining": "{seconds}s remaining",
+  "diagnostics.lastError": "Last error",
+  "diagnostics.loadError": "Could not load diagnostic data.",
+  "diagnostics.empty": "No diagnostic data yet.",
+  "diagnostics.noBlockingWait": "Cooldown does not block the server; the remaining time updates automatically.",
+  "settings.restartNote": "Saving an OpenAI-compatible key reloads the provider. The endpoint URL is configured through .env."
+
 } as const;
