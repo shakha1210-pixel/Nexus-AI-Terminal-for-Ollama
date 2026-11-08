@@ -9,16 +9,18 @@ import WorkspacePanel from "./components/WorkspacePanel";
 import ChatPanel from "./components/ChatPanel";
 import AgentPanel from "./components/AgentPanel";
 import ModelsPanel from "./components/ModelsPanel";
+import ProviderPanel from "./components/ProviderPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
 import "./kaggle-styles.css";
+import "./providers-styles.css";
 
 type Theme = "dark" | "light";
 
 
 function App() {
   const [theme, setTheme] = useState<Theme>("dark");
-  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents">("dashboard");
+  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,7 +146,8 @@ function App() {
           <p className="nav-label">RESOURCES</p>
           <a className="nav-item" href="#models"><Boxes size={17} />Models<span className="nav-count">{models.length}</span></a>
           <a className="nav-item" href="#knowledge"><Database size={17} />Knowledge Base</a>
-          <a className="nav-item" href="#integrations"><Network size={17} />Integrations</a>
+          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" onClick={() => setActiveView("providers")}><Network size={17} />Model Providers</a>
+          <a className="nav-item" href="#integrations"><Workflow size={17} />Integrations</a>
         </div>
 
         <div className="nav-group">
@@ -168,7 +171,7 @@ function App() {
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? "Agent Runtime" : "AI Chat"}</strong></div>
+          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? "Agent Runtime" : activeView === "providers" ? "Model Providers" : "AI Chat"}</strong></div>
           <div className="topbar-actions">
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
             <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label="Change theme" title="Change theme">
@@ -251,6 +254,11 @@ function App() {
               <div><p className="eyebrow">LOCAL DEVELOPMENT</p><h1>Explorer</h1><p className="page-subtitle">Manage project files and prepare context for your AI agents.</p></div>
             </div>
             <WorkspacePanel />
+          </section>
+        ) : activeView === "providers" ? (
+          <section className="page-content workstation-page">
+            <div className="page-heading"><div><p className="eyebrow">INFERENCE BACKENDS</p><h1>Model Providers</h1><p className="page-subtitle">Manage provider adapters and guarded fallback behavior.</p></div></div>
+            <ProviderPanel />
           </section>
         ) : activeView === "agents" ? (
           <section className="page-content workstation-page">
