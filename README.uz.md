@@ -5,7 +5,7 @@ ko‘rsatadigan, avvalo lokal ishlashga mo‘ljallangan dashboard. FastAPI backe
 brauzerdagi interfeys bilan Ollama o‘rtasida API gateway vazifasini bajaradi.
 
 > **Loyiha holati:** Lokal dashboard, backend health/status endpointlari,
-> Ollama modellarini ko‘rish va ixtiyoriy Kaggle GPU boshqaruvi ishlaydi.
+> Ollama modellarini ko‘rish, ixtiyoriy Kaggle GPU boshqaruvi va lokal workspace Explorer ishlaydi.
 > Kaggle uchun operator o‘z hisob ma’lumotlari va notebook secret’larini
 > sozlashi kerak. Chat, agentni ishga tushirish, UI orqali model yuklash va
 > workflow funksiyalari hali mavjud emas.
@@ -105,6 +105,10 @@ Kaggle notebook uchun Kaggle Notebook Secrets’da `NGROK_TOKEN` va
 Secret’dagi qiymat bilan bir xil bo‘lsin. `.env`, API token, ngrok token va
 parollarni Git’ga qo‘shmang.
 
+## Lokal Workspace
+
+Explorer standart holatda foydalanuvchining `~/NexusWorkspace` papkasidan foydalanadi. Boshqa papkani tanlash uchun backend muhitida `NEXUS_WORKSPACE_ROOT` o‘zgaruvchisini belgilang. API yo‘llari workspace ildizidan tashqariga chiqishni rad etadi; ramziy havolalar ro‘yxatda ko‘rsatilmaydi. Matnli fayllarni ochish/tahrirlash limiti 2 MB, yuklash limiti 10 MB. Hozircha fayl o‘chirish va agentning avtomatik fayl ruxsatlari yoqilmagan.
+
 ## API endpointlari
 
 Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida lokal saqlanadi. Bu fayl `.gitignore` orqali repozitoriyga kiritilmaydi.
@@ -116,6 +120,13 @@ Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida l
 | `GET` | `/api/ollama/status` | Tanlangan Ollama runtime holatini tekshirish |
 | `GET` | `/api/ollama/models` | Tanlangan Ollama runtime’dagi modellarni olish |
 | `GET` | `/api/kaggle/status` | Kaggle ishga tushishi va ulanish holatini olish |
+| `GET` | `/api/workspace/tree` | Workspace papkasidagi fayl va papkalar ro‘yxati |
+| `GET` | `/api/workspace/file` | Matnli faylni o‘qish |
+| `GET` | `/api/workspace/asset` | Rasm faylini xavfsiz preview qilish |
+| `POST` | `/api/workspace/file` | Yangi matnli fayl yaratish |
+| `PUT` | `/api/workspace/file` | Matnli faylni saqlash |
+| `POST` | `/api/workspace/directory` | Papka yaratish |
+| `POST` | `/api/workspace/upload` | Faylni base64 orqali yuklash |
 | `GET` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini olish |
 | `PUT` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini saqlash; body: `{"theme":"dark","sound_enabled":false}` |
 | `POST` | `/api/kaggle/start` | Kaggle runtime’ni boshlash; body: `{"model":"llama3.2"}` |
