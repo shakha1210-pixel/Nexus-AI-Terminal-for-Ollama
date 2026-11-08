@@ -23,8 +23,8 @@ const PROVIDERS = [
 export default function ProviderPanel({ activeProvider, onProviderChange }: { activeProvider: string; onProviderChange: (providerId: string) => void }) {
   const { t } = useTranslation();
   const failureLabel = (value: FailureKind) => ({ timeout: t("providers.failureTimeout"), rate_limit: t("providers.failureRateLimit"), server_error: t("providers.failureServer"), network_error: t("providers.failureNetwork"), unknown: t("providers.failureUnknown") })[value];
-  const providerName = (id: string, fallback: string) => ({ ollama: t("providers.ollamaName"), "openai-compatible": t("providers.openaiName"), anthropic: t("providers.anthropicName"), gemini: t("providers.geminiName") }[id] ?? fallback);
-  const providerDetail = (id: string, fallback: string) => ({ ollama: t("providers.ollamaDetail"), "openai-compatible": t("providers.openaiDetail"), anthropic: t("providers.anthropicDetail"), gemini: t("providers.geminiDetail") }[id] ?? fallback);
+  const providerName = (id: string, fallback: string) => ({ ollama: t("providers.ollamaName"), "openai-compatible": t("providers.openaiName"), anthropic: t("providers.anthropicName"), gemini: t("providers.geminiName") } as Record<string, string>)[id] ?? fallback);
+  const providerDetail = (id: string, fallback: string) => ({ ollama: t("providers.ollamaDetail"), "openai-compatible": t("providers.openaiDetail"), anthropic: t("providers.anthropicDetail"), gemini: t("providers.geminiDetail") } as Record<string, string>)[id] ?? fallback);
   const [policy, setPolicy] = useState<ProviderPolicy>(DEFAULT_POLICY);
   const [catalog, setCatalog] = useState<ProviderCatalog | null>(null);
   const [pathText, setPathText] = useState("");
