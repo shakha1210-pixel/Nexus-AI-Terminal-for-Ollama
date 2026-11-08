@@ -4,8 +4,6 @@ import base64
 import os
 from pathlib import Path
 
-from app.config import settings
-
 
 class WorkspaceError(ValueError):
     pass
@@ -66,6 +64,14 @@ class WorkspaceService:
         except UnicodeDecodeError as exc:
             raise WorkspaceError("Bu fayl matn formatida emas.") from exc
         return {"path": relative_path, "content": content, "size": size}
+
+    def create_file(self, relative_path: str, content: str = "") -> dict:
+        if not relative_path:
+            raise WorkspaceError("Fayl yo‘li bo‘sh.")
+        path = self.resolve(relative_path)
+        if path.exists():
+            raise WorkspaceError("Bu nomdagi fayl allaqachon mavjud.")
+        return self.write_file(relative_path, content)
 
     def write_file(self, relative_path: str, content: str) -> dict:
         if not relative_path or len(content.encode("utf-8")) > self.MAX_READ_BYTES:
