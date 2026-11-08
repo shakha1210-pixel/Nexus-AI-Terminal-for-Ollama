@@ -35,6 +35,7 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [preferencesReady, setPreferencesReady] = useState(false);
   const refreshing = useRef(false);
+  const kaggleRefreshing = useRef(false);
 
   const playUiSound = useCallback((frequency = 660) => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -107,8 +108,11 @@ function App() {
   }, [refresh]);
 
   const refreshKaggle = useCallback(async () => {
+    if (kaggleRefreshing.current) return;
+    kaggleRefreshing.current = true;
     try { setKaggleStatus(await api.getKaggleStatus()); }
     catch { /* Kaggle is optional; keep the last known state when unavailable. */ }
+    finally { kaggleRefreshing.current = false; }
   }, []);
 
   useEffect(() => {
