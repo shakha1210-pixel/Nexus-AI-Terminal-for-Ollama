@@ -7,7 +7,7 @@ brauzerdagi interfeys bilan Ollama o‘rtasida API gateway vazifasini bajaradi.
 > **Loyiha holati:** Lokal dashboard, backend health/status endpointlari,
 > Ollama modellarini ko‘rish, ixtiyoriy Kaggle GPU boshqaruvi va lokal workspace Explorer ishlaydi.
 > Kaggle uchun operator o‘z hisob ma’lumotlari va notebook secret’larini
-> sozlashi kerak. Ollama bilan streaming chat va suhbat tarixini saqlash mavjud. Agent Runtime dastlabki versiyasi mavjud: agent faqat ruxsat berilgan workspace matnli fayllarini o‘qiy oladi. Workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va chatga tanlangan fayllarni kontekst sifatida biriktirish mavjud.
+> sozlashi kerak. Ollama bilan streaming chat va suhbat tarixini saqlash mavjud. Agent Runtime dastlabki versiyasi mavjud: agent faqat ruxsat berilgan workspace matnli fayllarini Docker sandbox orqali o‘qiy oladi. Sandbox uchun Docker Engine va nexus-agent-sandbox:py311 image talab qilinadi. Workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va chatga tanlangan fayllarni kontekst sifatida biriktirish mavjud.
 > Ollama modellarini UI orqali yuklash va o‘chirish mavjud.
 
 Loyiha [MIT litsenziyasi](LICENSE) ostida tarqatiladi.
@@ -185,3 +185,20 @@ nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
 - `POST /api/agents/{agent_id}/release` — izolyatsiyadan chiqarish; xavfsiz `read_only` rejimiga qaytaradi.
 
 Hozirgi runtime faqat ruxsatli matnli faylni o‘qiydi. Shu sabab `autopilot` ham hozircha shu tor vakolat doirasida ishlaydi; `approval_required` yozish amallari qo‘shilganda tasdiqlash darvozasi sifatida ishga tushadi. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
+
+
+## Agent Sandbox (tajriba bosqichi)
+
+Agentning workspace_read_file vositasi faqat aniq read ruxsati tekshirilgandan keyin alohida, bir martalik Docker konteynerida bajariladi. Konteynerga butun workspace emas, faqat ruxsat berilgan bitta faylning vaqtinchalik nusxasi read-only mount qilinadi.
+
+Sandbox image’ini repository root papkasidan yarating:
+
+```powershell
+docker build --pull -t nexus-agent-sandbox:py311 -f backend/sandbox/Dockerfile backend/sandbox
+```
+
+Konteyner tarmoqsiz ishlaydi (--network=none), root filesystem read-only, Linux capabilities olib tashlangan, no-new-privileges yoqilgan; PID, RAM, CPU va vaqt limitlari qo‘llanadi. Har bir fayl o‘qish uchun yangi konteyner ishga tushadi va yakunda o‘chiriladi. Agent konteyneriga Docker socket, shell yoki host workspace papkasi berilmaydi.
+
+Docker CLI yoki daemon mavjud bo‘lmasa, image topilmasa yoki konteyner xato bersa, agent sandboxsiz ishlashga o‘tmaydi — fayl o‘qish rad etiladi. Bu sandbox faqat agentning fayl o‘qish vositasini izolyatsiya qiladi; FastAPI backend va Ollama host jarayonlari konteyner ichida emas. Backend API’ni internetga yoki ishonchsiz LAN’ga ochmang.
+
+Tekshiruv: python -m unittest discover -s tests -v.
