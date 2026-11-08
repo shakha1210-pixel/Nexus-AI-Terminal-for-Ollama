@@ -172,7 +172,7 @@ class AgentApprovalService:
                 self._save(data)
                 return self._public(item)
 
-            target, current_bytes, current_hash = self._file_state(item["path"])
+            target, _, current_hash = self._file_state(item["path"])
             if current_hash != item["original_sha256"]:
                 item["status"] = "stale"
                 item["decided_at"] = now.isoformat()
@@ -196,6 +196,13 @@ class AgentApprovalService:
                     stream.write(content)
                     stream.flush()
                     os.fsync(stream.fileno())
+                latest_hash = hashlib.sha256(target.read_bytes()).hexdigest()
+                if latest_hash != item["original_sha256"]:
+                    os.unlink(temp_name)
+                    item["status"] = "stale"
+                    item["result"] = "File changed immediately before replacement."
+                    self._save(data)
+                    raise AgentApprovalError("Fayl tasdiqlash vaqtida o‘zgardi. Yangi taklif talab etiladi.")
                 os.replace(temp_name, target)
                 item["status"] = "approved"
                 item["result"] = "File replacement applied."
