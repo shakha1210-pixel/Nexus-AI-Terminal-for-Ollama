@@ -34,6 +34,8 @@ class AgentSandboxService:
         self.storage_root = (storage_root or (Path(__file__).resolve().parents[2] / ".nexus" / "sandboxes")).resolve()
         self.docker_binary = docker_binary or os.getenv("NEXUS_DOCKER_BINARY", "docker")
         self.image = image or os.getenv("NEXUS_SANDBOX_IMAGE", "python:3.12-slim")
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/:@-]{0,255}", self.image):
+            raise AgentSandboxError("Sandbox Docker image nomi yaroqsiz.")
 
     @staticmethod
     def _agent_id(agent_id: str) -> str:
@@ -103,7 +105,7 @@ class AgentSandboxService:
         if stage.is_symlink():
             raise AgentSandboxError("Sandbox staging papkasi symlink bo‘lishi mumkin emas.")
         if stage.exists():
-            shutil.rmtree(stage)
+            self._remove_stage(stage)
         stage.mkdir(mode=0o700)
 
         total = 0
@@ -138,6 +140,10 @@ class AgentSandboxService:
 
     def start(self, agent_id: str, paths: list[str]) -> dict[str, Any]:
         agent = self._agent_id(agent_id)
+        from app.services.agent_control_service import agent_control_service
+        control = agent_control_service.get(agent)
+        if control["isolated"] or control["mode"] == "locked":
+            raise AgentSandboxError("Izolyatsiyadagi yoki Locked agent uchun sandbox ochilmaydi.")
         if not paths or len(paths) > self.MAX_FILES or len(set(paths)) != len(paths):
             raise AgentSandboxError("Sandbox uchun 1–10 ta takrorlanmaydigan ruxsatli fayl tanlang.")
         name = self._name(agent)
@@ -179,6 +185,13 @@ class AgentSandboxService:
             except OSError:
                 pass
             raise
+        control = agent_control_service.get(agent)
+        if control["isolated"] or control["mode"] == "locked":
+            try:
+                self._docker(["rm", "--force", name])
+            finally:
+                self._remove_stage(stage)
+            raise AgentSandboxError("Agent sandbox ishga tushish vaqtida izolyatsiya qilindi.")
         return {
             "agent_id": agent,
             "container": name,
