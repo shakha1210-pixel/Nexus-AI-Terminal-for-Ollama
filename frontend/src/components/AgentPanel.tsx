@@ -141,7 +141,7 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
           if (eventName === "tool") setStatus(`Tool: ${payload.name} — ${payload.result}`);
           if (eventName === "token") setOutput((current) => current + payload.content);
           if (eventName === "approval") {
-            setStatus(payload.message ?? "Edit proposal submitted for approval.");
+            setStatus(payload.error ?? payload.message ?? "Edit proposal submitted for approval.");
             void loadApprovals();
           }
           if (eventName === "error") setError(payload.message ?? "Agent xatoligi.");
