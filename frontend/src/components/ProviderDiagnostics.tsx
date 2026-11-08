@@ -5,6 +5,7 @@ import { useTranslation } from "../i18n";
 
 type Diagnostic = {
   provider_id: string;
+  connected: boolean | null;
   state: "available" | "cooldown";
   cooldown_remaining_seconds: number;
   consecutive_failures: number;
@@ -55,6 +56,7 @@ export default function ProviderDiagnostics() {
           </span>
         </div>
         <div className="diagnostic-meta">
+          <span>{t("diagnostics.connection")}: {item.connected === null ? "—" : item.connected ? t("status.connected") : t("status.offline")}</span>
           <span>{t("diagnostics.failures")}: {item.consecutive_failures}</span>
           {item.state === "cooldown" && <strong>{t("diagnostics.remaining").replace("{seconds}", item.cooldown_remaining_seconds.toFixed(0))}</strong>}
           {item.last_error_kind && <span>{t("diagnostics.lastError")}: {item.last_error_kind}</span>}
