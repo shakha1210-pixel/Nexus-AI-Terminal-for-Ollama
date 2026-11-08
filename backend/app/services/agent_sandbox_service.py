@@ -79,9 +79,12 @@ class AgentSandboxService:
         try:
             # Stage only the explicitly granted file. The container never receives
             # a mount of the workspace directory or any other host path.
+            file_bytes = source.read_bytes()
+            if len(file_bytes) > 2 * 1024 * 1024:
+                raise AgentSandboxError("Fayl 2 MB limitdan katta.")
             fd, staged_path = tempfile.mkstemp(prefix="nexus-agent-input-")
             with os.fdopen(fd, "wb") as staged:
-                staged.write(source.read_bytes())
+                staged.write(file_bytes)
             os.chmod(staged_path, 0o444)
             process = await asyncio.create_subprocess_exec(
                 *self._command(Path(staged_path)),
