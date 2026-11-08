@@ -187,7 +187,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
     <div className="agent-runtime-actions"><span className="agent-runtime-status">{running ? <><span className="agent-pulse" />{status}</> : status || "Ready"}</span><button className="primary-button" onClick={() => void runAgent()} disabled={!connected || running || isolated || mode === "locked" || !model || !task.trim()}><Play size={15} />{running ? "Running…" : "Run agent"}</button></div>
     <div className="agent-capabilities">
       <div><ShieldCheck size={17} /><span><strong>Access mode enforced</strong><small>Autopilot is still limited to explicitly granted read access in this build.</small></span></div>
-      <div><Wrench size={17} /><span><strong>Isolation control</strong><small>Locks the agent and cancels its active Ollama request. No agent shell or external network tool exists.</small></span></div>
+      <div><Wrench size={17} /><span><strong>Isolation control</strong><small>Locks the agent and cancels its active provider request. No agent shell or external network tool exists.</small></span></div>
     </div>
     {output && <div className="agent-output"><div className="agent-output-title">AGENT RESPONSE</div><pre>{output}</pre></div>}
     {error && <div className="chat-error" role="alert">{error}</div>}
