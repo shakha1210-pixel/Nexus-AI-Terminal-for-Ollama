@@ -257,5 +257,9 @@ export const en = {
   "providers.geminiDetail": "Native Gemini API",
   "chat.sharedProvider": "SHARED PROVIDER",
   "agent.tool": "Tool",
-  "agent.completed": "Completed · {count} tool calls"
+  "agent.completed": "Completed · {count} tool calls",
+  "providers.failureAuthentication": "Authentication failure",
+  "providers.failureModelMissing": "Model not found",
+  "providers.failureCancelled": "User cancelled",
+  "providers.failureSecurity": "Security block"
 } as const;
