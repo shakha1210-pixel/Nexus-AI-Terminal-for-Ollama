@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import re
+import tempfile
 from pathlib import Path
 
 from app.services.agent_access_service import AgentAccessError, agent_access_service
@@ -73,9 +74,17 @@ class AgentSandboxService:
             raise AgentSandboxError("Faqat mavjud oddiy faylni sandbox orqali o‘qish mumkin.")
         if source.stat().st_size > 2 * 1024 * 1024:
             raise AgentSandboxError("Fayl 2 MB limitdan katta.")
+        staged_path: str | None = None
+        process: asyncio.subprocess.Process | None = None
         try:
+            # Stage only the explicitly granted file. The container never receives
+            # a mount of the workspace directory or any other host path.
+            fd, staged_path = tempfile.mkstemp(prefix="nexus-agent-input-")
+            with os.fdopen(fd, "wb") as staged:
+                staged.write(source.read_bytes())
+            os.chmod(staged_path, 0o444)
             process = await asyncio.create_subprocess_exec(
-                *self._command(source),
+                *self._command(Path(staged_path)),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -109,11 +118,17 @@ class AgentSandboxService:
                 "Docker CLI topilmadi. Agent xavfsizlik sababli sandboxsiz ishlamaydi."
             ) from exc
         except asyncio.CancelledError:
-            # The docker CLI process is terminated if the request is isolated/cancelled.
-            if "process" in locals() and process.returncode is None:
+            if process is not None and process.returncode is None:
                 process.kill()
                 await process.communicate()
             raise
+        finally:
+            if staged_path is not None:
+                try:
+                    os.chmod(staged_path, 0o600)
+                    os.unlink(staged_path)
+                except OSError:
+                    pass
 
 
 agent_sandbox_service = AgentSandboxService()
