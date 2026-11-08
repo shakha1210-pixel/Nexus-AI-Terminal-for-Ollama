@@ -74,7 +74,8 @@ class OllamaAdapter(BaseAdapter):
             ))
         return result
 
-    async def chat(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
+    @staticmethod
+    def _normalize_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         ollama_messages = []
         for message in messages:
             item = {key: value for key, value in message.items() if key in ("role", "content", "images", "tool_name", "tool_calls")}
@@ -86,7 +87,10 @@ class OllamaAdapter(BaseAdapter):
                     }
                 } for call in item["tool_calls"]]
             ollama_messages.append(item)
-        payload = {**kwargs, "model": model, "messages": ollama_messages, "stream": False}
+        return ollama_messages
+
+    async def chat(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
+        payload = {**kwargs, "model": model, "messages": self._normalize_messages(messages), "stream": False}
         async with httpx.AsyncClient(timeout=self.timeout, auth=self.auth) as client:
             response = await client.post(f"{self.base_url}/api/chat", json=payload)
             response.raise_for_status()
