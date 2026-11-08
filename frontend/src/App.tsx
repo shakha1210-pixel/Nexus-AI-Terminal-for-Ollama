@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  Activity, Bot, Boxes, ChevronDown, CircleHelp, Command, Cpu,
-  Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
-  Plus, RefreshCw, Settings, ShieldCheck, Sun, Workflow,
+  Activity, Bot, Boxes, BookOpen, ChevronDown, CircleHelp, Command, Cpu,
+  Database, ExternalLink, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
+  Plus, RefreshCw, Search, Settings, ShieldCheck, Sun, Workflow,
 } from "lucide-react";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
+import { BrowserRouter, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import type { KaggleNotebook } from "./types/kaggle";
 
 type Theme = "dark" | "light";
 
@@ -21,7 +23,7 @@ function formatBytes(bytes: number | null): string {
   return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
 }
 
-function App() {
+function DashboardPage() {
   const [theme, setTheme] = useState<Theme>("dark");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
@@ -78,7 +80,7 @@ function App() {
 
         <div className="nav-group">
           <p className="nav-label">WORKSPACE</p>
-          <a className="nav-item active" href="#dashboard"><LayoutDashboard size={17} />Dashboard</a>
+          <a className="nav-item active" href="/"><LayoutDashboard size={17} />Dashboard</a>
           <a className="nav-item" href="#conversations"><MessageSquare size={17} />Conversations</a>
           <a className="nav-item" href="#agents"><Bot size={17} />My Agents</a>
           <a className="nav-item" href="#workflows"><Workflow size={17} />Workflows</a>
@@ -87,6 +89,7 @@ function App() {
         <div className="nav-group">
           <p className="nav-label">RESOURCES</p>
           <a className="nav-item" href="#models"><Boxes size={17} />Models<span className="nav-count">{models.length}</span></a>
+          <NavLink className={({ isActive }) => `nav-item${isActive ? " active" : ""}`} to="/notebooks"><BookOpen size={17} />Notebooks</NavLink>
           <a className="nav-item" href="#knowledge"><Database size={17} />Knowledge Base</a>
           <a className="nav-item" href="#integrations"><Network size={17} />Integrations</a>
         </div>
@@ -216,6 +219,141 @@ function App() {
         </section>
       </main>
     </div>
+  );
+}
+
+
+function NotebooksPage() {
+  const location = useLocation();
+  const [notebooks, setNotebooks] = useState<KaggleNotebook[]>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pulling, setPulling] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const loadNotebooks = useCallback(async (search = query) => {
+    setLoading(true);
+    setError(null);
+    try {
+      setNotebooks(await api.getKaggleNotebooks(search || undefined));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Notebooklarni yuklab bo‘lmadi.");
+      setNotebooks([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [query]);
+
+  useEffect(() => { void loadNotebooks(""); }, []);
+
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void loadNotebooks(query);
+  };
+
+  const pullNotebook = async (notebook: KaggleNotebook) => {
+    const [owner, slug] = notebook.ref.split("/");
+    if (!owner || !slug) return;
+    setPulling(notebook.ref);
+    setNotice(null);
+    try {
+      const result = await api.pullKaggleNotebook(owner, slug);
+      setNotice(`Downloaded ${result.filename} to backend/data/kaggle.`);
+      setNotebooks((current) => current.map((item) =>
+        item.ref === notebook.ref ? { ...item, is_pulled: true } : item
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Notebookni yuklab bo‘lmadi.");
+    } finally {
+      setPulling(null);
+    }
+  };
+
+  const formatDate = (value: string | null) => {
+    if (!value) return "Update date unavailable";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
+  };
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand"><div className="brand-mark"><Command size={19} strokeWidth={2.2} /></div><div><strong>NEXUS</strong><span>AI PLATFORM</span></div></div>
+        <button className="workspace-switcher"><span className="workspace-avatar">N</span><span className="workspace-copy"><strong>Personal workspace</strong><small>Local environment</small></span><ChevronDown size={15} /></button>
+        <div className="nav-group">
+          <p className="nav-label">WORKSPACE</p>
+          <NavLink className={({isActive}) => `nav-item${isActive ? " active" : ""}`} to="/"><LayoutDashboard size={17}/>Dashboard</NavLink>
+          <a className="nav-item" href="/#conversations"><MessageSquare size={17}/>Conversations</a>
+          <a className="nav-item" href="/#agents"><Bot size={17}/>My Agents</a>
+          <a className="nav-item" href="/#workflows"><Workflow size={17}/>Workflows</a>
+        </div>
+        <div className="nav-group">
+          <p className="nav-label">RESOURCES</p>
+          <a className="nav-item" href="/#models"><Boxes size={17}/>Models</a>
+          <a className="nav-item" href="/#knowledge"><Database size={17}/>Knowledge Base</a>
+          <NavLink className={({isActive}) => `nav-item${isActive ? " active" : ""}`} to="/notebooks"><BookOpen size={17}/>Notebooks</NavLink>
+          <a className="nav-item" href="/#integrations"><Network size={17}/>Integrations</a>
+        </div>
+        <div className="nav-group"><p className="nav-label">SYSTEM</p><a className="nav-item" href="/#runtime"><Activity size={17}/>Runtime Monitor</a><a className="nav-item" href="/#settings"><Settings size={17}/>Settings</a></div>
+        <div className="sidebar-bottom">
+          <div className="local-card"><div className="local-card-icon"><ShieldCheck size={16}/></div><div><strong>Local-first</strong><span>Your data stays on device</span></div></div>
+          <div className="profile-row"><div className="profile-avatar">U</div><div className="profile-copy"><strong>Local User</strong><span>Administrator</span></div></div>
+        </div>
+      </aside>
+      <main className="main-content">
+        <header className="topbar">
+          <div className="breadcrumbs"><a href="/">Workspace</a><span className="crumb-separator">/</span><strong>Notebooks</strong></div>
+          <div className="topbar-actions"><div className="environment"><span className="environment-dot"/>KAGGLE LIBRARY</div><button className="icon-button" onClick={() => void loadNotebooks()} aria-label="Refresh notebooks" disabled={loading}><RefreshCw size={16} className={loading ? "spin" : ""}/></button><div className="profile-avatar top-avatar">U</div></div>
+        </header>
+        <section className="page-content notebooks-page">
+          <div className="page-heading">
+            <div><p className="eyebrow">RESOURCES / KAGGLE</p><h1>Notebooks</h1><p className="page-subtitle">Explore and pull your Kaggle notebooks into the NEXUS workspace.</p></div>
+            <a className="primary-button" href="https://www.kaggle.com/code" target="_blank" rel="noreferrer">Explore Kaggle <ExternalLink size={14}/></a>
+          </div>
+          <form className="notebook-search" onSubmit={handleSearch}>
+            <Search size={18}/>
+            <input aria-label="Search Kaggle notebooks" placeholder="Search notebooks by title or topic..." value={query} onChange={(event) => setQuery(event.target.value)}/>
+            <button type="submit" disabled={loading}>Search</button>
+          </form>
+          {notice && <div className="success-banner">{notice}</div>}
+          {error && <div className="error-banner">{error}<span> Check Kaggle credentials in backend/.env and confirm the Kaggle CLI is installed.</span></div>}
+          <div className="section-heading notebook-results-heading"><h2>Notebook library</h2><span className="muted-note">{loading ? "Loading…" : `${notebooks.length} results`}</span></div>
+          {loading ? (
+            <div className="notebook-grid">{[1,2,3].map((item) => <div className="notebook-card skeleton-card" key={item}><div className="skeleton-line wide"/><div className="skeleton-line medium"/><div className="skeleton-line short"/><div className="skeleton-footer"/></div>)}</div>
+          ) : notebooks.length === 0 && !error ? (
+            <div className="empty-state notebook-empty"><div className="empty-icon"><BookOpen size={22}/></div><strong>No notebooks found</strong><p>Try another search, or check that your Kaggle account has notebooks available.</p></div>
+          ) : (
+            <div className="notebook-grid">
+              {notebooks.map((notebook) => (
+                <article className="notebook-card" key={notebook.ref}>
+                  <div className="notebook-card-top"><span className="kaggle-mark">K</span><span className="notebook-language">{notebook.language || "Notebook"}</span></div>
+                  <h3>{notebook.title}</h3>
+                  <p className="notebook-ref">{notebook.ref}</p>
+                  <div className="notebook-meta"><span><span className="meta-symbol">↑</span>{notebook.votes.toLocaleString()} votes</span><span>{formatDate(notebook.last_updated)}</span></div>
+                  <div className="notebook-actions">
+                    <a className="notebook-open" href={notebook.url} target="_blank" rel="noreferrer">Open on Kaggle <ExternalLink size={13}/></a>
+                    <button className="notebook-pull" onClick={() => void pullNotebook(notebook)} disabled={pulling === notebook.ref || notebook.is_pulled}>{notebook.is_pulled ? "Downloaded" : pulling === notebook.ref ? "Pulling…" : "Pull .ipynb"}</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+          <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.2.0</b></span><span className="note-separator">·</span><span>Notebook metadata provided by Kaggle</span></div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/notebooks" element={<NotebooksPage/>}/>
+        <Route path="*" element={<DashboardPage/>}/>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
