@@ -1,5 +1,5 @@
 import json
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Callable
 
 import httpx
 
@@ -7,16 +7,26 @@ from app.providers.base import BaseAdapter, ProviderCapabilities, ProviderModel
 
 
 class OllamaAdapter(BaseAdapter):
-    """Native Ollama API adapter for local or authenticated remote endpoints."""
+    """Native Ollama API adapter; endpoint/auth may follow the active local/Kaggle runtime."""
 
-    def __init__(self, base_url: str, timeout: float = 30.0, auth: tuple[str, str] | None = None,
+    def __init__(self, base_url: str | Callable[[], str], timeout: float = 30.0,
+                 auth: tuple[str, str] | None | Callable[[], tuple[str, str] | None] = None,
                  provider_id: str = "ollama") -> None:
         if not provider_id.strip():
             raise ValueError("provider_id must be non-empty")
         self.provider_id = provider_id
-        self.base_url = base_url.rstrip("/")
+        self._base_url = base_url
         self.timeout = timeout
-        self.auth = auth
+        self._auth = auth
+
+    @property
+    def base_url(self) -> str:
+        value = self._base_url() if callable(self._base_url) else self._base_url
+        return value.rstrip("/")
+
+    @property
+    def auth(self) -> tuple[str, str] | None:
+        return self._auth() if callable(self._auth) else self._auth
 
     async def health_check(self) -> bool:
         try:
@@ -35,12 +45,25 @@ class OllamaAdapter(BaseAdapter):
         models = payload.get("models", [])
         if not isinstance(models, list):
             raise ValueError("Ollama returned an invalid model list.")
-        return [ProviderModel(
-            id=str(item.get("name") or item.get("model")),
-            display_name=str(item.get("name") or item.get("model")),
-            capabilities=ProviderCapabilities(streaming=True),
-            metadata={key: item.get(key) for key in ("size", "modified_at", "digest") if item.get(key) is not None},
-        ) for item in models if item.get("name") or item.get("model")]
+        result = []
+        for item in models:
+            if not isinstance(item, dict):
+                continue
+            name = item.get("name") or item.get("model")
+            if not name:
+                continue
+            details = item.get("details") or {}
+            result.append(ProviderModel(
+                id=str(name), display_name=str(name),
+                capabilities=ProviderCapabilities(streaming=True, tool_calling=True, vision=True),
+                metadata={key: value for key, value in {
+                    "size": item.get("size"), "modified_at": item.get("modified_at"),
+                    "digest": item.get("digest"), "family": details.get("family"),
+                    "parameter_size": details.get("parameter_size"),
+                    "quantization_level": details.get("quantization_level"),
+                }.items() if value is not None},
+            ))
+        return result
 
     async def chat(self, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
         payload = {**kwargs, "model": model, "messages": messages, "stream": False}
