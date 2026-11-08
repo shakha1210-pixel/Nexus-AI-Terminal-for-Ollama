@@ -6,23 +6,13 @@ import {
 } from "lucide-react";
 import KagglePanel from "./components/KagglePanel";
 import WorkspacePanel from "./components/WorkspacePanel";
+import ModelsPanel from "./components/ModelsPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
 import "./kaggle-styles.css";
 
 type Theme = "dark" | "light";
 
-function formatBytes(bytes: number | null): string {
-  if (bytes === null || !Number.isFinite(bytes)) return "—";
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
-}
 
 function App() {
   const [theme, setTheme] = useState<Theme>("dark");
@@ -232,38 +222,7 @@ function App() {
           </div>
 
           <div className="content-grid">
-            <section className="panel models-panel" id="models">
-              <div className="panel-header">
-                <div><h2>Installed models</h2><p>Models available on this machine</p></div>
-                <button className="text-button" onClick={() => void refresh()}>Refresh <RefreshCw size={13} /></button>
-              </div>
-              {!connected ? (
-                <div className="empty-state">
-                  <div className="empty-icon"><Cpu size={22} /></div>
-                  <strong>Ollama is not connected</strong>
-                  <p>Start Ollama and make sure its local API is available at <code>127.0.0.1:11434</code>.</p>
-                </div>
-              ) : models.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon"><Boxes size={22} /></div>
-                  <strong>No models found</strong>
-                  <p>Pull a model using Ollama to see it listed here.</p>
-                  <code>ollama pull llama3.2</code>
-                </div>
-              ) : (
-                <div className="model-list">
-                  {models.map((model) => (
-                    <div className="model-row" key={model.digest ?? model.name}>
-                      <div className="model-symbol"><Cpu size={17} /></div>
-                      <div className="model-info"><strong>{model.name}</strong><span>{[model.family, model.parameter_size, model.quantization_level].filter(Boolean).join(" · ") || "Local model"}</span></div>
-                      <span className="model-size">{formatBytes(model.size)}</span>
-                      <span className="model-ready"><span className="status-dot online" />Ready</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="panel-footer"><span>{models.length} model{models.length === 1 ? "" : "s"} detected</span><span>Powered by Ollama</span></div>
-            </section>
+            <ModelsPanel models={models} connected={connected} onRefresh={() => void refresh(true)} />  </section>
 
             <section className="panel runtime-panel" id="runtime">
               <div className="panel-header"><div><h2>Runtime connection</h2><p>{status?.mode === "kaggle" ? "Kaggle inference service" : "Local inference service"}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
