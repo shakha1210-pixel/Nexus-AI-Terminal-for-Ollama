@@ -12,12 +12,14 @@ import ModelsPanel from "./components/ModelsPanel";
 import ProviderPanel from "./components/ProviderPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
+import { useTranslation } from "./i18n";
 import "./providers-styles.css";
 
 type Theme = "dark" | "light";
 
 
 function App() {
+  const { t, language, setLanguage } = useTranslation();
   const [theme, setTheme] = useState<Theme>("dark");
   const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
@@ -152,26 +154,26 @@ function App() {
         </button>
 
         <div className="nav-group">
-          <p className="nav-label">WORKSPACE</p>
-          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" onClick={() => setActiveView("dashboard")}><LayoutDashboard size={17} />Dashboard</a>
-          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" onClick={() => setActiveView("explorer")}><HardDrive size={17} />Explorer</a>
-          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" onClick={() => setActiveView("chat")}><MessageSquare size={17} />Conversations</a>
-          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" onClick={() => setActiveView("agents")}><Bot size={17} />My Agents</a>
-          <a className="nav-item" href="#workflows"><Workflow size={17} />Workflows</a>
+          <p className="nav-label">{t("nav.workspace")}</p>
+          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" onClick={() => setActiveView("dashboard")}><LayoutDashboard size={17} />{t("nav.dashboard")}</a>
+          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" onClick={() => setActiveView("explorer")}><HardDrive size={17} />{t("nav.explorer")}</a>
+          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" onClick={() => setActiveView("chat")}><MessageSquare size={17} />{t("nav.conversations")}</a>
+          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" onClick={() => setActiveView("agents")}><Bot size={17} />{t("nav.agents")}</a>
+          <a className="nav-item" href="#workflows"><Workflow size={17} />{t("nav.workflows")}</a>
         </div>
 
         <div className="nav-group">
-          <p className="nav-label">RESOURCES</p>
-          <a className="nav-item" href="#models"><Boxes size={17} />Models<span className="nav-count">{models.length}</span></a>
-          <a className="nav-item" href="#knowledge"><Database size={17} />Knowledge Base</a>
-          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" onClick={() => setActiveView("providers")}><Network size={17} />Model Providers</a>
-          <a className="nav-item" href="#integrations"><Workflow size={17} />Integrations</a>
+          <p className="nav-label">{t("nav.resources")}</p>
+          <a className="nav-item" href="#models"><Boxes size={17} />{t("nav.models")}<span className="nav-count">{models.length}</span></a>
+          <a className="nav-item" href="#knowledge"><Database size={17} />{t("nav.knowledge")}</a>
+          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" onClick={() => setActiveView("providers")}><Network size={17} />{t("nav.providers")}</a>
+          <a className="nav-item" href="#integrations"><Workflow size={17} />{t("nav.integrations")}</a>
         </div>
 
         <div className="nav-group">
-          <p className="nav-label">SYSTEM</p>
-          <a className="nav-item" href="#runtime"><Activity size={17} />Runtime Monitor</a>
-          <a className="nav-item" href="#settings"><Settings size={17} />Settings</a>
+          <p className="nav-label">{t("nav.system")}</p>
+          <a className="nav-item" href="#runtime"><Activity size={17} />{t("nav.runtime")}</a>
+          <a className="nav-item" href="#settings"><Settings size={17} />{t("nav.settings")}</a>
         </div>
 
         <div className="sidebar-bottom">
@@ -189,16 +191,17 @@ function App() {
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? "Agent Runtime" : activeView === "providers" ? "Model Providers" : "AI Chat"}</strong></div>
+          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? "Model Providers" : t("nav.aiChat")}</strong></div>
           <div className="topbar-actions">
+            <label className="language-switch" aria-label={t("actions.language")}><span>{t("actions.language")}</span><select value={language} onChange={(event) => setLanguage(event.target.value as "uz" | "en")}><option value="uz">O‘zbekcha</option><option value="en">English</option></select></label>
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
-            <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label="Change theme" title="Change theme">
+            <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label=t("actions.changeTheme") title=t("actions.changeTheme")>
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
             </button>
-            <button className="icon-button" onClick={() => { playUiSound(520); void refresh(); }} aria-label="Refresh data" title="Refresh data" disabled={loading}>
+            <button className="icon-button" onClick={() => { playUiSound(520); void refresh(); }} aria-label=t("actions.refresh") title=t("actions.refresh") disabled={loading}>
               <RefreshCw size={16} className={loading ? "spin" : ""} />
             </button>
-            <button className="icon-button" onClick={() => setSoundEnabled((enabled) => !enabled)} disabled={!preferencesReady} aria-label={soundEnabled ? "Disable sound effects" : "Enable sound effects"} title={soundEnabled ? "Sound effects on" : "Sound effects off"} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}</button>
+            <button className="icon-button" onClick={() => setSoundEnabled((enabled) => !enabled)} disabled={!preferencesReady} aria-label={soundEnabled ? t("actions.soundOff") : t("actions.soundOn")} title={soundEnabled ? t("actions.soundOn") : t("actions.soundOff")} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}</button>
             <div className="profile-avatar top-avatar">U</div>
           </div>
         </header>
@@ -207,30 +210,30 @@ function App() {
         <section className="page-content">
           <div className="page-heading">
             <div>
-              <p className="eyebrow">OVERVIEW</p>
-              <h1>Dashboard</h1>
+              <p className="eyebrow">{t("dashboard.overview")}</p>
+              <h1>{t("nav.dashboard")}</h1>
               <p className="page-subtitle">Your local AI environment at a glance.</p>
             </div>
-            <button className="primary-button" onClick={() => setActiveView("agents")}><Plus size={16} />Create agent</button>
+            <button className="primary-button" onClick={() => setActiveView("agents")}><Plus size={16} />{t("dashboard.createAgent")}</button>
           </div>
 
           {error && <div className="error-banner">{error}</div>}
 
           <div className="section-heading">
-            <h2>System overview</h2>
-            <span className="muted-note">{updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : "Waiting for data"}</span>
+            <h2>{t("dashboard.systemOverview")}</h2>
+            <span className="muted-note">{updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : t("dashboard.waiting")}</span>
           </div>
 
           <div className="stats-grid">
             <article className="stat-card">
               <div className="stat-top"><span>Ollama runtime</span><div className="stat-icon"><Activity size={17} /></div></div>
-              <div className="stat-value status-value"><span className={`status-dot ${ollamaConnected ? "online" : "offline"}`} />{loading && !status ? "Checking…" : ollamaConnected ? "Connected" : "Offline"}</div>
-              <p className="stat-foot">{status?.version ? `Version ${status.version}` : "Local model runtime"}</p>
+              <div className="stat-value status-value"><span className={`status-dot ${ollamaConnected ? "online" : "offline"}`} />{loading && !status ? t("dashboard.checking") : ollamaConnected ? t("status.connected") : t("status.offline")}</div>
+              <p className="stat-foot">{status?.version ? `Version ${status.version}` : t("dashboard.localRuntime")}</p>
             </article>
             <article className="stat-card">
               <div className="stat-top"><span>Installed models</span><div className="stat-icon"><Boxes size={17} /></div></div>
               <div className="stat-value">{models.length}</div>
-              <p className="stat-foot">{status?.mode === "kaggle" ? "Available in Kaggle Ollama" : "Available in local Ollama"}</p>
+              <p className="stat-foot">{status?.mode === "kaggle" ? t("dashboard.kaggleModels") : t("dashboard.localModels")}</p>
             </article>
             <article className="stat-card">
               <div className="stat-top"><span>AI agents</span><div className="stat-icon"><Bot size={17} /></div></div>
@@ -238,7 +241,7 @@ function App() {
               <p className="stat-foot">Permission-scoped agent runtime</p>
             </article>
             <article className="stat-card">
-              <div className="stat-top"><span>Workflows</span><div className="stat-icon"><Workflow size={17} /></div></div>
+              <div className="stat-top"><span>{t("nav.workflows")}</span><div className="stat-icon"><Workflow size={17} /></div></div>
               <div className="stat-value">—</div>
               <p className="stat-foot">Automation pipeline</p>
             </article>
@@ -248,14 +251,14 @@ function App() {
             <ModelsPanel models={models} connected={ollamaConnected} onRefresh={() => void refresh(true)} />
 
             <section className="panel runtime-panel" id="runtime">
-              <div className="panel-header"><div><h2>Runtime connection</h2><p>{status?.mode === "kaggle" ? "Kaggle inference service" : "Local inference service"}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
+              <div className="panel-header"><div><h2>{t("dashboard.runtimeConnection")}</h2><p>{status?.mode === "kaggle" ? t("dashboard.kaggleInference") : t("dashboard.localInference")}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
               <div className="runtime-status">
                 <div className={`runtime-indicator ${ollamaConnected ? "is-online" : ""}`}><span /></div>
-                <div><strong>{ollamaConnected ? "Runtime operational" : "Runtime unavailable"}</strong><p>{status?.message ?? "Checking connection…"}</p></div>
+                <div><strong>{ollamaConnected ? t("dashboard.runtimeOperational") : t("dashboard.runtimeUnavailable")}</strong><p>{status?.message ?? t("dashboard.checkingConnection")}</p></div>
               </div>
-              <div className="detail-row"><span>Service</span><strong>Ollama</strong></div>
-              <div className="detail-row"><span>Selected runtime</span><code>{status?.mode === "kaggle" ? "Kaggle GPU" : "127.0.0.1:11434"}</code></div>
-              <div className="detail-row"><span>API gateway</span><code>127.0.0.1:8000</code></div>
+              <div className="detail-row"><span>{t("dashboard.service")}</span><strong>Ollama</strong></div>
+              <div className="detail-row"><span>{t("dashboard.selectedRuntime")}</span><code>{status?.mode === "kaggle" ? "Kaggle GPU" : "127.0.0.1:11434"}</code></div>
+              <div className="detail-row"><span>{t("dashboard.apiGateway")}</span><code>127.0.0.1:8000</code></div>
               <div className="runtime-hint"><ShieldCheck size={15} /><span>Requests are routed through the local NEXUS API.</span></div>
             </section>
           </div>
@@ -269,13 +272,13 @@ function App() {
         ) : activeView === "explorer" ? (
           <section className="page-content workstation-page">
             <div className="page-heading">
-              <div><p className="eyebrow">LOCAL DEVELOPMENT</p><h1>Explorer</h1><p className="page-subtitle">Manage project files and prepare context for your AI agents.</p></div>
+              <div><p className="eyebrow">LOCAL DEVELOPMENT</p><h1>{t("nav.explorer")}</h1><p className="page-subtitle">Manage project files and prepare context for your AI agents.</p></div>
             </div>
             <WorkspacePanel />
           </section>
         ) : activeView === "providers" ? (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">INFERENCE BACKENDS</p><h1>Model Providers</h1><p className="page-subtitle">Manage provider adapters and guarded fallback behavior.</p></div></div>
+            <div className="page-heading"><div><p className="eyebrow">INFERENCE BACKENDS</p><h1>{t("nav.providers")}</h1><p className="page-subtitle">Manage provider adapters and guarded fallback behavior.</p></div></div>
             <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
               void api.setActiveProvider(providerId).then((result) => {
                 setActiveProvider(result.provider_id);
@@ -287,12 +290,12 @@ function App() {
           </section>
         ) : activeView === "agents" ? (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>My Agents</h1><p className="page-subtitle">Run an agent through the shared provider with tightly scoped workspace access.</p></div></div>
+            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>{t("nav.agents")}</h1><p className="page-subtitle">Run an agent through the shared provider with tightly scoped workspace access.</p></div></div>
             <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         ) : (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>Conversations</h1><p className="page-subtitle">Chat with the model selected in Model Providers.</p></div></div>
+            <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>{t("nav.conversations")}</h1><p className="page-subtitle">Chat with the model selected in Model Providers.</p></div></div>
             <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         )}
