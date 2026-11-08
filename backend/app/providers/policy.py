@@ -115,8 +115,15 @@ class ProviderSwitchingEngine:
         self._last_switch_at = monotonic()
         return SwitchDecision(True, target, False, "Fallback is permitted by policy.")
 
-    def confirm(self, decision: SwitchDecision) -> SwitchDecision:
+    def confirm(
+        self, decision: SwitchDecision, *, isolated: bool = False,
+        approval_pending: bool = False, stream_started: bool = False,
+    ) -> SwitchDecision:
         if not decision.allowed or not decision.requires_confirmation or not decision.target_provider:
             return SwitchDecision(False, reason="There is no pending provider switch to confirm.")
+        if isolated or approval_pending:
+            return SwitchDecision(False, reason="Agent security state blocks provider switching.")
+        if stream_started:
+            return SwitchDecision(False, reason="A response stream has started; switching is locked for this request.")
         self._last_switch_at = monotonic()
         return SwitchDecision(True, decision.target_provider, False, "Provider switch confirmed.")
