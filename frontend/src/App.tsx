@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Activity, Bot, Boxes, ChevronDown, CircleHelp, Command, Cpu,
   Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
-  Plus, RefreshCw, Settings, ShieldCheck, Sun, Workflow,
+  Plus, RefreshCw, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
 } from "lucide-react";
 import KagglePanel from "./components/KagglePanel";
 import { api } from "./services/api";
@@ -30,6 +30,30 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  const playUiSound = useCallback((frequency = 660) => {
+    if (!soundEnabled || typeof window === "undefined") return;
+    try {
+      const AudioContextClass = window.AudioContext;
+      if (!AudioContextClass) return;
+      const context = new AudioContextClass();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.035, context.currentTime + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.09);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.1);
+      oscillator.onended = () => void context.close();
+    } catch {
+      // Audio feedback is optional; UI actions must work without it.
+    }
+  }, [soundEnabled]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -54,7 +78,9 @@ function App() {
 
   useEffect(() => {
     void refresh();
-    const timer = window.setInterval(() => void refresh(), 15000);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refresh();
+    }, 15000);
     return () => window.clearInterval(timer);
   }, [refresh]);
 
@@ -117,12 +143,13 @@ function App() {
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>Dashboard</strong></div>
           <div className="topbar-actions">
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
-            <button className="icon-button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Change theme">
+            <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} aria-label="Change theme" title="Change theme">
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
             </button>
-            <button className="icon-button" onClick={() => void refresh()} aria-label="Refresh data" disabled={loading}>
+            <button className="icon-button" onClick={() => { playUiSound(520); void refresh(); }} aria-label="Refresh data" title="Refresh data" disabled={loading}>
               <RefreshCw size={16} className={loading ? "spin" : ""} />
             </button>
+            <button className="icon-button" onClick={() => setSoundEnabled((enabled) => !enabled)} aria-label={soundEnabled ? "Disable sound effects" : "Enable sound effects"} title={soundEnabled ? "Sound effects on" : "Sound effects off"} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}</button>
             <div className="profile-avatar top-avatar">U</div>
           </div>
         </header>
