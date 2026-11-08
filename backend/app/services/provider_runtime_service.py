@@ -8,6 +8,7 @@ from app.providers.manager import provider_manager
 from app.services.app_data import get_store_path
 from app.services.ollama_service import ollama_service
 from app.services.secrets_service import secrets_service
+from app.services.provider_resilience_service import provider_resilience_service
 
 _LEGACY_DIR = Path(__file__).resolve().parents[2] / ".nexus"
 
@@ -57,9 +58,11 @@ class ProviderRuntimeService:
                     api_key=api_key or None,
                     timeout=settings.request_timeout_seconds,
                 ))
+                provider_resilience_service.reset("openai-compatible")
                 configured = True
             else:
                 provider_manager.registry.remove("openai-compatible")
+                provider_resilience_service.reset("openai-compatible")
                 configured = False
                 if self._active_provider == "openai-compatible":
                     self._active_provider = "ollama"
