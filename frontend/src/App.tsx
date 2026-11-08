@@ -134,6 +134,7 @@ function App() {
         if (!active) return;
         setTheme(preferences.theme);
         setSoundEnabled(preferences.sound_enabled);
+        setLanguage(preferences.language ?? "uz");
       })
       .catch(() => {
         // Keep safe local defaults when the preferences endpoint is unavailable.
@@ -151,13 +152,13 @@ function App() {
   useEffect(() => {
     if (!preferencesReady) return;
     const timer = window.setTimeout(() => {
-      void api.savePreferences({ theme, sound_enabled: soundEnabled })
+      void api.savePreferences({ theme, sound_enabled: soundEnabled, language })
         .catch((err: unknown) => {
           setError(err instanceof Error ? `${t("settings.preferencesSaveError")}: ${err.message}` : t("settings.preferencesSaveError"));
         });
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [theme, soundEnabled, preferencesReady]);
+  }, [theme, soundEnabled, language, preferencesReady]);
 
   const connected = providerConnected;
   const ollamaConnected = status?.connected === true;
