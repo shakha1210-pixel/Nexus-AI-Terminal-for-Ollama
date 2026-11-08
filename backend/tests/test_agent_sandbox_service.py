@@ -11,10 +11,10 @@ class AgentSandboxServiceTests(unittest.TestCase):
         self.service = AgentSandboxService()
 
     def test_command_is_networkless_read_only_and_resource_limited(self) -> None:
-        command = self.service._command(Path("/tmp/nexus-input.txt"))
+        command = self.service._command(Path("/tmp/nexus-input.txt"), "nexus-agent-read-test")
         joined = " ".join(command)
         for required in (
-            "--network=none", "--read-only", "--cap-drop=ALL",
+            "--network=none", "--read-only", "--cap-drop=ALL", "--name nexus-agent-read-test",
             "--security-opt=no-new-privileges", "--pids-limit=16",
             "--memory=96m", "--cpus=0.50", "--user=65532:65532",
             "readonly", "nexus-agent-sandbox:py311",
@@ -30,7 +30,7 @@ class AgentSandboxServiceTests(unittest.TestCase):
 
     def test_rejects_comma_in_mount_source(self) -> None:
         with self.assertRaises(AgentSandboxError):
-            self.service._command(Path("/tmp/a,b.txt"))
+            self.service._command(Path("/tmp/a,b.txt"), "nexus-agent-read-test")
 
     def test_ungranted_path_fails_before_docker(self) -> None:
         with patch(
