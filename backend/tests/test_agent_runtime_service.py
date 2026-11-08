@@ -22,6 +22,15 @@ class AgentRuntimeServiceTests(unittest.TestCase):
         self.assertNotIn("terminal", functions)
         self.assertNotIn("workspace_write_file", functions)
 
+    def test_edit_proposal_tool_is_only_available_in_approval_mode(self) -> None:
+        read_tools = self.service.tools_for_mode("read_only")
+        approval_tools = self.service.tools_for_mode("approval_required")
+        self.assertEqual([item["function"]["name"] for item in read_tools], ["workspace_read_file"])
+        self.assertEqual(
+            [item["function"]["name"] for item in approval_tools],
+            ["workspace_read_file", "workspace_propose_file_edit"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
