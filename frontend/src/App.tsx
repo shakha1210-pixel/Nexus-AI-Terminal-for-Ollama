@@ -225,7 +225,7 @@ function App() {
           <div className="stats-grid">
             <article className="stat-card">
               <div className="stat-top"><span>Ollama runtime</span><div className="stat-icon"><Activity size={17} /></div></div>
-              <div className="stat-value status-value"><span className={`status-dot ${connected ? "online" : "offline"}`} />{loading && !status ? "Checking…" : connected ? "Connected" : "Offline"}</div>
+              <div className="stat-value status-value"><span className={`status-dot ${ollamaConnected ? "online" : "offline"}`} />{loading && !status ? "Checking…" : ollamaConnected ? "Connected" : "Offline"}</div>
               <p className="stat-foot">{status?.version ? `Version ${status.version}` : "Local model runtime"}</p>
             </article>
             <article className="stat-card">
@@ -251,8 +251,8 @@ function App() {
             <section className="panel runtime-panel" id="runtime">
               <div className="panel-header"><div><h2>Runtime connection</h2><p>{status?.mode === "kaggle" ? "Kaggle inference service" : "Local inference service"}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
               <div className="runtime-status">
-                <div className={`runtime-indicator ${connected ? "is-online" : ""}`}><span /></div>
-                <div><strong>{connected ? "Runtime operational" : "Runtime unavailable"}</strong><p>{status?.message ?? "Checking connection…"}</p></div>
+                <div className={`runtime-indicator ${ollamaConnected ? "is-online" : ""}`}><span /></div>
+                <div><strong>{ollamaConnected ? "Runtime operational" : "Runtime unavailable"}</strong><p>{status?.message ?? "Checking connection…"}</p></div>
               </div>
               <div className="detail-row"><span>Service</span><strong>Ollama</strong></div>
               <div className="detail-row"><span>Selected runtime</span><code>{status?.mode === "kaggle" ? "Kaggle GPU" : "127.0.0.1:11434"}</code></div>
@@ -285,12 +285,12 @@ function App() {
           </section>
         ) : activeView === "agents" ? (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>My Agents</h1><p className="page-subtitle">Run a local agent with tightly scoped workspace access.</p></div></div>
+            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>My Agents</h1><p className="page-subtitle">Run an agent through the shared provider with tightly scoped workspace access.</p></div></div>
             <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         ) : (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>Conversations</h1><p className="page-subtitle">Chat with locally installed Ollama models.</p></div></div>
+            <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>Conversations</h1><p className="page-subtitle">Chat with the model selected in Model Providers.</p></div></div>
             <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         )}
