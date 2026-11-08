@@ -70,6 +70,12 @@ class AgentApprovalService:
             or any(part in {"", ".", ".."} for part in relative_path.split("/"))
         ):
             raise AgentApprovalError("Workspace fayl yo‘li noto‘g‘ri.")
+        lexical = workspace_service.root.joinpath(*relative_path.split("/"))
+        current = lexical
+        while current != workspace_service.root and current != current.parent:
+            if current.is_symlink():
+                raise AgentApprovalError("Symlink orqali fayl o‘zgartirishga ruxsat yo‘q.")
+            current = current.parent
         try:
             target = workspace_service.resolve(relative_path)
         except WorkspaceError as exc:
@@ -179,10 +185,9 @@ class AgentApprovalService:
                 self._save(data)
                 raise AgentApprovalError("Taklif mazmuni tekshiruvdan o‘tmadi.")
 
-            # Consume approval before performing the single authorized replacement.
-            item["status"] = "approved"
+            # Consume the request before writing; a crash cannot make it reusable.
+            item["status"] = "applying"
             item["decided_at"] = now.isoformat()
-            item["result"] = "File replacement applied."
             self._save(data)
             fd, temp_name = tempfile.mkstemp(prefix=".nexus-approved-", dir=str(target.parent))
             try:
@@ -191,6 +196,9 @@ class AgentApprovalService:
                     stream.flush()
                     os.fsync(stream.fileno())
                 os.replace(temp_name, target)
+                item["status"] = "approved"
+                item["result"] = "File replacement applied."
+                self._save(data)
             except OSError as exc:
                 try:
                     os.unlink(temp_name)
