@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from typing import Literal
 
 from app.services.agent_access_service import AgentAccessError, agent_access_service
 from app.services.agent_runtime_service import AgentRuntimeError, agent_runtime_service
+from app.services.agent_control_service import AgentControlError, agent_control_service
 
 router = APIRouter(prefix="/api/agents", tags=["Agent Access"])
 
@@ -19,6 +21,14 @@ class ContextRequest(BaseModel):
 class AgentRunRequest(BaseModel):
     model: str = Field(min_length=1, max_length=160)
     task: str = Field(min_length=1, max_length=12000)
+
+
+class AgentModeRequest(BaseModel):
+    mode: Literal["read_only", "approval_required", "autopilot", "locked"]
+
+
+class IsolationRequest(BaseModel):
+    reason: str = Field(default="Manual isolation", max_length=500)
 
 
 def _error(exc: AgentAccessError) -> HTTPException:
@@ -76,3 +86,35 @@ async def run_agent(agent_id: str, payload: AgentRunRequest) -> StreamingRespons
     return StreamingResponse(events(), media_type="text/event-stream", headers={
         "Cache-Control": "no-cache", "X-Accel-Buffering": "no",
     })
+
+ 
+@router.get("/{agent_id}/control")
+async def get_agent_control(agent_id: str) -> dict:
+    try:
+        return agent_control_service.get(agent_id)
+    except AgentControlError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.put("/{agent_id}/control/mode")
+async def set_agent_mode(agent_id: str, payload: AgentModeRequest) -> dict:
+    try:
+        return agent_control_service.set_mode(agent_id, payload.mode)
+    except AgentControlError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/{agent_id}/isolate")
+async def isolate_agent(agent_id: str, payload: IsolationRequest) -> dict:
+    try:
+        return agent_control_service.isolate(agent_id, payload.reason)
+    except AgentControlError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/{agent_id}/release")
+async def release_agent(agent_id: str) -> dict:
+    try:
+        return agent_control_service.release(agent_id)
+    except AgentControlError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
