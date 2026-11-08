@@ -133,6 +133,7 @@ Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida l
 | `POST` | `/api/agents/{agent_id}/permissions/read` | Agentga bitta workspace faylini o‘qish ruxsatini berish |
 | `DELETE` | `/api/agents/{agent_id}/permissions/read?path=notes.md` | Fayl uchun read ruxsatini bekor qilish |
 | `POST` | `/api/agents/{agent_id}/context` | Ruxsat berilgan tanlangan fayllarni agent konteksti uchun olish |
+| `POST` | `/api/agents/{agent_id}/run` | Agentni ishga tushirish; faqat read-grant tekshiruvidan o‘tgan `workspace_read_file` vositasi mavjud |
 | `GET` | `/api/chat/conversations` | Suhbatlar ro‘yxatini olish |
 | `GET` | `/api/chat/conversations/{conversation_id}` | Suhbat tarixini olish |
 | `DELETE` | `/api/chat/conversations/{conversation_id}` | Suhbatni o‘chirish |
