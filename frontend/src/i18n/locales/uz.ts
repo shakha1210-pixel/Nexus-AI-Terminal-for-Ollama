@@ -257,5 +257,9 @@ export const uz = {
   "providers.geminiDetail": "Native Gemini API",
   "chat.sharedProvider": "UMUMIY PROVAYDER",
   "agent.tool": "Vosita",
-  "agent.completed": "{count} ta vosita chaqiruvi bilan yakunlandi"
+  "agent.completed": "{count} ta vosita chaqiruvi bilan yakunlandi",
+  "providers.failureAuthentication": "Autentifikatsiya xatoligi",
+  "providers.failureModelMissing": "Model topilmadi",
+  "providers.failureCancelled": "Foydalanuvchi bekor qildi",
+  "providers.failureSecurity": "Xavfsizlik blokladi"
 } as const;
