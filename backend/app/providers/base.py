@@ -38,7 +38,7 @@ class BaseAdapter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def stream(
+    def stream(
         self, messages: list[dict[str, Any]], model: str, **kwargs: Any
     ) -> AsyncIterator[dict[str, Any]]:
         raise NotImplementedError
