@@ -186,3 +186,13 @@ python desktop/launcher.py
 ```
 
 `create_icon.py` generates the multi-size `desktop/assets/icon.ico` file. The preflight script checks Python, the frontend build, WebView2 Runtime files, and the icon; it does not install anything or launch the app. Final WebView2, window close/minimize, tray, and reopen behavior still require manual testing on a real Windows machine.
+
+
+### Settings and credentials (Stage 3)
+
+- Theme, sound, and UI language are stored in the per-user data directory: `%LOCALAPPDATA%\\NEXUS AI` on Windows.
+- Existing `backend/.nexus` settings are copied to the new location on first launch; legacy files are not deleted.
+- Kaggle, tunnel, and OpenAI-compatible API credentials are stored in Windows Credential Manager, never in ordinary JSON settings files.
+- Credentials cannot be read back through the API; it only reports whether a supported credential is configured.
+- Environment variables in `.env` take precedence. Credential Manager values are used when the matching secret environment value is empty.
+- Credential Manager writes are Windows-only and fail closed when the secure Windows backend is unavailable.
