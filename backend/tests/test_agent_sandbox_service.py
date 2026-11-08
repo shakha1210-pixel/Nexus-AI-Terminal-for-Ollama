@@ -73,9 +73,9 @@ class AgentSandboxServiceTests(unittest.TestCase):
         with patch.object(self.service, "_container_status", return_value="absent"):
             with patch.object(self.service, "_docker", return_value=subprocess.CompletedProcess([], 0, "", "")):
                 with patch(
-                "app.services.agent_sandbox_service.agent_access_service.build_context",
-                side_effect=AgentAccessError("read grant missing"),
-            ):
+                    "app.services.agent_sandbox_service.agent_access_service.build_context",
+                    side_effect=AgentAccessError("read grant missing"),
+                ):
                     with self.assertRaisesRegex(AgentSandboxError, "read grant missing"):
                         self.service.start("agent-a", ["secret.txt"])
 
