@@ -45,6 +45,31 @@ class ProviderRuntimeService:
         except (OSError, ValueError):
             pass
 
+
+    def refresh_openai_adapter(self) -> dict:
+        """Apply current endpoint and credential values without restarting the backend."""
+        with self._lock:
+            base_url = settings.openai_compatible_base_url.strip()
+            api_key = settings.openai_compatible_api_key or secrets_service.get("openai-compatible-api-key")
+            if base_url:
+                provider_manager.registry.replace(OpenAICompatibleAdapter(
+                    base_url=base_url,
+                    api_key=api_key or None,
+                    timeout=settings.request_timeout_seconds,
+                ))
+                configured = True
+            else:
+                provider_manager.registry.remove("openai-compatible")
+                configured = False
+                if self._active_provider == "openai-compatible":
+                    self._active_provider = "ollama"
+                    provider_manager.set_active_provider("ollama")
+                    self.store_path.parent.mkdir(parents=True, exist_ok=True)
+                    temporary = self.store_path.with_suffix(".tmp")
+                    temporary.write_text(json.dumps({"active_provider": "ollama"}, indent=2), encoding="utf-8")
+                    temporary.replace(self.store_path)
+            return {"provider_id": "openai-compatible", "configured": configured, "reloaded": True}
+
     def active(self) -> dict:
         with self._lock:
             return {"provider_id": self._active_provider}
