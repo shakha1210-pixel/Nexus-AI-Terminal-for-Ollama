@@ -224,3 +224,17 @@ python desktop/launcher.py
 - Bir vaqtning o‘zida ikkinchi NEXUS nusxasini ochish Windows named mutex orqali bloklanadi.
 
 PyWebView, tray va WebView2 ishlashini haqiqiy Windows 10/11 qurilmasida tekshirish kerak; Linux CI bu platforma integratsiyasini to‘liq tasdiqlamaydi.
+
+
+### Windows preflight va ikonka
+
+Windows 10/11 qurilmasida oldindan tekshiruv:
+
+```powershell
+python -m pip install -r desktop/requirements.txt
+python scripts/create_icon.py
+powershell -ExecutionPolicy Bypass -File scripts/windows-smoke-test.ps1
+python desktop/launcher.py
+```
+
+`create_icon.py` ko‘p o‘lchamli `desktop/assets/icon.ico` faylini yaratadi. Preflight skripti Python, frontend build, WebView2 Runtime fayllari va ikonka mavjudligini tekshiradi; u hech narsa o‘rnatmaydi yoki dasturni ishga tushirmaydi. Yakuniy WebView2, oynani yopish/minimize, tray va qayta ochish sinovlari haqiqiy Windows qurilmasida qo‘lda bajarilishi kerak.
