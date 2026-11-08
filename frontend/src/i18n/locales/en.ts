@@ -62,5 +62,20 @@ export const en = {
   "status.connected": "Connected",
   "status.offline": "Offline",
   "nav.workspaceTitle": "Workspace",
-  "dashboard.updated": "Updated"
+  "dashboard.updated": "Updated",
+  "kaggle.title": "Kaggle GPU",
+  "kaggle.subtitle": "Remote Ollama (OpenAI-compatible /v1)",
+  "kaggle.idle": "Not started",
+  "kaggle.pushing": "Uploading",
+  "kaggle.queued": "Queued",
+  "kaggle.starting": "Starting",
+  "kaggle.online": "Online",
+  "kaggle.stopped": "Stopped",
+  "kaggle.error": "Error",
+  "kaggle.model": "Model",
+  "kaggle.start": "Start on Kaggle",
+  "kaggle.returnLocal": "Switch to local",
+  "kaggle.useRemote": "Use Kaggle",
+  "kaggle.baseUrl": "OpenAI base URL",
+  "kaggle.unknownError": "Unknown error"
 } as const;
