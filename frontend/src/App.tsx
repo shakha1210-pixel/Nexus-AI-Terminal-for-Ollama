@@ -4,8 +4,10 @@ import {
   Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
   Plus, RefreshCw, Settings, ShieldCheck, Sun, Workflow,
 } from "lucide-react";
+import KagglePanel from "./components/KagglePanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
+import "./kaggle-styles.css";
 
 type Theme = "dark" | "light";
 
@@ -43,7 +45,7 @@ function App() {
       setUpdatedAt(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Noma’lum xatolik yuz berdi.");
-      setStatus({ connected: false, version: null, message: "Backend API bilan aloqa yo‘q." });
+      setStatus({ connected: false, version: null, mode: "local", message: "Backend API bilan aloqa yo‘q." });
       setModels([]);
     } finally {
       setLoading(false);
@@ -151,7 +153,7 @@ function App() {
             <article className="stat-card">
               <div className="stat-top"><span>Installed models</span><div className="stat-icon"><Boxes size={17} /></div></div>
               <div className="stat-value">{models.length}</div>
-              <p className="stat-foot">Available in local Ollama</p>
+              <p className="stat-foot">{status?.mode === "kaggle" ? "Available in Kaggle Ollama" : "Available in local Ollama"}</p>
             </article>
             <article className="stat-card">
               <div className="stat-top"><span>AI agents</span><div className="stat-icon"><Bot size={17} /></div></div>
@@ -200,16 +202,20 @@ function App() {
             </section>
 
             <section className="panel runtime-panel" id="runtime">
-              <div className="panel-header"><div><h2>Runtime connection</h2><p>Local inference service</p></div><Gauge size={18} className="panel-muted-icon" /></div>
+              <div className="panel-header"><div><h2>Runtime connection</h2><p>{status?.mode === "kaggle" ? "Kaggle inference service" : "Local inference service"}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
               <div className="runtime-status">
                 <div className={`runtime-indicator ${connected ? "is-online" : ""}`}><span /></div>
                 <div><strong>{connected ? "Runtime operational" : "Runtime unavailable"}</strong><p>{status?.message ?? "Checking connection…"}</p></div>
               </div>
               <div className="detail-row"><span>Service</span><strong>Ollama</strong></div>
-              <div className="detail-row"><span>Endpoint</span><code>127.0.0.1:11434</code></div>
+              <div className="detail-row"><span>Selected runtime</span><code>{status?.mode === "kaggle" ? "Kaggle GPU" : "127.0.0.1:11434"}</code></div>
               <div className="detail-row"><span>API gateway</span><code>127.0.0.1:8000</code></div>
               <div className="runtime-hint"><ShieldCheck size={15} /><span>Requests are routed through the local NEXUS API.</span></div>
             </section>
+          </div>
+
+          <div className="kaggle-section">
+            <KagglePanel onModeChange={() => void refresh()} />
           </div>
 
           <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>Local-first intelligence workspace</span></div>

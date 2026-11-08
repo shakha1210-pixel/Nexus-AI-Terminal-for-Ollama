@@ -6,6 +6,12 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://127.0.0.1:11434"
     frontend_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     request_timeout_seconds: float = 8.0
+    kaggle_username: str = ""
+    kaggle_key: str = ""
+    kaggle_kernel_name: str = "nexus-ollama-server"
+    ngrok_domain: str = ""
+    tunnel_user: str = "nexus"
+    tunnel_password: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

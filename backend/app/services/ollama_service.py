@@ -5,11 +5,24 @@ from app.config import settings
 
 class OllamaService:
     def __init__(self) -> None:
-        self.base_url = settings.ollama_base_url.rstrip("/")
+        self.local_base_url = settings.ollama_base_url.rstrip("/")
+        self.base_url = self.local_base_url
         self.timeout = settings.request_timeout_seconds
+        self.mode = "local"
+        self.auth: tuple[str, str] | None = None
+
+    def use_local(self) -> None:
+        self.mode = "local"
+        self.base_url = self.local_base_url
+        self.auth = None
+
+    def use_remote(self, base_url: str, auth: tuple[str, str]) -> None:
+        self.mode = "kaggle"
+        self.base_url = base_url.rstrip("/")
+        self.auth = auth
 
     async def _get(self, path: str) -> dict:
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.timeout, auth=self.auth) as client:
             response = await client.get(f"{self.base_url}{path}")
             response.raise_for_status()
             return response.json()
@@ -19,12 +32,13 @@ class OllamaService:
             payload = await self._get("/api/version")
             version = payload.get("version")
             if not isinstance(version, str) or not version:
-                return {"connected": False, "version": None, "message": "Ollama javobi kutilgan formatda emas."}
-            return {"connected": True, "version": version, "message": "Ollama bilan aloqa o‘rnatildi."}
+                return {"connected": False, "version": None, "mode": self.mode, "message": "Ollama javobi kutilgan formatda emas."}
+            return {"connected": True, "version": version, "mode": self.mode, "message": "Ollama bilan aloqa o‘rnatildi."}
         except (httpx.HTTPError, ValueError) as exc:
             return {
                 "connected": False,
                 "version": None,
+                "mode": self.mode,
                 "message": f"Ollama bilan bog‘lanib bo‘lmadi: {type(exc).__name__}",
             }
 

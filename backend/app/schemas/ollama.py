@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class OllamaStatus(BaseModel):
     connected: bool
     version: str | None = None
+    mode: str = "local"
     message: str
 
 

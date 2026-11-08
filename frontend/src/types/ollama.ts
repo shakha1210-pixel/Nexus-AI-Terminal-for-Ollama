@@ -1,6 +1,7 @@
 export interface OllamaStatus {
   connected: boolean;
   version: string | null;
+  mode: "local" | "kaggle";
   message: string;
 }
 
