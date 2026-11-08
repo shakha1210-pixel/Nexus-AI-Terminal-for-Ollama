@@ -7,6 +7,7 @@ import {
 import KagglePanel from "./components/KagglePanel";
 import WorkspacePanel from "./components/WorkspacePanel";
 import ChatPanel from "./components/ChatPanel";
+import AgentPanel from "./components/AgentPanel";
 import ModelsPanel from "./components/ModelsPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
@@ -17,7 +18,7 @@ type Theme = "dark" | "light";
 
 function App() {
   const [theme, setTheme] = useState<Theme>("dark");
-  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat">("dashboard");
+  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +136,7 @@ function App() {
           <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" onClick={() => setActiveView("dashboard")}><LayoutDashboard size={17} />Dashboard</a>
           <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" onClick={() => setActiveView("explorer")}><HardDrive size={17} />Explorer</a>
           <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" onClick={() => setActiveView("chat")}><MessageSquare size={17} />Conversations</a>
-          <a className="nav-item" href="#agents"><Bot size={17} />My Agents</a>
+          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" onClick={() => setActiveView("agents")}><Bot size={17} />My Agents</a>
           <a className="nav-item" href="#workflows"><Workflow size={17} />Workflows</a>
         </div>
 
@@ -167,7 +168,7 @@ function App() {
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : "AI Chat"}</strong></div>
+          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? "Agent Runtime" : "AI Chat"}</strong></div>
           <div className="topbar-actions">
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
             <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label="Change theme" title="Change theme">
@@ -189,7 +190,7 @@ function App() {
               <h1>Dashboard</h1>
               <p className="page-subtitle">Your local AI environment at a glance.</p>
             </div>
-            <button className="primary-button" onClick={() => window.location.hash = "agents"}><Plus size={16} />Create agent</button>
+            <button className="primary-button" onClick={() => setActiveView("agents")}><Plus size={16} />Create agent</button>
           </div>
 
           {error && <div className="error-banner">{error}</div>}
@@ -213,7 +214,7 @@ function App() {
             <article className="stat-card">
               <div className="stat-top"><span>AI agents</span><div className="stat-icon"><Bot size={17} /></div></div>
               <div className="stat-value">—</div>
-              <p className="stat-foot">Agent workspace coming next</p>
+              <p className="stat-foot">Permission-scoped agent runtime</p>
             </article>
             <article className="stat-card">
               <div className="stat-top"><span>Workflows</span><div className="stat-icon"><Workflow size={17} /></div></div>
@@ -250,6 +251,11 @@ function App() {
               <div><p className="eyebrow">LOCAL DEVELOPMENT</p><h1>Explorer</h1><p className="page-subtitle">Manage project files and prepare context for your AI agents.</p></div>
             </div>
             <WorkspacePanel />
+          </section>
+        ) : activeView === "agents" ? (
+          <section className="page-content workstation-page">
+            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>My Agents</h1><p className="page-subtitle">Run a local agent with tightly scoped workspace access.</p></div></div>
+            <AgentPanel models={models} connected={connected} />
           </section>
         ) : (
           <section className="page-content workstation-page">
