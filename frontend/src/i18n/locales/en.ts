@@ -297,4 +297,5 @@ export const en = {
   "diagnostics.noBlockingWait": "Cooldown does not block the server; the remaining time updates automatically.",
   "settings.restartNote": "Saving an OpenAI-compatible key reloads the provider. The endpoint URL is configured through .env."
 
+  "diagnostics.connection": "Connection",
 } as const;
