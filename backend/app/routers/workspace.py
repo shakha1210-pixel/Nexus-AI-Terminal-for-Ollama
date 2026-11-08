@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
+from pathlib import Path
 from pydantic import BaseModel, Field
 
 from app.services.workspace_service import WorkspaceError, workspace_service
@@ -61,5 +63,22 @@ async def post_directory(payload: DirectoryCreate) -> dict:
 async def post_upload(payload: FileUpload) -> dict:
     try:
         return workspace_service.save_upload(payload.directory, payload.filename, payload.data_base64)
+    except WorkspaceError as exc:
+        raise _handle_workspace_error(exc) from exc
+
+
+@router.get("/asset")
+async def get_asset(path: str):
+    try:
+        asset_path = workspace_service.resolve(path)
+        if not asset_path.is_file() or asset_path.is_symlink():
+            raise WorkspaceError("Fayl topilmadi.")
+        media_type = {
+            ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml",
+        }.get(asset_path.suffix.lower(), "application/octet-stream")
+        if not media_type.startswith("image/"):
+            raise WorkspaceError("Bu fayl rasm emas.")
+        return FileResponse(asset_path, media_type=media_type)
     except WorkspaceError as exc:
         raise _handle_workspace_error(exc) from exc
