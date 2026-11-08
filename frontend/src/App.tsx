@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
-  Activity, Bot, Boxes, BookOpen, BriefcaseBusiness, ChevronDown, CircleHelp,
+  Activity, Bot, Boxes, BookOpen, Briefcase, ChevronDown, CircleHelp,
   Command, Cpu, Database, ExternalLink, Gauge, LayoutDashboard, MessageSquare,
   Moon, Network, Plus, RefreshCw, Search, Settings, ShieldCheck, Sun, Workflow, X,
 } from "lucide-react";
@@ -90,7 +90,7 @@ function Shell({
           <a className="nav-item" href="/#conversations"><MessageSquare size={17} />Conversations</a>
           <a className="nav-item" href="/#agents"><Bot size={17} />My Agents</a>
           <a className="nav-item" href="/#workflows"><Workflow size={17} />Workflows</a>
-          <NavLink to="/portfolio" className={({ isActive }) => "nav-item" + (isActive ? " active" : "")}><BriefcaseBusiness size={17} />Portfolio</NavLink>
+          <NavLink to="/portfolio" className={({ isActive }) => "nav-item" + (isActive ? " active" : "")}><Briefcase size={17} />Portfolio</NavLink>
         </div>
 
         <div className="nav-group">
@@ -313,7 +313,7 @@ function PortfolioPage({ theme, onThemeChange }: { theme: Theme; onThemeChange: 
       <section className="page-content portfolio-page">
         <div className="page-heading"><div><p className="eyebrow">WORKSPACE / SHOWCASE</p><h1>Portfolio</h1><p className="page-subtitle">A home for the AI projects you build with NEXUS.</p></div></div>
         <section className="panel portfolio-empty">
-          <div className="portfolio-orbit"><span /><span /><span /><BriefcaseBusiness size={25} /></div>
+          <div className="portfolio-orbit"><span /><span /><span /><Briefcase size={25} /></div>
           <p className="eyebrow">YOUR PROJECT SPACE</p>
           <h2>Your work will live here</h2>
           <p>Projects, agents, workflows and notebook-based experiments can be gathered here as a clear, shareable portfolio. The portfolio data and publishing flow are not connected yet.</p>
