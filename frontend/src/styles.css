@@ -534,5 +534,5 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 .agent-capabilities small { color:var(--muted); font-size:9px; line-height:1.5; }
 .agent-output { margin-top:16px; padding:14px; background:var(--surface-2); border:1px solid var(--border); border-radius:7px; }
 .agent-output-title { color:var(--subtle); font-size:8px; font-weight:700; letter-spacing:.12em; }
-.agent-output pre { margin:10px 0 0; color:var(--text); font:11px/1.7 inherit; white-space:pre-wrap; overflow-wrap:anywhere; }
+.agent-output pre { margin:10px 0 0; color:var(--text); font:inherit; font-size:11px; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; }
 @media(max-width:640px) { .agent-runtime-controls,.agent-capabilities { grid-template-columns:1fr; } .agent-runtime { padding:14px; } }
