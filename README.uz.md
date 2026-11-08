@@ -7,7 +7,7 @@ brauzerdagi interfeys bilan Ollama o‘rtasida API gateway vazifasini bajaradi.
 > **Loyiha holati:** Lokal dashboard, backend health/status endpointlari,
 > Ollama modellarini ko‘rish, ixtiyoriy Kaggle GPU boshqaruvi va lokal workspace Explorer ishlaydi.
 > Kaggle uchun operator o‘z hisob ma’lumotlari va notebook secret’larini
-> sozlashi kerak. Chat, agent runtime va workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va tanlangan fayllarni kontekst sifatida tayyorlash API darajasida mavjud.
+> sozlashi kerak. Ollama bilan streaming chat va suhbat tarixini saqlash mavjud. Agent runtime va workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va chatga tanlangan fayllarni kontekst sifatida biriktirish mavjud.
 > Ollama modellarini UI orqali yuklash va o‘chirish mavjud.
 
 Loyiha [MIT litsenziyasi](LICENSE) ostida tarqatiladi.
@@ -129,6 +129,10 @@ Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida l
 | `PUT` | `/api/workspace/file` | Matnli faylni saqlash |
 | `POST` | `/api/workspace/directory` | Papka yaratish |
 | `POST` | `/api/workspace/upload` | Faylni base64 orqali yuklash |\n| `GET` | `/api/agents/{agent_id}/permissions` | Agentning aniq fayllarga read ruxsatlarini ko‘rish |\n| `POST` | `/api/agents/{agent_id}/permissions/read` | Agentga bitta workspace faylini o‘qish ruxsatini berish; body: `{"path":"notes.md"}` |\n| `DELETE` | `/api/agents/{agent_id}/permissions/read?path=notes.md` | Fayl uchun read ruxsatini bekor qilish |\n| `POST` | `/api/agents/{agent_id}/context` | Ruxsat berilgan tanlangan fayllarni agent konteksti uchun olish; body: `{"paths":["notes.md"]}` |
+| `GET` | `/api/chat/conversations` | Suhbatlar ro‘yxatini olish |
+| `GET` | `/api/chat/conversations/{conversation_id}` | Suhbat tarixini olish |
+| `DELETE` | `/api/chat/conversations/{conversation_id}` | Suhbatni o‘chirish |
+| `POST` | `/api/chat/stream` | Ollama bilan streaming chat; body: model, message, conversation_id?, agent_id?, paths? |
 | `GET` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini olish |
 | `PUT` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini saqlash; body: `{"theme":"dark","sound_enabled":false}` |
 | `POST` | `/api/kaggle/start` | Kaggle runtime’ni boshlash; body: `{"model":"llama3.2"}` |
