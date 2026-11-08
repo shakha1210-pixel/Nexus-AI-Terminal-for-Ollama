@@ -12,7 +12,6 @@ import ModelsPanel from "./components/ModelsPanel";
 import ProviderPanel from "./components/ProviderPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
-import "./kaggle-styles.css";
 import "./providers-styles.css";
 
 type Theme = "dark" | "light";
