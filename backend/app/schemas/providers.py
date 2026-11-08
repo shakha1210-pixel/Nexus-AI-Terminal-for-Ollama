@@ -40,3 +40,33 @@ class ProviderPolicyUpdate(BaseModel):
 
 class ProviderPolicySnapshot(ProviderPolicyUpdate):
     updated: bool = False
+
+from pydantic import BaseModel, Field
+
+
+class ActiveProviderUpdate(BaseModel):
+    provider_id: str = Field(min_length=1, max_length=80)
+
+
+class ActiveProviderSnapshot(BaseModel):
+    provider_id: str
+
+
+class ProviderModelSnapshot(BaseModel):
+    name: str
+    display_name: str
+    capabilities: dict[str, bool]
+    metadata: dict = Field(default_factory=dict)
+
+
+class ProviderSnapshot(BaseModel):
+    id: str
+    name: str
+    configured: bool
+    connected: bool
+    models: list[ProviderModelSnapshot] = Field(default_factory=list)
+
+
+class ProviderCatalogSnapshot(BaseModel):
+    active_provider: str
+    providers: list[ProviderSnapshot]
