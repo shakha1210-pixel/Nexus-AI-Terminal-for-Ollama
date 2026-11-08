@@ -146,3 +146,29 @@ backend/   FastAPI API, Ollama/Kaggle services, schemas, notebook template
 frontend/  React + TypeScript dashboard
 nexus-ai/  Earlier standalone UI prototype (not the integrated application)
 ```
+
+
+## Windows desktop launcher (Stage 2)
+
+Install the backend and optional desktop dependencies:
+
+```powershell
+python -m pip install -r backend/requirements.txt
+python -m pip install -r desktop/requirements.txt
+```
+
+After building the frontend, run from the repository root:
+
+```powershell
+python desktop/launcher.py
+```
+
+- `--browser` opens the system browser instead of PyWebView.
+- `--dev` also starts the Vite development server on port 5173.
+- `--port 8123` changes the FastAPI port (default: 8000).
+- On Windows, if the WebView2 Runtime is not detected, the launcher explains how to install the official runtime and falls back to the browser.
+- Ollama remains a separate installation; the launcher does not bundle or start it.
+- The tray menu can reopen the window or exit the application. If optional PyWebView/tray packages are unavailable, browser fallback is used.
+- A Windows named mutex prevents a second NEXUS instance from starting.
+
+PyWebView, tray, and WebView2 behavior still needs validation on a real Windows 10/11 machine; Linux CI cannot fully verify those platform integrations.
