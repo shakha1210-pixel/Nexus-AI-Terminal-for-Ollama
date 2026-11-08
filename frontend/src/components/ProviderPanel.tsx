@@ -114,7 +114,7 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
           <label className="provider-field"><span>Retries before fallback</span><input type="number" min={0} max={10} value={policy.retry_limit} onChange={(e) => update("retry_limit", Number(e.target.value))} /></label>
           <label className="provider-field"><span>Cooldown (seconds)</span><input type="number" min={0} max={3600} value={policy.cooldown_seconds} onChange={(e) => update("cooldown_seconds", Number(e.target.value))} /></label>
         </div>
-        <label className="provider-field"><span>Allowed switching path</span><input value={pathText} onChange={(e) => { setPathText(e.target.value); setSaved(false); }} placeholder="openai-compatible → ollama-kaggle → anthropic" />
+        <label className="provider-field"><span>Allowed switching path</span><input value={pathText} onChange={(e) => { setPathText(e.target.value); setSaved(false); }} placeholder="openai-compatible → ollama" />
           <small>Only the listed order is eligible. Leave empty to block all automatic transitions.</small>
         </label>
         {policy.mode === "exception_based" && <fieldset className="provider-exceptions"><legend>Allowed failure types</legend>
