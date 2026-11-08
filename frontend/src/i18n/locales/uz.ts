@@ -297,5 +297,11 @@ export const uz = {
   "diagnostics.noBlockingWait": "Kutish serverni band qilmaydi; qolgan vaqt avtomatik yangilanadi.",
   "settings.restartNote": "OpenAI-compatible kaliti saqlanganda provider qayta sozlanadi. Endpoint manzili .env orqali belgilanadi."
 
-  "diagnostics.connection": "Ulanish",
+  "diagnostics.connection": "Ulanish",,
+  "diagnostics.tip.wait_or_switch": "Provider vaqtincha kutish rejimida. Kutish tugashini kuzating yoki ruxsat etilgan boshqa provider’ni tanlang.",
+  "diagnostics.tip.rate_limit": "So‘rovlar limiti oshgan. Retry-After muddati tugamaguncha yangi so‘rov yubormang.",
+  "diagnostics.tip.credentials": "Autentifikatsiya rad etildi. API kaliti va endpoint ruxsatlarini tekshiring; avtomatik qayta urinish bajarilmaydi.",
+  "diagnostics.tip.connectivity": "Ulanish yoki server holatini tekshiring. Vaqtinchalik xatolar uchun cooldown avtomatik qo‘llanadi.",
+  "diagnostics.tip.connection_check": "Provider javob bermadi. Xizmat holati, endpoint manzili va autentifikatsiyani tekshiring."
+
 } as const;
