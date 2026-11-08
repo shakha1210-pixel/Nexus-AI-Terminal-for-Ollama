@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import {
   Activity, Bot, Boxes, BookOpen, ChevronDown, CircleHelp, Command, Cpu,
   Database, ExternalLink, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
@@ -6,7 +7,7 @@ import {
 } from "lucide-react";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
-import { BrowserRouter, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import type { KaggleNotebook } from "./types/kaggle";
 
 type Theme = "dark" | "light";
@@ -224,7 +225,6 @@ function DashboardPage() {
 
 
 function NotebooksPage() {
-  const location = useLocation();
   const [notebooks, setNotebooks] = useState<KaggleNotebook[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -247,7 +247,7 @@ function NotebooksPage() {
 
   useEffect(() => { void loadNotebooks(""); }, []);
 
-  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     void loadNotebooks(query);
   };
