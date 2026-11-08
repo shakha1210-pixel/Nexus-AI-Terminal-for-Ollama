@@ -76,6 +76,17 @@ class AgentSandboxService:
             return "absent"
         return result.stdout.strip() or "unknown"
 
+    def _remove_stage(self, stage: Path) -> None:
+        if not stage.exists() or stage.is_symlink():
+            return
+        for item in stage.rglob("*"):
+            if item.is_dir() and not item.is_symlink():
+                item.chmod(0o700)
+            elif not item.is_symlink():
+                item.chmod(0o600)
+        stage.chmod(0o700)
+        shutil.rmtree(stage)
+
     def _write_snapshot(self, agent_id: str, paths: list[str]) -> Path:
         try:
             context = agent_access_service.build_context(agent_id, paths)
@@ -110,13 +121,16 @@ class AgentSandboxService:
                 if total > self.MAX_SNAPSHOT_BYTES:
                     raise AgentSandboxError("Sandbox fayllari umumiy hajmi 20 MB dan oshdi.")
                 destination.write_bytes(data)
-                destination.chmod(0o400)
+                destination.chmod(0o444)
             for directory in sorted((p for p in stage.rglob("*") if p.is_dir()), key=lambda p: len(p.parts), reverse=True):
-                directory.chmod(0o500)
-            stage.chmod(0o500)
+                directory.chmod(0o555)
+            stage.chmod(0o555)
             return stage
         except Exception:
-            shutil.rmtree(stage, ignore_errors=True)
+            try:
+                self._remove_stage(stage)
+            except OSError:
+                pass
             raise
 
     def start(self, agent_id: str, paths: list[str]) -> dict[str, Any]:
@@ -133,7 +147,7 @@ class AgentSandboxService:
         stage = self._write_snapshot(agent, paths)
         mount = f"type=bind,src={stage},dst=/workspace,readonly"
         if "," in str(stage):
-            shutil.rmtree(stage, ignore_errors=True)
+            self._remove_stage(stage)
             raise AgentSandboxError("Workspace yo‘lida vergul bor; Docker mount xavfsiz tuzilmadi.")
 
         command = [
@@ -156,7 +170,10 @@ class AgentSandboxService:
         try:
             result = self._docker(command)
         except Exception:
-            shutil.rmtree(stage, ignore_errors=True)
+            try:
+                self._remove_stage(stage)
+            except OSError:
+                pass
             raise
         return {
             "agent_id": agent,
@@ -175,8 +192,7 @@ class AgentSandboxService:
         if state != "absent":
             self._docker(["rm", "--force", name])
         stage = self._stage_path(agent)
-        if stage.exists() and not stage.is_symlink():
-            shutil.rmtree(stage)
+        self._remove_stage(stage)
         return {"agent_id": agent, "container": name, "status": "stopped"}
 
     def status(self, agent_id: str) -> dict[str, Any]:
