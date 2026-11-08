@@ -7,7 +7,7 @@ brauzerdagi interfeys bilan Ollama o‘rtasida API gateway vazifasini bajaradi.
 > **Loyiha holati:** Lokal dashboard, backend health/status endpointlari,
 > Ollama modellarini ko‘rish, ixtiyoriy Kaggle GPU boshqaruvi va lokal workspace Explorer ishlaydi.
 > Kaggle uchun operator o‘z hisob ma’lumotlari va notebook secret’larini
-> sozlashi kerak. Chat, agentni ishga tushirish, agent ruxsatlari va workflow funksiyalari hali mavjud emas.
+> sozlashi kerak. Chat, agent runtime va workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va tanlangan fayllarni kontekst sifatida tayyorlash API darajasida mavjud.
 > Ollama modellarini UI orqali yuklash va o‘chirish mavjud.
 
 Loyiha [MIT litsenziyasi](LICENSE) ostida tarqatiladi.
@@ -107,7 +107,7 @@ parollarni Git’ga qo‘shmang.
 
 ## Lokal Workspace
 
-Explorer standart holatda foydalanuvchining `~/NexusWorkspace` papkasidan foydalanadi. Boshqa papkani tanlash uchun backend muhitida `NEXUS_WORKSPACE_ROOT` o‘zgaruvchisini belgilang. API yo‘llari workspace ildizidan tashqariga chiqishni rad etadi; ramziy havolalar ro‘yxatda ko‘rsatilmaydi. Matnli fayllarni ochish/tahrirlash limiti 2 MB, yuklash limiti 10 MB. Hozircha fayl o‘chirish va agentning avtomatik fayl ruxsatlari yoqilmagan.
+Explorer standart holatda foydalanuvchining `~/NexusWorkspace` papkasidan foydalanadi. Boshqa papkani tanlash uchun backend muhitida `NEXUS_WORKSPACE_ROOT` o‘zgaruvchisini belgilang. API yo‘llari workspace ildizidan tashqariga chiqishni rad etadi; ramziy havolalar ro‘yxatda ko‘rsatilmaydi. Matnli fayllarni ochish/tahrirlash limiti 2 MB, yuklash limiti 10 MB. Fayl o‘chirish mavjud emas. Agent ruxsatlari default holatda bo‘sh; har bir agentga faqat alohida tanlangan fayllar uchun read ruxsati beriladi.
 
 ## API endpointlari
 
@@ -128,7 +128,7 @@ Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida l
 | `POST` | `/api/workspace/file` | Yangi matnli fayl yaratish |
 | `PUT` | `/api/workspace/file` | Matnli faylni saqlash |
 | `POST` | `/api/workspace/directory` | Papka yaratish |
-| `POST` | `/api/workspace/upload` | Faylni base64 orqali yuklash |
+| `POST` | `/api/workspace/upload` | Faylni base64 orqali yuklash |\n| `GET` | `/api/agents/{agent_id}/permissions` | Agentning aniq fayllarga read ruxsatlarini ko‘rish |\n| `POST` | `/api/agents/{agent_id}/permissions/read` | Agentga bitta workspace faylini o‘qish ruxsatini berish; body: `{"path":"notes.md"}` |\n| `DELETE` | `/api/agents/{agent_id}/permissions/read?path=notes.md` | Fayl uchun read ruxsatini bekor qilish |\n| `POST` | `/api/agents/{agent_id}/context` | Ruxsat berilgan tanlangan fayllarni agent konteksti uchun olish; body: `{"paths":["notes.md"]}` |
 | `GET` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini olish |
 | `PUT` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini saqlash; body: `{"theme":"dark","sound_enabled":false}` |
 | `POST` | `/api/kaggle/start` | Kaggle runtime’ni boshlash; body: `{"model":"llama3.2"}` |
