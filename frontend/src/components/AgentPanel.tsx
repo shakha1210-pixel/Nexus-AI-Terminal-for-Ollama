@@ -118,41 +118,24 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
     setError("");
     setStatus(t("agent.starting"));
     try {
-      const response = await fetch(`${API_BASE}/api/agents/${encodeURIComponent(agentId)}/run`, {
+      const response = await openEventStream("/api/agents/" + encodeURIComponent(agentId) + "/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider_id: providerId, model, task: task.trim() }),
       });
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.detail ?? `Agent API xatosi: ${response.status}`);
-      }
-      if (!response.body) throw new Error(t("agent.streamUnavailable"));
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split("\n\n");
-        buffer = events.pop() ?? "";
-        for (const event of events) {
-          const eventName = event.match(/^event: (.+)$/m)?.[1];
-          const dataLine = event.split("\n").find((line) => line.startsWith("data: "));
-          if (!dataLine) continue;
-          const payload = JSON.parse(dataLine.slice(6));
-          if (eventName === "status") setStatus(payload.message);
-          if (eventName === "tool") setStatus(`${t("agent.tool")}: ${payload.name} — ${payload.result}`);
-          if (eventName === "token") setOutput((current) => current + payload.content);
-          if (eventName === "approval") {
-            setStatus(payload.error ?? payload.message ?? t("agent.proposalSubmitted"));
-            void loadApprovals();
-          }
-          if (eventName === "error") setError(payload.message ?? t("agent.runError"));
-          if (eventName === "done") setStatus(t("agent.completed").replace("{count}", String(payload.tool_calls)));
+      await readEventStream(response, ({ event, data }) => {
+        if (!data) return;
+        const payload = JSON.parse(data);
+        if (event === "status") setStatus(payload.message);
+        if (event === "tool") setStatus(t("agent.tool") + ": " + payload.name + " — " + payload.result);
+        if (event === "token") setOutput((current) => current + payload.content);
+        if (event === "approval") {
+          setStatus(payload.error ?? payload.message ?? t("agent.proposalSubmitted"));
+          void loadApprovals();
         }
-      }
+        if (event === "error") setError(payload.message ?? t("agent.runError"));
+        if (event === "done") setStatus(t("agent.completed").replace("{count}", String(payload.tool_calls)));
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("agent.startError"));
     } finally {
