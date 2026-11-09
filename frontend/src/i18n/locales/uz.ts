@@ -301,8 +301,7 @@ export const uz = {
   "diagnostics.tip.rate_limit": "So‘rovlar limiti oshgan. Retry-After muddati tugamaguncha yangi so‘rov yubormang.",
   "diagnostics.tip.credentials": "Autentifikatsiya rad etildi. API kaliti va endpoint ruxsatlarini tekshiring; avtomatik qayta urinish bajarilmaydi.",
   "diagnostics.tip.connectivity": "Ulanish yoki server holatini tekshiring. Vaqtinchalik xatolar uchun cooldown avtomatik qo‘llanadi.",
-  "diagnostics.tip.connection_check": "Provider javob bermadi. Xizmat holati, endpoint manzili va autentifikatsiyani tekshiring."
-
+  "diagnostics.tip.connection_check": "Provider javob bermadi. Xizmat holati, endpoint manzili va autentifikatsiyani tekshiring.",
   "diagnostics.recovering": "Tiklanish tekshiruvi",
   "diagnostics.tip.recovery_probe": "Provider tiklanishi avtomatik tekshirilmoqda. Tekshiruv yakunlangach holat yangilanadi.",
 } as const;
