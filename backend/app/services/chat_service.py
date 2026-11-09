@@ -13,6 +13,7 @@ import httpx
 from app.services.agent_access_service import AgentAccessError, agent_access_service
 from app.providers.base import ProviderCapabilities
 from app.providers.manager import ProviderCapabilityError, provider_manager
+from app.services.provider_resilience_service import ProviderCooldownError
 
 
 class ChatError(ValueError):
@@ -151,7 +152,10 @@ class ChatService:
                     self._write(data)
             yield "event: done\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\n\n"
         except (httpx.HTTPError, ChatError, ValueError, RuntimeError, KeyError) as exc:
-            message_text = str(exc) if isinstance(exc, ChatError) else f"Provider chat xatosi: {type(exc).__name__}"
+            if isinstance(exc, ProviderCooldownError):
+                message_text = f"Provider vaqtincha kutish rejimida. Taxminan {exc.retry_after:.0f} soniya kuting yoki boshqa ruxsat etilgan provider’ni tanlang."
+            else:
+                message_text = str(exc) if isinstance(exc, ChatError) else f"Provider chat xatosi: {type(exc).__name__}"
             yield "event: error\ndata: " + json.dumps({"message": message_text}, ensure_ascii=False) + "\n\n"
 
 
