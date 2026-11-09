@@ -1,6 +1,9 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+from app.routers.workspace import workspace_service
 
 from fastapi.testclient import TestClient
 
@@ -46,6 +49,20 @@ class FrontendServingTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Not Found"})
+
+    def test_untrusted_host_is_rejected(self) -> None:
+        response = self.client.get("/api/health", headers={"host": "attacker.example"})
+        self.assertEqual(response.status_code, 400)
+
+    def test_svg_asset_is_sandboxed_and_nosniff(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "sample.svg").write_text("<svg xmlns='http://www.w3.org/2000/svg'></svg>", encoding="utf-8")
+            with patch.object(workspace_service, "root", root):
+                response = self.client.get("/api/workspace/asset", params={"path": "sample.svg"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers.get("content-security-policy"), "sandbox; default-src 'none'")
+        self.assertEqual(response.headers.get("x-content-type-options"), "nosniff")
 
     def test_health_route_is_not_shadowed_by_static_mount(self) -> None:
         response = self.client.get("/api/health")
