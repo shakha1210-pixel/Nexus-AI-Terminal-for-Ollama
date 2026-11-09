@@ -41,6 +41,11 @@ def _error(exc: AgentAccessError) -> HTTPException:
     return HTTPException(status_code=400, detail=str(exc))
 
 
+@router.get("")
+async def list_agents() -> dict:
+    return {"agent_ids": sorted(set(agent_control_service.list_agent_ids()) | set(agent_access_service.list_agent_ids()))}
+
+
 @router.get("/{agent_id}/permissions")
 async def get_permissions(agent_id: str) -> dict:
     try:

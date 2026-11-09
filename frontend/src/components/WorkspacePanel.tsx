@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { File, FileImage, FilePlus2, Folder, FolderPlus, HardDrive, RefreshCw, Save, Upload, X } from "lucide-react";
 import { useTranslation } from "../i18n";
+import { useAgentContext } from "../contexts/AgentContext";
+import { request } from "../services/http";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 type Entry = { name: string; path: string; kind: "file" | "directory"; size: number | null; modified_at: number };
@@ -8,24 +10,20 @@ type TreeResponse = { root_name: string; path: string; entries: Entry[] };
 type OpenFile = { path: string; content: string; dirty: boolean };
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, init);
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.detail ?? `API error: ${response.status}`);
-  }
-  return response.json() as Promise<T>;
+  const body = typeof init?.body === "string" ? JSON.parse(init.body) : init?.body;
+  return request<T>(path, { ...init, body });
 }
 const prettySize = (size: number | null) => size === null ? "Folder" : size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`;
 
 export default function WorkspacePanel() {
   const { t } = useTranslation();
+  const { agentId, setAgentId } = useAgentContext();
   const [tree, setTree] = useState<TreeResponse | null>(null);
   const [currentPath, setCurrentPath] = useState("");
   const [activeFile, setActiveFile] = useState<OpenFile | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("");
-  const [agentId, setAgentId] = useState("default");
   const [readGranted, setReadGranted] = useState(false);
   const uploadRef = useRef<HTMLInputElement>(null);
   const loadTree = useCallback(async (path = currentPath) => {

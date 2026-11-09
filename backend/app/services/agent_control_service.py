@@ -52,6 +52,16 @@ class AgentControlService:
         temp.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
         os.replace(temp, self.file_path)
 
+    def list_agent_ids(self) -> list[str]:
+        with self._lock:
+            values = {"default"}
+            for candidate in self._read().keys():
+                try:
+                    values.add(self._agent_id(candidate))
+                except AgentControlError:
+                    continue
+            return sorted(values)
+
     def get(self, agent_id: str) -> dict[str, Any]:
         agent = self._agent_id(agent_id)
         with self._lock:
