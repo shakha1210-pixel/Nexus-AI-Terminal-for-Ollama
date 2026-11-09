@@ -58,7 +58,7 @@ export default function KaggleNotebookLibrary() {
               <strong>{item.title}</strong>
               <div className="kaggle-msg">{item.ref} · {item.votes} votes {item.last_run ? `· ${item.last_run}` : ""}</div>
             </div>
-            <a className="secondary-button" href={`/api/kaggle/notebooks/${encodeURIComponent(item.ref.split("/")[0])}/${encodeURIComponent(item.ref.split("/")[1])}/download`}>
+            <a className="secondary-button" href={api.kaggleNotebookDownloadUrl(item.ref)}>
               <Download size={14} />{t("kaggle.download")}
             </a>
           </div>
