@@ -154,7 +154,8 @@ function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-  }, [theme]);
+    document.documentElement.lang = language;
+  }, [theme, language]);
 
   useEffect(() => {
     if (!preferencesReady) return;
@@ -173,6 +174,7 @@ function App() {
   return (
     <AgentProvider>
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">{t("accessibility.skipToContent")}</a>
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><Command size={19} strokeWidth={2.2} /></div>
@@ -185,29 +187,31 @@ function App() {
           <ChevronDown size={15} />
         </button>
 
+        <nav className="sidebar-nav" aria-label={t("nav.workspaceTitle")}>
         <div className="nav-group">
           <p className="nav-label">{t("nav.workspace")}</p>
-          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" onClick={() => navigateTo("dashboard")}><LayoutDashboard size={17} />{t("nav.dashboard")}</a>
-          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" onClick={() => navigateTo("explorer")}><HardDrive size={17} />{t("nav.explorer")}</a>
-          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" onClick={() => navigateTo("chat")}><MessageSquare size={17} />{t("nav.conversations")}</a>
-          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" onClick={() => navigateTo("agents")}><Bot size={17} />{t("nav.agents")}</a>
-          <a className="nav-item" href="#workflows"><Workflow size={17} />{t("nav.workflows")}</a>
+          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" aria-label={t("nav.dashboard")} title={t("nav.dashboard")} aria-current={activeView === "dashboard" ? "page" : undefined} onClick={() => navigateTo("dashboard")}><LayoutDashboard size={17} aria-hidden="true" />{t("nav.dashboard")}</a>
+          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" aria-label={t("nav.explorer")} title={t("nav.explorer")} aria-current={activeView === "explorer" ? "page" : undefined} onClick={() => navigateTo("explorer")}><HardDrive size={17} aria-hidden="true" />{t("nav.explorer")}</a>
+          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" aria-label={t("nav.conversations")} title={t("nav.conversations")} aria-current={activeView === "chat" ? "page" : undefined} onClick={() => navigateTo("chat")}><MessageSquare size={17} aria-hidden="true" />{t("nav.conversations")}</a>
+          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" aria-label={t("nav.agents")} title={t("nav.agents")} aria-current={activeView === "agents" ? "page" : undefined} onClick={() => navigateTo("agents")}><Bot size={17} aria-hidden="true" />{t("nav.agents")}</a>
+          <a className="nav-item" href="#workflows" aria-label={t("nav.workflows")} title={t("nav.workflows")}><Workflow size={17} aria-hidden="true" />{t("nav.workflows")}</a>
         </div>
 
         <div className="nav-group">
           <p className="nav-label">{t("nav.resources")}</p>
-          <a className="nav-item" href="#models"><Boxes size={17} />{t("nav.models")}<span className="nav-count">{models.length}</span></a>
-          <a className="nav-item" href="#knowledge"><Database size={17} />{t("nav.knowledge")}</a>
-          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" onClick={() => navigateTo("providers")}><Network size={17} />{t("nav.providers")}</a>
-          <a className="nav-item" href="#integrations"><Workflow size={17} />{t("nav.integrations")}</a>
+          <a className="nav-item" href="#models" aria-label={t("nav.models")} title={t("nav.models")}><Boxes size={17} aria-hidden="true" />{t("nav.models")}<span className="nav-count">{models.length}</span></a>
+          <a className="nav-item" href="#knowledge" aria-label={t("nav.knowledge")} title={t("nav.knowledge")}><Database size={17} aria-hidden="true" />{t("nav.knowledge")}</a>
+          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" aria-label={t("nav.providers")} title={t("nav.providers")} aria-current={activeView === "providers" ? "page" : undefined} onClick={() => navigateTo("providers")}><Network size={17} aria-hidden="true" />{t("nav.providers")}</a>
+          <a className="nav-item" href="#integrations" aria-label={t("nav.integrations")} title={t("nav.integrations")}><Workflow size={17} aria-hidden="true" />{t("nav.integrations")}</a>
         </div>
 
         <div className="nav-group">
           <p className="nav-label">{t("nav.system")}</p>
-          <a className="nav-item" href="#runtime"><Activity size={17} />{t("nav.runtime")}</a>
-          <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" onClick={() => navigateTo("settings")}><Settings size={17} />{t("nav.settings")}</a>
+          <a className="nav-item" href="#runtime" aria-label={t("nav.runtime")} title={t("nav.runtime")}><Activity size={17} aria-hidden="true" />{t("nav.runtime")}</a>
+          <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" aria-label={t("nav.settings")} title={t("nav.settings")} aria-current={activeView === "settings" ? "page" : undefined} onClick={() => navigateTo("settings")}><Settings size={17} aria-hidden="true" />{t("nav.settings")}</a>
         </div>
 
+        </nav>
         <div className="sidebar-bottom">
           <div className="local-card">
             <div className="local-card-icon"><ShieldCheck size={16} /></div>
@@ -221,7 +225,7 @@ function App() {
         </div>
       </aside>
 
-      <main className="main-content" id="dashboard">
+      <main className="main-content" id="main-content" tabIndex={-1}>
         <header className="topbar">
           <div className="breadcrumbs"><span>{t("nav.workspaceTitle")}</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? t("nav.dashboard") : activeView === "explorer" ? t("nav.explorer") : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? t("nav.providers") : activeView === "settings" ? t("nav.settings") : t("nav.aiChat")}</strong></div>
           <div className="topbar-actions">
@@ -239,7 +243,7 @@ function App() {
         </header>
 
         {visitedViews.has("dashboard") && <div hidden={activeView !== "dashboard"} style={{ display: activeView === "dashboard" ? "block" : "none" }}>
-        <section className="page-content">
+        <section className="page-content" id="dashboard">
           <div className="page-heading">
             <div>
               <p className="eyebrow">{t("dashboard.overview")}</p>
@@ -259,7 +263,7 @@ function App() {
           <div className="stats-grid">
             <article className="stat-card">
               <div className="stat-top"><span>{t("dashboard.ollamaRuntime")}</span><div className="stat-icon"><Activity size={17} /></div></div>
-              <div className="stat-value status-value"><span className={`status-dot ${ollamaConnected ? "online" : "offline"}`} />{loading && !status ? t("dashboard.checking") : ollamaConnected ? t("status.connected") : t("status.offline")}</div>
+              <div className="stat-value status-value" aria-live="polite" aria-atomic="true"><span className={`status-dot ${ollamaConnected ? "online" : "offline"}`} />{loading && !status ? t("dashboard.checking") : ollamaConnected ? t("status.connected") : t("status.offline")}</div>
               <p className="stat-foot">{status?.version ? `Version ${status.version}` : t("dashboard.localRuntime")}</p>
             </article>
             <article className="stat-card">

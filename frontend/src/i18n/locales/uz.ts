@@ -318,4 +318,5 @@ export const uz = {
   "agent.originalVersion": "Amaldagi fayl",
   "agent.proposedVersion": "Taklif qilingan fayl",
   "agent.originalUnavailable": "Bu eski so‘rov uchun dastlabki nusxa saqlanmagan.",
+  "accessibility.skipToContent": "Asosiy mazmunga o‘tish",
 } as const;
