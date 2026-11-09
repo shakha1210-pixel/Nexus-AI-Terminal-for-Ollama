@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import os
 import re
 import subprocess
@@ -123,7 +124,11 @@ class KaggleNotebookService:
             if source.stat().st_size > self.MAX_NOTEBOOK_BYTES:
                 raise KaggleNotebookError("Notebook 20 MB limitdan katta.")
             payload = source.read_bytes()
-            if not payload.startswith(b"{") or b'"cells"' not in payload[:4096]:
+            try:
+                notebook = json.loads(payload)
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise KaggleNotebookError("Yuklangan fayl yaroqli Jupyter notebook formatida emas.") from exc
+            if not isinstance(notebook, dict) or not isinstance(notebook.get("cells"), list) or notebook.get("nbformat") != 4:
                 raise KaggleNotebookError("Yuklangan fayl yaroqli Jupyter notebook formatida emas.")
 
         target = destination_dir / f"{owner}__{slug}.ipynb"
