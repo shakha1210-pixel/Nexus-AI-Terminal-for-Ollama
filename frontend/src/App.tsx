@@ -21,6 +21,26 @@ import "./providers-styles.css";
 type Theme = "dark" | "light";
 type View = "dashboard" | "explorer" | "chat" | "agents" | "providers" | "settings";
 
+const viewFromHash = (hash: string): View | null => {
+  switch (hash.replace(/^#/, "")) {
+    case "dashboard": return "dashboard";
+    case "explorer": return "explorer";
+    case "conversations": return "chat";
+    case "agents": return "agents";
+    case "providers": return "providers";
+    case "settings": return "settings";
+    default: return null;
+  }
+};
+
+const hashForView = (view: View): string => ({
+  dashboard: "#dashboard",
+  explorer: "#explorer",
+  chat: "#conversations",
+  agents: "#agents",
+  providers: "#providers",
+  settings: "#settings",
+})[view];
 
 function App() {
   const { t, language, setLanguage } = useTranslation();
@@ -30,6 +50,32 @@ function App() {
   const navigateTo = useCallback((view: View) => {
     setActiveView(view);
     setVisitedViews((current) => current.has(view) ? current : new Set(current).add(view));
+    const nextHash = hashForView(view);
+    if (window.location.hash !== nextHash) {
+      window.history.pushState(null, "", nextHash);
+    }
+  }, []);
+
+  useEffect(() => {
+    const syncViewFromLocation = () => {
+      const view = viewFromHash(window.location.hash);
+      if (!view) {
+        window.history.replaceState(null, "", hashForView("dashboard"));
+        setActiveView("dashboard");
+        setVisitedViews((current) => current.has("dashboard") ? current : new Set(current).add("dashboard"));
+        return;
+      }
+      setActiveView(view);
+      setVisitedViews((current) => current.has(view) ? current : new Set(current).add(view));
+    };
+
+    syncViewFromLocation();
+    window.addEventListener("popstate", syncViewFromLocation);
+    window.addEventListener("hashchange", syncViewFromLocation);
+    return () => {
+      window.removeEventListener("popstate", syncViewFromLocation);
+      window.removeEventListener("hashchange", syncViewFromLocation);
+    };
   }, []);
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [kaggleStatus, setKaggleStatus] = useState<KaggleStatus | null>(null);
@@ -190,25 +236,25 @@ function App() {
         <nav className="sidebar-nav" aria-label={t("nav.workspaceTitle")}>
         <div className="nav-group">
           <p className="nav-label">{t("nav.workspace")}</p>
-          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" aria-label={t("nav.dashboard")} title={t("nav.dashboard")} aria-current={activeView === "dashboard" ? "page" : undefined} onClick={() => navigateTo("dashboard")}><LayoutDashboard size={17} aria-hidden="true" />{t("nav.dashboard")}</a>
-          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" aria-label={t("nav.explorer")} title={t("nav.explorer")} aria-current={activeView === "explorer" ? "page" : undefined} onClick={() => navigateTo("explorer")}><HardDrive size={17} aria-hidden="true" />{t("nav.explorer")}</a>
-          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" aria-label={t("nav.conversations")} title={t("nav.conversations")} aria-current={activeView === "chat" ? "page" : undefined} onClick={() => navigateTo("chat")}><MessageSquare size={17} aria-hidden="true" />{t("nav.conversations")}</a>
-          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" aria-label={t("nav.agents")} title={t("nav.agents")} aria-current={activeView === "agents" ? "page" : undefined} onClick={() => navigateTo("agents")}><Bot size={17} aria-hidden="true" />{t("nav.agents")}</a>
-          <a className="nav-item" href="#workflows" aria-label={t("nav.workflows")} title={t("nav.workflows")}><Workflow size={17} aria-hidden="true" />{t("nav.workflows")}</a>
+          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" aria-label={t("nav.dashboard")} title={t("nav.dashboard")} aria-current={activeView === "dashboard" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("dashboard"); }}><LayoutDashboard size={17} aria-hidden="true" />{t("nav.dashboard")}</a>
+          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" aria-label={t("nav.explorer")} title={t("nav.explorer")} aria-current={activeView === "explorer" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("explorer"); }}><HardDrive size={17} aria-hidden="true" />{t("nav.explorer")}</a>
+          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" aria-label={t("nav.conversations")} title={t("nav.conversations")} aria-current={activeView === "chat" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("chat"); }}><MessageSquare size={17} aria-hidden="true" />{t("nav.conversations")}</a>
+          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" aria-label={t("nav.agents")} title={t("nav.agents")} aria-current={activeView === "agents" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("agents"); }}><Bot size={17} aria-hidden="true" />{t("nav.agents")}</a>
+          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.workflows")} title={t("nav.workflows")}><Workflow size={17} aria-hidden="true" />{t("nav.workflows")}</span>
         </div>
 
         <div className="nav-group">
           <p className="nav-label">{t("nav.resources")}</p>
-          <a className="nav-item" href="#models" aria-label={t("nav.models")} title={t("nav.models")}><Boxes size={17} aria-hidden="true" />{t("nav.models")}<span className="nav-count">{models.length}</span></a>
-          <a className="nav-item" href="#knowledge" aria-label={t("nav.knowledge")} title={t("nav.knowledge")}><Database size={17} aria-hidden="true" />{t("nav.knowledge")}</a>
-          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" aria-label={t("nav.providers")} title={t("nav.providers")} aria-current={activeView === "providers" ? "page" : undefined} onClick={() => navigateTo("providers")}><Network size={17} aria-hidden="true" />{t("nav.providers")}</a>
-          <a className="nav-item" href="#integrations" aria-label={t("nav.integrations")} title={t("nav.integrations")}><Workflow size={17} aria-hidden="true" />{t("nav.integrations")}</a>
+          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.models")} title={t("nav.models")}><Boxes size={17} aria-hidden="true" />{t("nav.models")}<span className="nav-count">{models.length}</span></span>
+          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.knowledge")} title={t("nav.knowledge")}><Database size={17} aria-hidden="true" />{t("nav.knowledge")}</span>
+          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" aria-label={t("nav.providers")} title={t("nav.providers")} aria-current={activeView === "providers" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("providers"); }}><Network size={17} aria-hidden="true" />{t("nav.providers")}</a>
+          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.integrations")} title={t("nav.integrations")}><Workflow size={17} aria-hidden="true" />{t("nav.integrations")}</span>
         </div>
 
         <div className="nav-group">
           <p className="nav-label">{t("nav.system")}</p>
-          <a className="nav-item" href="#runtime" aria-label={t("nav.runtime")} title={t("nav.runtime")}><Activity size={17} aria-hidden="true" />{t("nav.runtime")}</a>
-          <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" aria-label={t("nav.settings")} title={t("nav.settings")} aria-current={activeView === "settings" ? "page" : undefined} onClick={() => navigateTo("settings")}><Settings size={17} aria-hidden="true" />{t("nav.settings")}</a>
+          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.runtime")} title={t("nav.runtime")}><Activity size={17} aria-hidden="true" />{t("nav.runtime")}</span>
+          <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" aria-label={t("nav.settings")} title={t("nav.settings")} aria-current={activeView === "settings" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("settings"); }}><Settings size={17} aria-hidden="true" />{t("nav.settings")}</a>
         </div>
 
         </nav>
