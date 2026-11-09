@@ -260,3 +260,26 @@ docker build --pull -t nexus-agent-sandbox:py311 -f backend/sandbox/Dockerfile b
 ```
 
 Konteyner tarmoqsiz, read-only root filesystem, cheklangan Linux capabilities, no-new-privileges, PID/RAM/CPU va 12 soniyalik vaqt limiti bilan ishlaydi. Har bir o‘qish uchun alohida konteyner yaratiladi va yakunda o‘chiriladi. Docker CLI/daemon yoki image mavjud bo‘lmasa, fayl o‘qish rad etiladi — sandboxsiz fallback yo‘q. Bu himoya faqat agentning fayl o‘qish vositasini qamrab oladi; FastAPI va provider jarayonlari hostda qoladi. Backend API’ni ishonchsiz tarmoqqa ochmang.
+
+
+### Docker Agent Sandbox — haqiqiy runtime smoke-test
+
+Docker Desktop ishlayotgan Windows kompyuterida repository root papkasidan
+PowerShell ochib quyidagini bajaring:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/docker-agent-sandbox-smoke-test.ps1
+```
+
+Skript sandbox image’ini build qiladi, vaqtinchalik matnli faylni alohida
+container ichida o‘qib ko‘radi va `docker inspect` orqali quyidagilarni
+tekshiradi: `network=none`, read-only root filesystem, barcha capabilities
+o‘chirilgani, `no-new-privileges`, PID/RAM/CPU limitlari, non-root user va
+bitta faylning read-only mount qilinishi. Yakunda vaqtinchalik container va
+probe fayl o‘chiriladi; build qilingan image saqlanadi.
+
+Skript workspace fayllariga tegmaydi va NEXUS backend’ini ishga tushirmaydi.
+Bu container konfiguratsiyasi hamda oddiy fayl o‘qishning smoke-testidir;
+Agent API integratsiyasi, Windows launcher yoki xavfsizlikning barcha
+ehtimoliy chetlab o‘tish holatlarini to‘liq tasdiqlamaydi. Natijani
+Docker Desktop ishlayotgan haqiqiy Windows qurilmasida qayd eting.
