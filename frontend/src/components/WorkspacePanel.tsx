@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { File, FileImage, FilePlus2, Folder, FolderPlus, HardDrive, RefreshCw, Save, Upload, X } from "lucide-react";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
+import { request } from "../services/http";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 type Entry = { name: string; path: string; kind: "file" | "directory"; size: number | null; modified_at: number };
