@@ -9,7 +9,7 @@ from app.routers.agents import AgentRunRequest, run_agent
 class AgentStreamRouterTests(unittest.IsolatedAsyncioTestCase):
     async def test_unexpected_stream_failure_emits_safe_error_event(self) -> None:
         async def broken_stream(**kwargs):
-            yield 'event: status\\ndata: {"message":"started"}\\n\\n'
+            yield 'event: status\ndata: {"message":"started"}\n\n'
             raise RuntimeError("private internal detail")
 
         with patch("app.routers.agents.agent_runtime_service.run", side_effect=broken_stream):
