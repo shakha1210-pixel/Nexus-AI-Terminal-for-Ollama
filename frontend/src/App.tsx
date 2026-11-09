@@ -187,7 +187,7 @@ function App() {
           <ChevronDown size={15} />
         </button>
 
-        <nav className="sidebar-nav" aria-label={t("nav.workspaceTitle")}> 
+        <nav className="sidebar-nav" aria-label={t("nav.workspaceTitle")}>
         <div className="nav-group">
           <p className="nav-label">{t("nav.workspace")}</p>
           <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" aria-label={t("nav.dashboard")} title={t("nav.dashboard")} aria-current={activeView === "dashboard" ? "page" : undefined} onClick={() => navigateTo("dashboard")}><LayoutDashboard size={17} aria-hidden="true" />{t("nav.dashboard")}</a>
@@ -243,7 +243,7 @@ function App() {
         </header>
 
         {visitedViews.has("dashboard") && <div hidden={activeView !== "dashboard"} style={{ display: activeView === "dashboard" ? "block" : "none" }}>
-        <section className="page-content">
+        <section className="page-content" id="dashboard">
           <div className="page-heading">
             <div>
               <p className="eyebrow">{t("dashboard.overview")}</p>
