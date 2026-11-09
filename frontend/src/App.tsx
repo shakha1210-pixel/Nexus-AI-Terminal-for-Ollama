@@ -330,8 +330,8 @@ function App() {
         )}
         {visitedViews.has("dashboard") && <div hidden={activeView !== "dashboard"} style={{ display: activeView === "dashboard" ? "block" : "none" }} className="kaggle-section">
           <KagglePanel status={kaggleStatus} onStatusChange={setKaggleStatus} onModeChange={() => { void refresh(); }} />
-        </div>
-        {visitedViews.has("explorer") && <section hidden={activeView !== "explorer"} style={{ display: activeView === "explorer" ? "block" : "none" }} className="page-content workstation-page"><WorkspacePanel /></section>
+        </div>}
+        {visitedViews.has("explorer") && <section hidden={activeView !== "explorer"} style={{ display: activeView === "explorer" ? "block" : "none" }} className="page-content workstation-page"><WorkspacePanel /></section>}
         {visitedViews.has("providers") && <section hidden={activeView !== "providers"} style={{ display: activeView === "providers" ? "block" : "none" }} className="page-content workstation-page">
           <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
             void api.setActiveProvider(providerId).then((result) => {
@@ -341,11 +341,11 @@ function App() {
               setError(err instanceof Error ? err.message : t("providers.selectionError"));
             });
           }} />
-        </section>
-        {visitedViews.has("settings") && <section hidden={activeView !== "settings"} style={{ display: activeView === "settings" ? "block" : "none" }} className="page-content workstation-page"><SettingsPanel /></section>
+        </section>}
+        {visitedViews.has("settings") && <section hidden={activeView !== "settings"} style={{ display: activeView === "settings" ? "block" : "none" }} className="page-content workstation-page"><SettingsPanel /></section>}
         {visitedViews.has("agents") && <section hidden={activeView !== "agents"} style={{ display: activeView === "agents" ? "block" : "none" }} className="page-content workstation-page">
           <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
-        </section>
+        </section>}
         {visitedViews.has("chat") && <section hidden={activeView !== "chat"} style={{ display: activeView === "chat" ? "block" : "none" }} className="page-content workstation-page">
           <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
         </section>}
