@@ -103,7 +103,7 @@ class ProviderResilienceService:
                 duration = self.base_cooldown
             elif state.consecutive_failures >= self.failure_threshold:
                 exponent = state.consecutive_failures - self.failure_threshold
-                duration = min(self.max_cooldown, self.base_cooldown * (2 ** exponent))
+                duration = min(self.max_cooldown, self.base_cooldown * (2 ** min(exponent, 16)))
             else:
                 duration = 0.0
             if duration > 0:
