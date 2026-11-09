@@ -247,3 +247,16 @@ python desktop/launcher.py
 - Kaggle, tunnel va OpenAI-compatible API kalitlari Windows Credential Manager’da saqlanadi. Ular oddiy JSON fayllarga yozilmaydi va API orqali qayta o‘qilmaydi.
 - `.env` qiymatlari ustuvor; Credential Manager qiymatlari `.env` bo‘sh bo‘lganda ishlatiladi.
 - Credential Manager integratsiyasi Windows desktop uchun mo‘ljallangan. Boshqa platformalarda maxfiy ma’lumotni saqlash xavfsiz backend bo‘lmasa rad etiladi.
+
+
+### Agent Sandbox v2 (tajriba bosqichi)
+
+Agentning `workspace_read_file` vositasi endi aniq read ruxsati tekshirilgach, vaqtinchalik Docker konteynerida bajariladi. Konteynerga faqat bitta faylning vaqtinchalik nusxasi read-only mount qilinadi; butun workspace, Docker socket yoki maxfiy kalitlar berilmaydi.
+
+Sandbox image’ini repository root papkasidan yarating:
+
+```powershell
+docker build --pull -t nexus-agent-sandbox:py311 -f backend/sandbox/Dockerfile backend/sandbox
+```
+
+Konteyner tarmoqsiz, read-only root filesystem, cheklangan Linux capabilities, no-new-privileges, PID/RAM/CPU va 12 soniyalik vaqt limiti bilan ishlaydi. Har bir o‘qish uchun alohida konteyner yaratiladi va yakunda o‘chiriladi. Docker CLI/daemon yoki image mavjud bo‘lmasa, fayl o‘qish rad etiladi — sandboxsiz fallback yo‘q. Bu himoya faqat agentning fayl o‘qish vositasini qamrab oladi; FastAPI va provider jarayonlari hostda qoladi. Backend API’ni ishonchsiz tarmoqqa ochmang.
