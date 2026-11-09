@@ -200,6 +200,44 @@ nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
 `autopilot` hamon faqat mavjud read-only vositalar bilan cheklangan. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Provider Manager orqali tanlangan modelning tool-calling imkoniyati tekshiriladi; qo‘llab-quvvatlanmasa Agent ishga tushmaydi. Provider Manager orqali tanlangan modelning tool-calling imkoniyati tekshiriladi; qo‘llab-quvvatlanmasa Agent ishga tushmaydi. Tasdiqlash API’si hozirgi local-first backend arxitekturasiga tayanadi; backendni ishonchsiz tarmoqka ochmang, chunki autentifikatsiya qatlami hali mavjud emas. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
 
 
+## Windows uchun tayyor installer
+
+Oddiy foydalanuvchi uchun GitHub Releases sahifasidan `NEXUS-AI-Setup.exe`
+faylini yuklab olib ishga tushirish kifoya. Installer:
+
+- Dasturni joriy foydalanuvchining `%LOCALAPPDATA%\\Programs\\NEXUS AI`
+  papkasiga o‘rnatadi; administrator huquqi talab qilinmaydi.
+- Start Menu yorlig‘ini yaratadi; Desktop yorlig‘i ixtiyoriy.
+- Windows’ning standart uninstall mexanizmi orqali olib tashlanadi.
+- `%LOCALAPPDATA%\\NEXUS AI` ichidagi foydalanuvchi sozlamalari va loglarni
+  uninstall vaqtida saqlab qoladi.
+- Ollama’ni paketlamaydi. Ollama alohida o‘rnatiladi.
+- WebView2 Runtime bo‘lmasa, launcher standart brauzerga fallback qiladi;
+  WebView2’ni alohida o‘rnatish mumkin.
+
+Installer hozircha Windows 10/11 x64 uchun mo‘ljallangan va code signing
+sertifikatisiz build qilinadi. Windows SmartScreen noma’lum publisher haqida
+ogohlantirishi mumkin.
+
+### Installer’ni ishlab chiquvchi sifatida build qilish
+
+Build qiluvchi Windows kompyuterida quyidagilar kerak:
+
+- Python 3.11 yoki yangiroq
+- Node.js 20 yoki yangiroq
+- Inno Setup 6
+
+Repository root papkasida PowerShell oching:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Clean
+```
+
+Natija: `dist/installer/NEXUS-AI-Setup.exe`. GitHub Actions ham Windows
+runner’da installer’ni build qilib, workflow artifact sifatida saqlaydi.
+Release’ga joylashdan oldin o‘rnatish, ishga tushirish, yangilash va uninstall
+jarayonlarini haqiqiy Windows 10/11 qurilmasida sinash kerak.
+
 ## Windows desktop launcher (Stage 2)
 
 Desktop rejimi uchun avval backend va desktop bog‘liqliklarini o‘rnating:
