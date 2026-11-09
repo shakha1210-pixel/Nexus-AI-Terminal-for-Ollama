@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import tempfile
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ class KaggleNotebookService:
     def __init__(self, *, data_dir: Path | None = None, kaggle_binary: str | None = None) -> None:
         self.data_dir = (data_dir or get_data_dir()).resolve()
         self.kaggle_binary = kaggle_binary or os.getenv("NEXUS_KAGGLE_BINARY", "kaggle")
+        self._install_lock = threading.Lock()
 
     @staticmethod
     def _credentials() -> tuple[str, str]:
@@ -147,7 +149,8 @@ class KaggleNotebookService:
                 temporary_file.write(payload)
                 temporary_file.flush()
                 os.fsync(temporary_file.fileno())
-            os.replace(temporary_path, target)
+            with self._install_lock:
+                os.replace(temporary_path, target)
         finally:
             if temporary_path is not None:
                 temporary_path.unlink(missing_ok=True)

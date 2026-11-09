@@ -82,15 +82,15 @@ class KaggleNotebookServiceTests(unittest.TestCase):
                 returncode = 0
                 stdout = ""
                 stderr = ""
+            barrier.wait(timeout=5)
             return Result()
 
-        def synchronized_replace(source, destination):
+        def track_replace(source, destination):
             staged_paths.append(Path(source))
-            barrier.wait(timeout=5)
             return real_replace(source, destination)
 
         self.service._run = fake_run
-        with patch("app.services.kaggle_notebook_service.os.replace", side_effect=synchronized_replace):
+        with patch("app.services.kaggle_notebook_service.os.replace", side_effect=track_replace):
             with ThreadPoolExecutor(max_workers=2) as executor:
                 results = list(executor.map(self.service.download, ["owner/notebook", "owner/notebook"]))
 

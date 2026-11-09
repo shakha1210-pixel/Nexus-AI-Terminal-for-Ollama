@@ -108,7 +108,10 @@ class AgentApprovalServiceTests(unittest.TestCase):
         outside = Path(self.temp_dir.name) / "outside.md"
         outside.write_text("outside", encoding="utf-8")
         link = self.root / "linked.md"
-        link.symlink_to(outside)
+        try:
+            link.symlink_to(outside)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlinks are not supported in this environment")
         with self.assertRaises(AgentApprovalError):
             self.service.create_request("agent-a", "linked.md", "replacement")
         self.assertEqual(outside.read_text(encoding="utf-8"), "outside")
