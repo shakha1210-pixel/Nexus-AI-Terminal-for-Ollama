@@ -104,7 +104,7 @@ class AgentApprovalService:
         self._mode_check(agent)
         if not isinstance(proposed_content, str) or len(proposed_content.encode("utf-8")) > self.MAX_CONTENT_BYTES:
             raise AgentApprovalError("Taklif qilinayotgan matn 2 MB limitdan katta yoki noto‘g‘ri.")
-        target, _, original_hash = self._file_state(relative_path)
+        target, original_bytes, original_hash = self._file_state(relative_path)
         request_id = uuid.uuid4().hex
         now = datetime.now(timezone.utc)
         item = {
@@ -112,6 +112,7 @@ class AgentApprovalService:
             "agent_id": agent,
             "path": target.relative_to(workspace_service.root).as_posix(),
             "operation": "replace_file",
+            "original_content": original_bytes.decode("utf-8"),
             "proposed_content": proposed_content,
             "original_sha256": original_hash,
             "proposed_sha256": hashlib.sha256(proposed_content.encode("utf-8")).hexdigest(),
@@ -129,8 +130,9 @@ class AgentApprovalService:
 
     @staticmethod
     def _public(item: dict[str, Any], include_content: bool = False) -> dict[str, Any]:
-        result = {key: value for key, value in item.items() if key != "proposed_content"}
+        result = {key: value for key, value in item.items() if key not in {"original_content", "proposed_content"}}
         if include_content:
+            result["original_content"] = item["original_content"]
             result["proposed_content"] = item["proposed_content"]
         return result
 
