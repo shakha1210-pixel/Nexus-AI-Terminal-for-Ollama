@@ -36,6 +36,8 @@ class AgentApprovalServiceTests(unittest.TestCase):
         request = self.service.create_request("agent-a", "notes.md", "proposed")
         self.assertEqual(self.workspace.read_file("notes.md")["content"], "original")
         self.assertEqual(request["status"], "pending")
+        self.assertEqual(request["original_content"], "original")
+        self.assertEqual(request["proposed_content"], "proposed")
         result = self.service.decide("agent-a", request["request_id"], True)
         self.assertEqual(result["status"], "approved")
         self.assertEqual(self.workspace.read_file("notes.md")["content"], "proposed")
