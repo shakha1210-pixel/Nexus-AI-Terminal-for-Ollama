@@ -3,6 +3,7 @@ import { Bot, Play, ShieldCheck, Wrench } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
+import { openEventStream, readEventStream, request } from "../services/http";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
