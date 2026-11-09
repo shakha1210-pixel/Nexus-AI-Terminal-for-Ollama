@@ -29,6 +29,7 @@ export const api = {
   getModels: () => request<OllamaModel[]>("/api/ollama/models"),
   getKaggleStatus: () => request<KaggleStatus>("/api/kaggle/status"),
   searchKaggleNotebooks: (query: string, page = 1) => request<KaggleNotebookSearchResponse>(`/api/kaggle/notebooks/search?q=${encodeURIComponent(query)}&page=${page}`),
+  kaggleNotebookDownloadUrl: (ref: string) => `${API_BASE}/api/kaggle/notebooks/${ref.split("/").map(encodeURIComponent).join("/")}/download`,
   startKaggle: (model: string) => request<KaggleStatus>("/api/kaggle/start", { method: "POST", body: { model } }),
   setMode: (mode: "local" | "kaggle") => request<KaggleStatus>("/api/kaggle/mode", { method: "POST", body: { mode } }),
   getPreferences: () => request<UIPreferences>("/api/preferences"),
