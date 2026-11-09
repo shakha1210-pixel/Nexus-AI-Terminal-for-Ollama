@@ -279,7 +279,6 @@ export const uz = {
   "settings.credentialMissing": "Sozlanmagan",
   "settings.deleteCredential": "Kalitni o‘chirish",
   "settings.environmentPriority": ".env dagi qiymatlar Credential Manager qiymatlaridan ustun turadi.",
-  "settings.restartNote": "OpenAI-compatible endpoint manzili .env orqali sozlanadi; yangi API kaliti keyingi backend ishga tushishida qo‘llanadi.",
   "settings.credentialsLoadError": "Kalitlar holatini yuklab bo‘lmadi.",
   "settings.enterCredential": "Avval maxfiy qiymatni kiriting.",
   "settings.credentialSaved": "Maxfiy qiymat xavfsiz saqlandi.",
