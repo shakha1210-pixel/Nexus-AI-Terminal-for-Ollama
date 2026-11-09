@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Bot, MessageSquare, Plus, Send, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bot, MessageSquare, Plus, Send, Square, Trash2 } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
@@ -19,6 +19,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   const [pathsInput, setPathsInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const abortController = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!model && models.length) setModel(models[0].name);
@@ -30,8 +31,10 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
     catch (err) { setError(err instanceof Error ? err.message : t("chat.historyLoadError")); }
   };
   useEffect(() => { void refreshHistory(); }, []);
+  useEffect(() => () => { abortController.current?.abort(); }, []);
 
   const openConversation = async (id: string) => {
+    abortController.current?.abort();
     try {
       const result = await request<{ id: string; messages: Message[] }>(`/api/chat/conversations/${id}`);
       setConversationId(result.id);
@@ -41,6 +44,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   };
 
   const newConversation = () => {
+    abortController.current?.abort();
     setConversationId(null);
     setMessages([]);
     setDraft("");
@@ -56,9 +60,13 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
     } catch (err) { setError(err instanceof Error ? err.message : t("chat.deleteError")); }
   };
 
+  const stopGeneration = () => abortController.current?.abort();
+
   const sendMessage = async () => {
     const text = draft.trim();
-    if (!text || !model || busy || !connected) return;
+    if (!text || !model || busy || abortController.current || !connected) return;
+    const controller = new AbortController();
+    abortController.current = controller;
     setDraft("");
     setError("");
     setMessages((current) => [...current, { role: "user", content: text }, { role: "assistant", content: "" }]);
@@ -69,6 +77,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider_id: providerId, model, message: text, conversation_id: conversationId, agent_id: agentId, paths }),
+        signal: controller.signal,
       });
       let streamError = "";
       await readEventStream(response, ({ event, data }) => {
@@ -77,21 +86,29 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
         if (event === "meta") setConversationId(payload.conversation_id);
         if (event === "token") setMessages((current) => current.map((item, index) => index === current.length - 1 ? { ...item, content: item.content + payload.content } : item));
         if (event === "error") streamError = payload.message ?? t("chat.modelError");
-      });
+      }, controller.signal);
       if (streamError) setError(streamError);
       await refreshHistory();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("chat.sendError"));
-      setMessages((current) => current.map((item, index) => index === current.length - 1 && item.role === "assistant" && !item.content ? { ...item, content: t("chat.responseError") } : item));
-    } finally { setBusy(false); }
+      if (controller.signal.aborted) {
+        setError("");
+        await refreshHistory();
+      } else {
+        setError(err instanceof Error ? err.message : t("chat.sendError"));
+        setMessages((current) => current.map((item, index) => index === current.length - 1 && item.role === "assistant" && !item.content ? { ...item, content: t("chat.responseError") } : item));
+      }
+    } finally {
+      if (abortController.current === controller) abortController.current = null;
+      setBusy(false);
+    }
   };
 
   return <section className="chat-workspace">
     <aside className="chat-history">
-      <div className="chat-history-head"><strong>{t("chat.conversations")}</strong><button onClick={newConversation} title={t("chat.newConversation")}><Plus size={16} /></button></div>
+      <div className="chat-history-head"><strong>{t("chat.conversations")}</strong><button onClick={newConversation} title={t("chat.newConversation")} disabled={busy}><Plus size={16} /></button></div>
       {conversations.map((item) => <div className={`chat-history-item ${conversationId === item.id ? "active" : ""}`} key={item.id}>
-        <button className="chat-history-open" onClick={() => void openConversation(item.id)}><MessageSquare size={14} /><span>{item.title || t("chat.newConversation")}</span></button>
-        <button className="chat-history-delete" title={t("chat.deleteConversation")} onClick={() => void deleteConversation(item.id)}><Trash2 size={13} /></button>
+        <button className="chat-history-open" onClick={() => void openConversation(item.id)} disabled={busy}><MessageSquare size={14} /><span>{item.title || t("chat.newConversation")}</span></button>
+        <button className="chat-history-delete" title={t("chat.deleteConversation")} onClick={() => void deleteConversation(item.id)} disabled={busy}><Trash2 size={13} /></button>
       </div>)}
       {!conversations.length && <p className="chat-history-empty">{t("chat.noSavedConversations")}</p>}
     </aside>
@@ -109,7 +126,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
           <label>{t("agent.id")} <input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
           <label className="chat-path-field">{t("chat.workspacePaths")} <input value={pathsInput} onChange={(event) => setPathsInput(event.target.value)} placeholder={t("chat.pathsPlaceholder")} /></label>
         </div>
-        <div className="chat-input-row"><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={t("chat.promptPlaceholder")} rows={3} disabled={!connected || busy} /><button className="primary-button" onClick={() => void sendMessage()} disabled={!connected || busy || !draft.trim() || !model}><Send size={16} />{busy ? t("chat.generating") : t("chat.send")}</button></div>
+        <div className="chat-input-row"><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={t("chat.promptPlaceholder")} rows={3} disabled={!connected || busy} />{busy ? <button className="primary-button chat-stop-button" onClick={stopGeneration}><Square size={16} />{t("chat.stop")}</button> : <button className="primary-button" onClick={() => void sendMessage()} disabled={!connected || !draft.trim() || !model}><Send size={16} />{t("chat.send")}</button>}</div>
         <p className="chat-footnote">{t("chat.footnote")}</p>
       </div>
       {error && <div className="chat-error" role="alert">{error}</div>}

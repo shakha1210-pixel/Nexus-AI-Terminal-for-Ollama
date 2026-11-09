@@ -1,3 +1,5 @@
+import asyncio
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,7 +27,33 @@ class FakeAdapter(BaseAdapter):
         yield {"done": True}
 
 
+class CancelledFakeAdapter(FakeAdapter):
+    async def stream(self, messages, model, **kwargs):
+        yield {"message": {"content": "partial answer"}, "done": False}
+        raise asyncio.CancelledError()
+
+
 class ChatProviderRoutingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_cancelled_stream_persists_partial_assistant_response(self):
+        manager = ProviderManager()
+        manager.register(CancelledFakeAdapter())
+        with tempfile.TemporaryDirectory() as directory:
+            service = ChatService(Path(directory))
+            with patch("app.services.chat_service.provider_manager", manager):
+                emitted = []
+                with self.assertRaises(asyncio.CancelledError):
+                    async for event in service.stream_chat(
+                        model="fake-model", message="hello", conversation_id=None,
+                        agent_id="default", paths=[], provider_id="fake-provider",
+                    ):
+                        emitted.append(event)
+
+            meta = next(event for event in emitted if event.startswith("event: meta"))
+            conversation_id = json.loads(meta.split("data: ", 1)[1])["conversation_id"]
+            conversation = service.get_conversation(conversation_id)
+
+        self.assertEqual(conversation["messages"][-1], {"role": "assistant", "content": "partial answer"})
+
     async def test_chat_uses_selected_provider_adapter_stream(self):
         manager = ProviderManager()
         manager.register(FakeAdapter())

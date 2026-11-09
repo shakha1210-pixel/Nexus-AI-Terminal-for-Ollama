@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 import threading
@@ -169,6 +170,14 @@ class ChatService:
                 with self._lock:
                     self._write(data)
             yield "event: done\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\n\n"
+        except asyncio.CancelledError:
+            # Preserve any tokens already delivered when the client stops generation.
+            if assistant_text:
+                data["messages"].append({"role": "assistant", "content": assistant_text})
+                data["updated_at"] = datetime.now(timezone.utc).isoformat()
+                with self._lock:
+                    self._write(data)
+            raise
         except (httpx.HTTPError, ChatError, ValueError, RuntimeError, KeyError) as exc:
             if isinstance(exc, ProviderCooldownError):
                 message_text = f"Provider vaqtincha kutish rejimida. Taxminan {exc.retry_after:.0f} soniya kuting yoki boshqa ruxsat etilgan provider’ni tanlang."
