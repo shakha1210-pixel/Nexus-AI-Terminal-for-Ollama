@@ -69,7 +69,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
 
   const stopGeneration = () => abortController.current?.abort();
 
-  const sendMessage = async (messageOverride?: string, appendUser = true) => {
+  const sendMessage = async (messageOverride?: string, appendUser = true, retryLast = false) => {
     const text = (messageOverride ?? draft).trim();
     if (!text || !model || busy || abortController.current || !connected) return;
     const controller = new AbortController();
@@ -90,7 +90,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
       const response = await openEventStream("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider_id: providerId, model, message: text, conversation_id: conversationId, agent_id: agentId, paths }),
+        body: JSON.stringify({ provider_id: providerId, model, message: text, conversation_id: conversationId, agent_id: agentId, paths, retry_last: retryLast }),
         signal: controller.signal,
       });
       let streamError = "";
@@ -122,7 +122,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   };
 
   const retryLastMessage = () => {
-    if (retryPrompt) void sendMessage(retryPrompt, false);
+    if (retryPrompt) void sendMessage(retryPrompt, false, Boolean(conversationId));
   };
 
   return <section className="chat-workspace">
