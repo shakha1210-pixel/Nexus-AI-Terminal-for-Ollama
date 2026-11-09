@@ -55,6 +55,10 @@ class AgentAccessService:
         temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         temporary.replace(self.store_path)
 
+    def list_agent_ids(self) -> list[str]:
+        with self._lock:
+            return sorted(self._load().keys())
+
     def list_permissions(self, agent_id: str) -> dict:
         agent = self._validate_agent_id(agent_id)
         with self._lock:
