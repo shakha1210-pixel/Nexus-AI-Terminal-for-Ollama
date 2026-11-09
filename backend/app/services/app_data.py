@@ -1,6 +1,7 @@
 import os
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -20,12 +21,33 @@ def get_data_dir() -> Path:
     return (Path(root).expanduser() if root else Path.home() / ".local" / "share") / "nexus-ai"
 
 
+def _copy_file_without_overwrite(source: Path, destination: Path) -> None:
+    """Publish a complete migrated file atomically without replacing user data."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{destination.name}.",
+        suffix=".migration",
+        dir=destination.parent,
+    )
+    os.close(descriptor)
+    temporary = Path(temporary_name)
+    try:
+        shutil.copy2(source, temporary)
+        try:
+            # A same-directory hard link is atomic and fails if another process
+            # has already created the destination. It never exposes a partial file.
+            os.link(temporary, destination)
+        except FileExistsError:
+            pass
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def get_store_path(filename: str, legacy_path: Path | None = None) -> Path:
     """Resolve a store path and migrate a legacy file once without overwriting data."""
     destination = get_data_dir() / filename
     if not destination.exists() and legacy_path is not None and legacy_path.is_file():
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(legacy_path, destination)
+        _copy_file_without_overwrite(legacy_path, destination)
     return destination
 
 
@@ -53,6 +75,5 @@ def get_store_dir(dirname: str, legacy_dir: Path | None = None) -> Path:
             target_file = target_dir / name
             if target_file.exists():
                 continue
-            target_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_file, target_file)
+            _copy_file_without_overwrite(source_file, target_file)
     return destination
