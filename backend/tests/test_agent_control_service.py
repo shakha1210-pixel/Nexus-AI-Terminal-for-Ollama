@@ -12,6 +12,10 @@ class AgentControlServiceTests(unittest.TestCase):
         self.addCleanup(self.temp_dir.cleanup)
         self.control = AgentControlService(Path(self.temp_dir.name))
 
+    def test_list_agent_ids_includes_default_and_configured_agents(self) -> None:
+        self.control.set_mode("agent-a", "approval_required")
+        self.assertEqual(self.control.list_agent_ids(), ["agent-a", "default"])
+
     def test_default_is_read_only_and_not_isolated(self) -> None:
         state = self.control.get("agent-a")
         self.assertEqual(state["mode"], "read_only")
