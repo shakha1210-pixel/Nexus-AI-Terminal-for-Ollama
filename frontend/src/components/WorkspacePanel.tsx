@@ -10,12 +10,8 @@ type TreeResponse = { root_name: string; path: string; entries: Entry[] };
 type OpenFile = { path: string; content: string; dirty: boolean };
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, init);
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.detail ?? `API error: ${response.status}`);
-  }
-  return response.json() as Promise<T>;
+  const body = typeof init?.body === "string" ? JSON.parse(init.body) : init?.body;
+  return request<T>(path, { ...init, body });
 }
 const prettySize = (size: number | null) => size === null ? "Folder" : size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`;
 
