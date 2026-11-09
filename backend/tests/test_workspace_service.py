@@ -16,6 +16,9 @@ class WorkspaceServiceTests(unittest.TestCase):
         with patch.dict(os.environ, {"NEXUS_WORKSPACE_ROOT": str(self.root)}):
             self.service = WorkspaceService()
 
+    def test_workspace_root_is_not_created_during_initialization(self) -> None:
+        self.assertFalse(self.root.exists())
+
     def test_create_and_read_text_file(self) -> None:
         created = self.service.create_file("src/main.py", "print('NEXUS')")
         self.assertEqual(created["path"], "src/main.py")
@@ -35,6 +38,7 @@ class WorkspaceServiceTests(unittest.TestCase):
         self.assertIn("sample.bin", names)
 
     def test_does_not_list_symlinks(self) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
         outside = Path(self.temp_dir.name) / "outside"
         outside.mkdir()
         (outside / "secret.txt").write_text("private", encoding="utf-8")

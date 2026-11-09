@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from app.services.app_data import get_data_dir, get_store_path
+
 
 class AgentControlError(ValueError):
     pass
@@ -18,8 +20,11 @@ class AgentControlService:
     MODES = {"read_only", "approval_required", "autopilot", "locked"}
 
     def __init__(self, storage_dir: Path | None = None) -> None:
-        root = storage_dir or (Path(__file__).resolve().parents[2] / ".nexus")
-        self.file_path = root / "agent_controls.json"
+        self.file_path = storage_dir / "agent_controls.json" if storage_dir else get_data_dir() / "agent_controls.json"
+        self._legacy_store_path = (
+            Path(__file__).resolve().parents[2] / ".nexus" / "agent_controls.json"
+            if storage_dir is None else None
+        )
         self._lock = threading.RLock()
         self._active_requests: dict[str, set[asyncio.Task[Any]]] = {}
 
@@ -31,6 +36,8 @@ class AgentControlService:
         return value
 
     def _read(self) -> dict[str, Any]:
+        if self._legacy_store_path is not None and not self.file_path.exists():
+            get_store_path(self.file_path.name, self._legacy_store_path)
         try:
             value = json.loads(self.file_path.read_text(encoding="utf-8"))
             return value if isinstance(value, dict) else {}

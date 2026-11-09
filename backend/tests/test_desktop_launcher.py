@@ -10,7 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from desktop.launcher import SingleInstance, parse_args, port_is_available, webview2_is_available
+from desktop.launcher import SingleInstance, handle_window_closing, parse_args, port_is_available, webview2_is_available
 from desktop.ollama_manager import check_ollama
 
 
@@ -37,6 +37,19 @@ class DesktopLauncherTests(unittest.TestCase):
             listener.listen()
             port = listener.getsockname()[1]
             self.assertFalse(port_is_available("127.0.0.1", port))
+
+    def test_normal_close_hides_window(self) -> None:
+        event = __import__("threading").Event()
+        hide = __import__("unittest.mock", fromlist=["Mock"]).Mock()
+        self.assertFalse(handle_window_closing(event, hide))
+        hide.assert_called_once_with()
+
+    def test_explicit_exit_allows_window_close(self) -> None:
+        event = __import__("threading").Event()
+        event.set()
+        hide = __import__("unittest.mock", fromlist=["Mock"]).Mock()
+        self.assertTrue(handle_window_closing(event, hide))
+        hide.assert_not_called()
 
     def test_non_windows_single_instance_is_portable(self) -> None:
         instance = SingleInstance()

@@ -6,6 +6,7 @@ from app.config import settings
 from app.providers.adapters import OllamaAdapter, OpenAICompatibleAdapter
 from app.providers.manager import provider_manager
 from app.services.app_data import get_store_path
+from app.services.lazy_service import LazyService
 from app.services.ollama_service import ollama_service
 from app.services.secrets_service import secrets_service
 from app.services.provider_resilience_service import provider_resilience_service
@@ -45,7 +46,6 @@ class ProviderRuntimeService:
                 self._active_provider = provider_id
         except (OSError, ValueError):
             pass
-
 
     def refresh_openai_adapter(self) -> dict:
         """Apply current endpoint and credential values without restarting the backend."""
@@ -120,4 +120,4 @@ class ProviderRuntimeService:
         return await provider_manager.list_models(selected)
 
 
-provider_runtime_service = ProviderRuntimeService()
+provider_runtime_service = LazyService(ProviderRuntimeService)

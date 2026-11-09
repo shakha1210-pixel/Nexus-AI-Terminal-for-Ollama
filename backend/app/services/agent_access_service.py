@@ -6,6 +6,7 @@ import re
 import threading
 from pathlib import Path
 
+from app.services.app_data import get_data_dir, get_store_path
 from app.services.workspace_service import WorkspaceError, workspace_service
 
 
@@ -21,7 +22,11 @@ class AgentAccessService:
     MAX_CONTEXT_FILE_BYTES = 10 * 1024 * 1024
 
     def __init__(self, store_path: Path | None = None) -> None:
-        self.store_path = store_path or (Path(__file__).resolve().parents[2] / ".nexus" / "agent_permissions.json")
+        self.store_path = store_path or (get_data_dir() / "agent_permissions.json")
+        self._legacy_store_path = (
+            Path(__file__).resolve().parents[2] / ".nexus" / "agent_permissions.json"
+            if store_path is None else None
+        )
         self._lock = threading.RLock()
 
     @staticmethod
@@ -32,6 +37,8 @@ class AgentAccessService:
         return value
 
     def _load(self) -> dict[str, list[str]]:
+        if self._legacy_store_path is not None and not self.store_path.exists():
+            get_store_path(self.store_path.name, self._legacy_store_path)
         try:
             raw = json.loads(self.store_path.read_text(encoding="utf-8"))
         except FileNotFoundError:

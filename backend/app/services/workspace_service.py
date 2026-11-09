@@ -16,7 +16,6 @@ class WorkspaceService:
     def __init__(self) -> None:
         configured = os.getenv("NEXUS_WORKSPACE_ROOT", str(Path.home() / "NexusWorkspace"))
         self.root = Path(configured).expanduser().resolve()
-        self.root.mkdir(parents=True, exist_ok=True)
 
     def resolve(self, relative_path: str = "") -> Path:
         candidate = (self.root / relative_path).resolve()
@@ -29,6 +28,7 @@ class WorkspaceService:
         return candidate
 
     def tree(self, relative_path: str = "") -> dict:
+        self.root.mkdir(parents=True, exist_ok=True)
         directory = self.resolve(relative_path)
         if not directory.is_dir():
             raise WorkspaceError("Ko‘rsatilgan yo‘l papka emas.")

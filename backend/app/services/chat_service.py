@@ -11,6 +11,7 @@ from typing import AsyncIterator
 import httpx
 
 from app.services.agent_access_service import AgentAccessError, agent_access_service
+from app.services.app_data import get_data_dir, get_store_dir
 from app.providers.base import ProviderCapabilities
 from app.providers.manager import ProviderCapabilityError, provider_manager
 from app.services.provider_resilience_service import ProviderCooldownError
@@ -22,8 +23,21 @@ class ChatError(ValueError):
 
 class ChatService:
     def __init__(self, store_path: Path | None = None) -> None:
-        self.store_path = store_path or (Path(__file__).resolve().parents[2] / ".nexus" / "conversations")
+        self.store_path = store_path or (get_data_dir() / "conversations")
+        self._legacy_store_path = (
+            Path(__file__).resolve().parents[2] / ".nexus" / "conversations"
+            if store_path is None else None
+        )
         self._lock = threading.RLock()
+        self._legacy_migration_checked = False
+
+    def _ensure_store_dir(self) -> None:
+        if self._legacy_store_path is None or self._legacy_migration_checked:
+            return
+        with self._lock:
+            if not self._legacy_migration_checked:
+                get_store_dir("conversations", self._legacy_store_path)
+                self._legacy_migration_checked = True
 
     @staticmethod
     def _valid_id(value: str) -> str:
@@ -35,6 +49,7 @@ class ChatService:
         return self.store_path / f"{self._valid_id(conversation_id)}.json"
 
     def _read(self, conversation_id: str) -> dict:
+        self._ensure_store_dir()
         try:
             data = json.loads(self._path(conversation_id).read_text(encoding="utf-8"))
         except FileNotFoundError as exc:
@@ -46,6 +61,7 @@ class ChatService:
         return data
 
     def _write(self, data: dict) -> None:
+        self._ensure_store_dir()
         self.store_path.mkdir(parents=True, exist_ok=True)
         target = self._path(data["id"])
         temporary = target.with_suffix(".tmp")
@@ -53,6 +69,7 @@ class ChatService:
         temporary.replace(target)
 
     def list_conversations(self) -> list[dict]:
+        self._ensure_store_dir()
         self.store_path.mkdir(parents=True, exist_ok=True)
         result = []
         for path in self.store_path.glob("*.json"):
@@ -71,6 +88,7 @@ class ChatService:
         return self._read(conversation_id)
 
     def delete_conversation(self, conversation_id: str) -> dict:
+        self._ensure_store_dir()
         path = self._path(conversation_id)
         try:
             path.unlink()

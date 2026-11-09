@@ -1,8 +1,10 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.config import settings
@@ -18,6 +20,17 @@ from app.routers.secrets import router as secrets_router
 from app.routers.workspace import router as workspace_router
 
 
+@asynccontextmanager
+async def lifespan(_application):
+    # Defer disk migration and OS credential access until the application starts.
+    from app.services.provider_runtime_service import provider_runtime_service
+    from app.services.provider_policy_service import provider_policy_service
+
+    provider_runtime_service.initialize()
+    provider_policy_service.initialize()
+    yield
+
+
 def resolve_frontend_dist() -> Path:
     configured = os.getenv("NEXUS_FRONTEND_DIST")
     if configured:
@@ -27,14 +40,19 @@ def resolve_frontend_dist() -> Path:
 
 
 def create_app(frontend_dist: Path | None = None) -> FastAPI:
-    application = FastAPI(title=settings.app_name, version="0.2.0")
+    application = FastAPI(title=settings.app_name, version="0.2.0", lifespan=lifespan)
 
+    # TrustedHost is outermost so even CORS preflight requests are host-validated.
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
+    )
+    application.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["127.0.0.1", "localhost"],
     )
 
     application.include_router(ollama_router)
