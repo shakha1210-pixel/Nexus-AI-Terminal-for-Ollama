@@ -18,9 +18,9 @@ class KaggleNotebookServiceTests(unittest.TestCase):
     @patch("app.services.kaggle_notebook_service.subprocess.run")
     def test_search_parses_csv_and_limits_fields(self, run) -> None:
         run.return_value.stdout = (
-            "ref,title,author,lastRunTime,totalVotes\\n"
-            "owner/notebook,Useful notebook,owner,2026-11-01,12\\n"
-            "../bad,Ignore this,attacker,2026-11-01,999\\n"
+            "ref,title,author,lastRunTime,totalVotes\n"
+            "owner/notebook,Useful notebook,owner,2026-11-01,12\n"
+            "../bad,Ignore this,attacker,2026-11-01,999\n"
         )
         run.return_value.stderr = ""
         run.return_value.returncode = 0
