@@ -314,4 +314,7 @@ export const uz = {
   "diagnostics.tip.connection_check": "Provider javob bermadi. Xizmat holati, endpoint manzili va autentifikatsiyani tekshiring.",
   "diagnostics.recovering": "Tiklanish tekshiruvi",
   "diagnostics.tip.recovery_probe": "Provider tiklanishi avtomatik tekshirilmoqda. Tekshiruv yakunlangach holat yangilanadi.",
+  "agent.diffPreview": "O‘zgarishlar ko‘rinishi",
+  "agent.originalVersion": "Amaldagi fayl",
+  "agent.proposedVersion": "Taklif qilingan fayl",
 } as const;
