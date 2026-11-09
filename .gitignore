@@ -18,6 +18,10 @@ __pycache__/
 # Local app data
 **/.nexus/
 
+# Local build outputs
+.build/
+desktop/assets/icon.ico
+
 # Local tooling
 .vscode/
 .idea/

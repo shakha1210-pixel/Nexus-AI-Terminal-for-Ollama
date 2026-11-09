@@ -15,7 +15,10 @@ import webbrowser
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if getattr(sys, "frozen", False):
+    PROJECT_ROOT = Path(getattr(sys, "_MEIPASS")).resolve()
+else:
+    PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BACKEND_DIR = PROJECT_ROOT / "backend"
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -176,7 +179,25 @@ def run_browser_mode(url: str, server, server_thread: threading.Thread, stop_eve
             tray.stop()
 
 
+def configure_runtime_streams() -> None:
+    """Keep diagnostics available when PyInstaller launches without a console."""
+    if sys.stdout is not None and sys.stderr is not None:
+        return
+    data_root = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "NEXUS AI" / "logs"
+    data_root.mkdir(parents=True, exist_ok=True)
+    log_file = (data_root / "launcher.log").open("a", encoding="utf-8", buffering=1)
+    if sys.stdout is None:
+        sys.stdout = log_file
+    if sys.stderr is None:
+        sys.stderr = log_file
+
+
 def main(argv: list[str] | None = None) -> int:
+    configure_runtime_streams()
+    if getattr(sys, "frozen", False):
+        bundled_kaggle = PROJECT_ROOT / "kaggle.exe"
+        if bundled_kaggle.is_file():
+            os.environ.setdefault("NEXUS_KAGGLE_BINARY", str(bundled_kaggle))
     args = parse_args(argv)
     os.chdir(BACKEND_DIR)
     instance = SingleInstance()
