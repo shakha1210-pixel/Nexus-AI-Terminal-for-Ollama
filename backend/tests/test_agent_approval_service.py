@@ -42,6 +42,28 @@ class AgentApprovalServiceTests(unittest.TestCase):
         self.assertEqual(result["status"], "approved")
         self.assertEqual(self.workspace.read_file("notes.md")["content"], "proposed")
 
+    def test_legacy_pending_request_without_snapshot_remains_listable(self) -> None:
+        request_id = "a" * 32
+        legacy_item = {
+            "request_id": request_id,
+            "agent_id": "agent-a",
+            "path": "notes.md",
+            "operation": "replace_file",
+            "proposed_content": "proposed",
+            "original_sha256": "legacy-hash",
+            "proposed_sha256": "proposed-hash",
+            "status": "pending",
+            "created_at": "2026-01-01T00:00:00+00:00",
+            "expires_at": "2999-01-01T00:00:00+00:00",
+        }
+        self.service.store_path.write_text(json.dumps({request_id: legacy_item}), encoding="utf-8")
+
+        result = self.service.list_requests("agent-a")
+
+        self.assertEqual(len(result["requests"]), 1)
+        self.assertIsNone(result["requests"][0]["original_content"])
+        self.assertEqual(result["requests"][0]["proposed_content"], "proposed")
+
     def test_rejection_is_final(self) -> None:
         request = self.service.create_request("agent-a", "notes.md", "proposed")
         result = self.service.decide("agent-a", request["request_id"], False)
