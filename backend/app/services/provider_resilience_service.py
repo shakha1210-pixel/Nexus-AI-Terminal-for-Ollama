@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from threading import RLock
 from time import monotonic
 from typing import Any
-from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
 
 import httpx
 
@@ -17,6 +17,7 @@ class ProviderState:
     last_error: str | None = None
     last_error_kind: str | None = None
     last_success_at: float | None = None
+    probe_in_flight: bool = False
 
 
 class ProviderCooldownError(RuntimeError):
@@ -27,7 +28,7 @@ class ProviderCooldownError(RuntimeError):
 
 
 class ProviderResilienceService:
-    """Per-provider circuit state. Uses monotonic time and never sleeps inside requests."""
+    """Per-provider circuit breaker with a single-flight half-open recovery probe."""
 
     def __init__(self, *, base_cooldown: float = 5.0, max_cooldown: float = 120.0, failure_threshold: int = 2) -> None:
         if base_cooldown < 0 or max_cooldown < base_cooldown or failure_threshold < 1:
@@ -43,9 +44,29 @@ class ProviderResilienceService:
 
     def before_request(self, provider_id: str) -> None:
         with self._lock:
-            remaining = self._state(provider_id).cooldown_until - monotonic()
-        if remaining > 0:
-            raise ProviderCooldownError(provider_id, remaining)
+            state = self._state(provider_id)
+            remaining = state.cooldown_until - monotonic()
+            if remaining > 0:
+                raise ProviderCooldownError(provider_id, remaining)
+            if state.cooldown_until > 0:
+                if state.probe_in_flight:
+                    raise ProviderCooldownError(provider_id, 1.0)
+                # Exactly one request is allowed to test recovery after cooldown.
+                state.probe_in_flight = True
+
+    def begin_recovery_probe(self, provider_id: str) -> bool:
+        """Claim the single automatic health probe after a cooldown expires."""
+        with self._lock:
+            state = self._state(provider_id)
+            if state.cooldown_until <= 0 or state.cooldown_until > monotonic() or state.probe_in_flight:
+                return False
+            state.probe_in_flight = True
+            return True
+
+    def release_probe(self, provider_id: str) -> None:
+        """Release a probe lease if a caller is cancelled before recording an outcome."""
+        with self._lock:
+            self._state(provider_id).probe_in_flight = False
 
     @staticmethod
     def classify(exc: BaseException) -> tuple[str, bool, float | None]:
@@ -84,6 +105,7 @@ class ProviderResilienceService:
             state = self._state(provider_id)
             state.consecutive_failures = 0
             state.cooldown_until = 0.0
+            state.probe_in_flight = False
             state.last_error = None
             state.last_error_kind = None
             state.last_success_at = monotonic()
@@ -92,10 +114,12 @@ class ProviderResilienceService:
         kind, transient, retry_after = self.classify(exc)
         with self._lock:
             state = self._state(provider_id)
+            state.probe_in_flight = False
             state.consecutive_failures += 1
             state.last_error_kind = kind
             state.last_error = type(exc).__name__
             if not transient:
+                state.cooldown_until = 0.0
                 return
             if retry_after is not None:
                 duration = retry_after
@@ -106,23 +130,27 @@ class ProviderResilienceService:
                 duration = min(self.max_cooldown, self.base_cooldown * (2 ** min(exponent, 16)))
             else:
                 duration = 0.0
-            if duration > 0:
-                state.cooldown_until = max(state.cooldown_until, monotonic() + duration)
+            state.cooldown_until = max(state.cooldown_until, monotonic() + duration) if duration > 0 else 0.0
 
     def snapshot(self) -> dict[str, dict[str, Any]]:
         now = monotonic()
         with self._lock:
-            return {
-                provider_id: {
-                    "state": "cooldown" if state.cooldown_until > now else "available",
-                    "cooldown_remaining_seconds": round(max(0.0, state.cooldown_until - now), 1),
+            result = {}
+            for provider_id, state in self._states.items():
+                remaining = max(0.0, state.cooldown_until - now)
+                circuit = "cooldown" if remaining > 0 else (
+                    "half_open" if state.cooldown_until > 0 or state.probe_in_flight else "available"
+                )
+                result[provider_id] = {
+                    "state": circuit,
+                    "cooldown_remaining_seconds": round(remaining, 1),
                     "consecutive_failures": state.consecutive_failures,
                     "last_error_kind": state.last_error_kind,
                     "last_error": state.last_error,
                     "last_success": state.last_success_at is not None,
+                    "probe_in_flight": state.probe_in_flight,
                 }
-                for provider_id, state in self._states.items()
-            }
+            return result
 
 
 provider_resilience_service = ProviderResilienceService()
