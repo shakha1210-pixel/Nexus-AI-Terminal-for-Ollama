@@ -100,6 +100,7 @@ class ChatService:
     async def stream_chat(
         self, *, model: str, message: str, conversation_id: str | None,
         agent_id: str, paths: list[str], provider_id: str | None = None,
+        retry_last: bool = False,
     ) -> AsyncIterator[str]:
         model = model.strip()
         message = message.strip()
@@ -117,6 +118,8 @@ class ChatService:
         if conversation_id:
             data = self._read(conversation_id)
         else:
+            if retry_last:
+                raise ChatError("Qayta urinish uchun suhbat topilmadi.")
             conversation_id = uuid.uuid4().hex
             now = datetime.now(timezone.utc).isoformat()
             data = {"id": conversation_id, "title": message[:72], "created_at": now, "updated_at": now, "messages": []}
@@ -148,7 +151,14 @@ class ChatService:
         request_message = dict(user_message)
         if image_data:
             request_message["images"] = image_data
-        data["messages"].append(user_message)
+        if retry_last:
+            messages = data["messages"]
+            if messages and messages[-1].get("role") == "assistant":
+                messages.pop()
+            if not messages or messages[-1].get("role") != "user" or messages[-1].get("content") != user_content:
+                raise ChatError("Qayta urinish uchun oxirgi foydalanuvchi xabari mos kelmadi.")
+        else:
+            data["messages"].append(user_message)
         data["updated_at"] = datetime.now(timezone.utc).isoformat()
         with self._lock:
             self._write(data)
