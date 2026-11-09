@@ -32,6 +32,17 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [approvalBusy, setApprovalBusy] = useState<string | null>(null);
   const [approvalMessage, setApprovalMessage] = useState("");
+  const [agentIds, setAgentIds] = useState<string[]>(["default"]);
+  useEffect(() => {
+    let active = true;
+    void request<{ agent_ids: string[] }>("/api/agents")
+      .then((result) => {
+        if (active) setAgentIds(Array.from(new Set(["default", agentId, ...result.agent_ids])).sort());
+      })
+      .catch(() => { if (active) setAgentIds((current) => Array.from(new Set([...current, agentId])).sort()); });
+    return () => { active = false; };
+  }, [agentId]);
+
   const modeLabel = mode === "read_only" ? t("agent.readOnly") : mode === "approval_required" ? t("agent.approvalRequired") : mode === "autopilot" ? t("agent.autopilot") : t("agent.locked");
 
   const loadApprovals = async () => {
@@ -129,7 +140,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
       <div className="agent-runtime-icon"><Bot size={25} /></div>
     </div>
     <div className="agent-runtime-controls">
-      <label>{t("agent.id")}<input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
+      <label>{t("agent.id")}<input list="nexus-agent-ids" value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /><datalist id="nexus-agent-ids">{agentIds.map((id) => <option key={id} value={id} />)}</datalist></label>
       <label>{t("agent.providerModel")} · {providerId}<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
       <label>{t("agent.accessMode")}<select value={mode} onChange={(event) => void updateMode(event.target.value as typeof mode)} disabled={controlBusy || isolated}>
         <option value="read_only">{t("agent.readOnly")}</option><option value="approval_required">{t("agent.approvalRequired")}</option><option value="autopilot">{t("agent.autopilot")}</option><option value="locked">{t("agent.locked")}</option>
