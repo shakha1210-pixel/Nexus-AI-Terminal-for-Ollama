@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from threading import RLock
 from time import monotonic
 from typing import Any
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 import httpx
 
@@ -54,7 +56,13 @@ class ProviderResilienceService:
                 try:
                     retry_after = min(3600.0, max(0.0, float(raw))) if raw else None
                 except ValueError:
-                    retry_after = None
+                    try:
+                        retry_date = parsedate_to_datetime(raw) if raw else None
+                        if retry_date is not None and retry_date.tzinfo is None:
+                            retry_date = retry_date.replace(tzinfo=timezone.utc)
+                        retry_after = min(3600.0, max(0.0, (retry_date - datetime.now(timezone.utc)).total_seconds())) if retry_date else None
+                    except (TypeError, ValueError, OverflowError):
+                        retry_after = None
                 return "rate_limit", True, retry_after
             if status in (401, 403):
                 return "authentication", False, None
