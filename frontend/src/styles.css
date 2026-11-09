@@ -589,3 +589,11 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 .kaggle-notebook-results { display: grid; gap: 0; }
 .kaggle-notebook-results .detail-row { align-items: center; }
 @media (max-width: 520px) { .kaggle-notebook-results .detail-row { align-items: flex-start; flex-direction: column; } }
+
+
+/* Approval change preview */
+.agent-approval-diff { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:10px 0; }
+.agent-approval-diff > div { min-width:0; }
+.agent-approval-diff > div > strong { display:block; margin-bottom:5px; color:var(--muted); font-size:9px; }
+.agent-approval-diff pre { margin:0; max-height:260px; overflow:auto; padding:10px; color:var(--text); background:var(--surface-2); border:1px solid var(--border); border-radius:5px; font:10px/1.6 "DM Mono",monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+@media (max-width:700px) { .agent-approval-diff { grid-template-columns:1fr; } }
