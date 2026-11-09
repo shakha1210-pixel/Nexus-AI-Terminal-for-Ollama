@@ -3,9 +3,8 @@ import { Bot, Play, ShieldCheck, Wrench } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
-import { openEventStream, readEventStream } from "../services/http";
+import { openEventStream, readEventStream, request } from "../services/http";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 type ApprovalRequest = {
   request_id: string;
@@ -37,9 +36,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
 
   const loadApprovals = async () => {
     try {
-      const response = await fetch(API_BASE + "/api/agents/" + encodeURIComponent(agentId) + "/approvals");
-      if (!response.ok) return;
-      const data = await response.json();
+      const data = await request<{ requests: ApprovalRequest[] }>("/api/agents/" + encodeURIComponent(agentId) + "/approvals");
       setApprovals(Array.isArray(data.requests) ? data.requests : []);
     } catch { /* queue remains unavailable until backend responds */ }
   };
@@ -48,12 +45,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
     setApprovalBusy(requestId);
     setApprovalMessage("");
     try {
-      const response = await fetch(API_BASE + "/api/agents/" + encodeURIComponent(agentId) + "/approvals/" + requestId + "/decision", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ approve }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail ?? t("agent.approvalDecisionFailed"));
+      await request("/api/agents/" + encodeURIComponent(agentId) + "/approvals/" + requestId + "/decision", { method: "POST", body: { approve } });
       setApprovalMessage(approve ? t("agent.approved") : t("agent.rejected"));
       await loadApprovals();
     } catch (err) {
@@ -64,9 +56,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
 
   const loadControl = async () => {
     try {
-      const response = await fetch(API_BASE + "/api/agents/" + encodeURIComponent(agentId) + "/control");
-      if (!response.ok) return;
-      const data = await response.json();
+      const data = await request<{ mode: typeof mode; isolated: boolean }>("/api/agents/" + encodeURIComponent(agentId) + "/control");
       setMode(data.mode);
       setIsolated(Boolean(data.isolated));
     } catch { /* conservative default */ }
@@ -79,12 +69,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
     setControlBusy(true);
     setControlMessage("");
     try {
-      const response = await fetch(API_BASE + "/api/agents/" + encodeURIComponent(agentId) + "/control/mode", {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: nextMode }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail ?? t("agent.modeError"));
+      const data = await request<{ mode: typeof mode; isolated: boolean }>("/api/agents/" + encodeURIComponent(agentId) + "/control/mode", { method: "PUT", body: { mode: nextMode } });
       setMode(data.mode); setIsolated(Boolean(data.isolated)); setControlMessage(t("agent.modeUpdated"));
     } catch (err) { setControlMessage(err instanceof Error ? err.message : t("agent.controlError")); }
     finally { setControlBusy(false); }
@@ -94,12 +79,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
     setControlBusy(true); setControlMessage("");
     try {
       const endpoint = nextIsolated ? "isolate" : "release";
-      const response = await fetch(API_BASE + "/api/agents/" + encodeURIComponent(agentId) + "/" + endpoint, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nextIsolated ? { reason: "Manual isolation from NEXUS UI" } : {}),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail ?? t("agent.isolationUpdateError"));
+      const data = await request<{ mode: typeof mode; isolated: boolean }>("/api/agents/" + encodeURIComponent(agentId) + "/" + endpoint, { method: "POST", body: nextIsolated ? { reason: "Manual isolation from NEXUS UI" } : {} });
       setMode(data.mode); setIsolated(Boolean(data.isolated));
       setControlMessage(nextIsolated ? t("agent.isolated") : t("agent.released"));
     } catch (err) { setControlMessage(err instanceof Error ? err.message : t("agent.isolationError")); }
