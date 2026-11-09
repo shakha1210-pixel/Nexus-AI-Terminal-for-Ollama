@@ -3,6 +3,7 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.config import settings
@@ -28,6 +29,11 @@ def resolve_frontend_dist() -> Path:
 
 def create_app(frontend_dist: Path | None = None) -> FastAPI:
     application = FastAPI(title=settings.app_name, version="0.2.0")
+
+    application.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["127.0.0.1", "localhost"],
+    )
 
     application.add_middleware(
         CORSMiddleware,
