@@ -279,7 +279,6 @@ export const en = {
   "settings.credentialMissing": "Not configured",
   "settings.deleteCredential": "Delete credential",
   "settings.environmentPriority": "Values from .env take precedence over Credential Manager values.",
-  "settings.restartNote": "The OpenAI-compatible endpoint URL is configured through .env; a new API key is applied on the next backend start.",
   "settings.credentialsLoadError": "Could not load credential status.",
   "settings.enterCredential": "Enter a secret value first.",
   "settings.credentialSaved": "Credential securely stored.",
