@@ -132,7 +132,7 @@ class AgentApprovalService:
     def _public(item: dict[str, Any], include_content: bool = False) -> dict[str, Any]:
         result = {key: value for key, value in item.items() if key not in {"original_content", "proposed_content"}}
         if include_content:
-            result["original_content"] = item["original_content"]
+            result["original_content"] = item.get("original_content")
             result["proposed_content"] = item["proposed_content"]
         return result
 
