@@ -42,17 +42,17 @@ def resolve_frontend_dist() -> Path:
 def create_app(frontend_dist: Path | None = None) -> FastAPI:
     application = FastAPI(title=settings.app_name, version="0.2.0", lifespan=lifespan)
 
-    application.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["127.0.0.1", "localhost"],
-    )
-
+    # TrustedHost is outermost so even CORS preflight requests are host-validated.
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
+    )
+    application.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["127.0.0.1", "localhost"],
     )
 
     application.include_router(ollama_router)
