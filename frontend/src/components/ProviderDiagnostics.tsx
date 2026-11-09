@@ -20,6 +20,13 @@ export default function ProviderDiagnostics() {
   const [items, setItems] = useState<Diagnostic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const recommendationText = (code: string) => ({
+    wait_or_switch: t("diagnostics.tip.wait_or_switch"),
+    rate_limit: t("diagnostics.tip.rate_limit"),
+    credentials: t("diagnostics.tip.credentials"),
+    connectivity: t("diagnostics.tip.connectivity"),
+    connection_check: t("diagnostics.tip.connection_check"),
+  }[code] ?? code);
 
   const refresh = useCallback(async () => {
     try {
@@ -61,7 +68,7 @@ export default function ProviderDiagnostics() {
           {item.state === "cooldown" && <strong>{t("diagnostics.remaining").replace("{seconds}", item.cooldown_remaining_seconds.toFixed(0))}</strong>}
           {item.last_error_kind && <span>{t("diagnostics.lastError")}: {item.last_error_kind}</span>}
         </div>
-        {item.recommendations.filter((tip) => !["wait_or_switch", "rate_limit"].includes(tip.code) || item.cooldown_remaining_seconds > 0).map((tip) => <div className={tip.level === "error" ? "diagnostic-tip is-error" : "diagnostic-tip"} key={tip.code}><AlertTriangle size={14} /><span>{t(`diagnostics.tip.${tip.code}`)}</span></div>)}
+        {item.recommendations.filter((tip) => !["wait_or_switch", "rate_limit"].includes(tip.code) || item.cooldown_remaining_seconds > 0).map((tip) => <div className={tip.level === "error" ? "diagnostic-tip is-error" : "diagnostic-tip"} key={tip.code}><AlertTriangle size={14} /><span>{recommendationText(tip.code)}</span></div>)}
       </article>)}
       {!loading && items.length === 0 && <p className="diagnostics-empty">{t("diagnostics.empty")}</p>}
     </div>
