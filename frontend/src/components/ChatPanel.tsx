@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, MessageSquare, Plus, RefreshCw, Send, Square, Trash2 } from "lucide-react";
+import { Bot, MessageSquare, Paperclip, Plus, RefreshCw, Send, Square, Trash2, X } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
@@ -17,7 +17,10 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
-  const [pathsInput, setPathsInput] = useState("");
+  const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
+  const [availablePaths, setAvailablePaths] = useState<string[]>([]);
+  const [attachmentsOpen, setAttachmentsOpen] = useState(false);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [retryPrompt, setRetryPrompt] = useState<string | null>(null);
@@ -35,6 +38,51 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   };
   useEffect(() => { void refreshHistory(); }, []);
   useEffect(() => () => { abortController.current?.abort(); }, []);
+  useEffect(() => {
+    setSelectedPaths([]);
+    setAvailablePaths([]);
+    setAttachmentsOpen(false);
+  }, [agentId]);
+
+  const loadAvailableAttachments = async () => {
+    setAttachmentsLoading(true);
+    try {
+      const result = await request<{ permissions: { path: string; access: string }[] }>(
+        `/api/agents/${encodeURIComponent(agentId)}/permissions`
+      );
+      const paths = result.permissions
+        .filter((permission) => permission.access === "read")
+        .map((permission) => permission.path)
+        .sort((a, b) => a.localeCompare(b));
+      setAvailablePaths(paths);
+      setAttachmentsOpen(true);
+      if (!paths.length) setError(t("chat.noReadableFiles"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("chat.attachmentsLoadError"));
+    } finally {
+      setAttachmentsLoading(false);
+    }
+  };
+
+  const toggleAttachmentPicker = () => {
+    if (attachmentsOpen) {
+      setAttachmentsOpen(false);
+      return;
+    }
+    if (availablePaths.length) {
+      setAttachmentsOpen(true);
+      return;
+    }
+    void loadAvailableAttachments();
+  };
+
+  const toggleAttachment = (path: string) => {
+    setSelectedPaths((current) => {
+      if (current.includes(path)) return current.filter((item) => item !== path);
+      if (current.length >= 10) return current;
+      return [...current, path];
+    });
+  };
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: busy ? "auto" : "smooth", block: "end" });
   }, [messages, busy]);
@@ -87,11 +135,10 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
     setRetryPrompt(null);
     setBusy(true);
     try {
-      const paths = pathsInput.split(",").map((path) => path.trim()).filter(Boolean);
       const response = await openEventStream("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider_id: providerId, model, message: text, conversation_id: conversationId, agent_id: agentId, paths, retry_last: retryLast }),
+        body: JSON.stringify({ provider_id: providerId, model, message: text, conversation_id: conversationId, agent_id: agentId, paths: selectedPaths, retry_last: retryLast }),
         signal: controller.signal,
       });
       let streamError = "";
@@ -148,8 +195,27 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
       <div className="chat-composer">
         <div className="chat-context-row">
           <label>{t("agent.id")} <input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
-          <label className="chat-path-field">{t("chat.workspacePaths")} <input value={pathsInput} onChange={(event) => setPathsInput(event.target.value)} placeholder={t("chat.pathsPlaceholder")} /></label>
+          <div className="chat-attachment-control">
+            <button type="button" className="chat-attach-toggle" onClick={toggleAttachmentPicker} disabled={attachmentsLoading || busy} aria-expanded={attachmentsOpen}>
+              <Paperclip size={14} />{attachmentsLoading ? t("chat.attachmentsLoading") : t("chat.attachFiles")}
+              <span>{selectedPaths.length}/10</span>
+            </button>
+            {attachmentsOpen && <div className="chat-attachment-picker">
+              {!availablePaths.length ? <p>{t("chat.noReadableFiles")}</p> : availablePaths.map((path) => (
+                <label key={path} className="chat-attachment-option">
+                  <input type="checkbox" checked={selectedPaths.includes(path)} disabled={!selectedPaths.includes(path) && selectedPaths.length >= 10} onChange={() => toggleAttachment(path)} />
+                  <span>{path}</span>
+                </label>
+              ))}
+              <p className="chat-attachment-note">{t("chat.attachmentsPermissionNote")}</p>
+            </div>}
+          </div>
         </div>
+        {selectedPaths.length > 0 && <div className="chat-attachment-chips" aria-label={t("chat.selectedAttachments")}>
+          {selectedPaths.map((path) => <span className="chat-attachment-chip" key={path}>
+            <span>{path}</span><button type="button" title={t("chat.removeAttachment")} onClick={() => toggleAttachment(path)} disabled={busy}><X size={12} /></button>
+          </span>)}
+        </div>}
         <div className="chat-input-row"><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) { event.preventDefault(); void sendMessage(); } }} placeholder={t("chat.promptPlaceholder")} rows={3} disabled={!connected || busy} />{busy ? <button className="primary-button chat-stop-button" onClick={stopGeneration}><Square size={16} />{t("chat.stop")}</button> : <button className="primary-button" onClick={() => void sendMessage()} disabled={!connected || !draft.trim() || !model}><Send size={16} />{t("chat.send")}</button>}</div>
         <p className="chat-footnote">{t("chat.footnote")}</p>
       </div>
