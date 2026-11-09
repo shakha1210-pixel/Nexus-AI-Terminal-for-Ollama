@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, MessageSquare, Plus, Send, Square, Trash2 } from "lucide-react";
+import { Bot, MessageSquare, Plus, RefreshCw, Send, Square, Trash2 } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
@@ -19,7 +19,9 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   const [pathsInput, setPathsInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [retryPrompt, setRetryPrompt] = useState<string | null>(null);
   const abortController = useRef<AbortController | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!model && models.length) setModel(models[0].name);
@@ -32,6 +34,9 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   };
   useEffect(() => { void refreshHistory(); }, []);
   useEffect(() => () => { abortController.current?.abort(); }, []);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: busy ? "auto" : "smooth", block: "end" });
+  }, [messages, busy]);
 
   const openConversation = async (id: string) => {
     abortController.current?.abort();
@@ -40,6 +45,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
       setConversationId(result.id);
       setMessages(result.messages.filter((item) => item.role === "user" || item.role === "assistant"));
       setError("");
+      setRetryPrompt(null);
     } catch (err) { setError(err instanceof Error ? err.message : t("chat.openError")); }
   };
 
@@ -49,6 +55,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
     setMessages([]);
     setDraft("");
     setError("");
+    setRetryPrompt(null);
   };
 
   const deleteConversation = async (id: string) => {
@@ -62,14 +69,21 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
 
   const stopGeneration = () => abortController.current?.abort();
 
-  const sendMessage = async () => {
-    const text = draft.trim();
+  const sendMessage = async (messageOverride?: string, appendUser = true) => {
+    const text = (messageOverride ?? draft).trim();
     if (!text || !model || busy || abortController.current || !connected) return;
     const controller = new AbortController();
     abortController.current = controller;
-    setDraft("");
+    if (appendUser) {
+      setDraft("");
+      setMessages((current) => [...current, { role: "user", content: text }, { role: "assistant", content: "" }]);
+    } else {
+      setMessages((current) => current.map((item, index) =>
+        index === current.length - 1 && item.role === "assistant" ? { ...item, content: "" } : item
+      ));
+    }
     setError("");
-    setMessages((current) => [...current, { role: "user", content: text }, { role: "assistant", content: "" }]);
+    setRetryPrompt(null);
     setBusy(true);
     try {
       const paths = pathsInput.split(",").map((path) => path.trim()).filter(Boolean);
@@ -87,7 +101,10 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
         if (event === "token") setMessages((current) => current.map((item, index) => index === current.length - 1 ? { ...item, content: item.content + payload.content } : item));
         if (event === "error") streamError = payload.message ?? t("chat.modelError");
       }, controller.signal);
-      if (streamError) setError(streamError);
+      if (streamError) {
+        setError(streamError);
+        setRetryPrompt(text);
+      }
       await refreshHistory();
     } catch (err) {
       if (controller.signal.aborted) {
@@ -95,12 +112,17 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
         await refreshHistory();
       } else {
         setError(err instanceof Error ? err.message : t("chat.sendError"));
+        setRetryPrompt(text);
         setMessages((current) => current.map((item, index) => index === current.length - 1 && item.role === "assistant" && !item.content ? { ...item, content: t("chat.responseError") } : item));
       }
     } finally {
       if (abortController.current === controller) abortController.current = null;
       setBusy(false);
     }
+  };
+
+  const retryLastMessage = () => {
+    if (retryPrompt) void sendMessage(retryPrompt, false);
   };
 
   return <section className="chat-workspace">
@@ -120,16 +142,17 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
       <div className="chat-messages">
         {!messages.length && <div className="chat-empty"><Bot size={34} /><strong>{t("chat.startConversation")}</strong><p>{t("chat.routingInfo")}</p></div>}
         {messages.map((item, index) => <article className={`chat-message ${item.role}`} key={index}><span>{item.role === "user" ? t("chat.you") : "NEXUS"}</span><p>{item.content || (busy && index === messages.length - 1 ? t("chat.thinking") : "")}</p></article>)}
+        <div ref={messagesEndRef} aria-hidden="true" />
       </div>
       <div className="chat-composer">
         <div className="chat-context-row">
           <label>{t("agent.id")} <input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
           <label className="chat-path-field">{t("chat.workspacePaths")} <input value={pathsInput} onChange={(event) => setPathsInput(event.target.value)} placeholder={t("chat.pathsPlaceholder")} /></label>
         </div>
-        <div className="chat-input-row"><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={t("chat.promptPlaceholder")} rows={3} disabled={!connected || busy} />{busy ? <button className="primary-button chat-stop-button" onClick={stopGeneration}><Square size={16} />{t("chat.stop")}</button> : <button className="primary-button" onClick={() => void sendMessage()} disabled={!connected || !draft.trim() || !model}><Send size={16} />{t("chat.send")}</button>}</div>
+        <div className="chat-input-row"><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) { event.preventDefault(); void sendMessage(); } }} placeholder={t("chat.promptPlaceholder")} rows={3} disabled={!connected || busy} />{busy ? <button className="primary-button chat-stop-button" onClick={stopGeneration}><Square size={16} />{t("chat.stop")}</button> : <button className="primary-button" onClick={() => void sendMessage()} disabled={!connected || !draft.trim() || !model}><Send size={16} />{t("chat.send")}</button>}</div>
         <p className="chat-footnote">{t("chat.footnote")}</p>
       </div>
-      {error && <div className="chat-error" role="alert">{error}</div>}
+      {error && <div className="chat-error" role="alert"><span>{error}</span>{retryPrompt && <button className="chat-retry-button" onClick={retryLastMessage} disabled={busy}><RefreshCw size={13} />{t("chat.retry")}</button>}</div>}
     </div>
   </section>;
 }
