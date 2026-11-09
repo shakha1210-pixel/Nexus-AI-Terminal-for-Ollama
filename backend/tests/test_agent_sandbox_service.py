@@ -2,7 +2,8 @@ import asyncio
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
 
 from app.services.agent_sandbox_service import AgentSandboxError, AgentSandboxService
 
@@ -69,6 +70,45 @@ class AgentSandboxServiceTests(unittest.TestCase):
             ):
                 with self.assertRaisesRegex(AgentSandboxError, "2 MB"):
                     self.service._stage_granted_file("agent-a", "large.txt")
+
+    def test_timeout_kills_process_removes_container_and_staged_file(self) -> None:
+        with tempfile.NamedTemporaryFile(delete=False) as staged:
+            staged_path = staged.name
+        process = SimpleNamespace(
+            returncode=None,
+            kill=Mock(),
+            communicate=AsyncMock(return_value=(b"", b"")),
+        )
+        async def scenario() -> None:
+            with patch.object(self.service, "_stage_granted_file", return_value=staged_path), \\
+                 patch("app.services.agent_sandbox_service.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)), \\
+                 patch("app.services.agent_sandbox_service.asyncio.wait_for", new=AsyncMock(side_effect=asyncio.TimeoutError)), \\
+                 patch.object(self.service, "_force_remove", new=AsyncMock()) as remove:
+                with self.assertRaisesRegex(AgentSandboxError, "vaqt limiti"):
+                    await self.service.read_granted_file("agent-a", "notes.md")
+                process.kill.assert_called_once()
+                remove.assert_awaited_once()
+                self.assertFalse(Path(staged_path).exists())
+        asyncio.run(scenario())
+
+    def test_cancellation_kills_process_removes_container_and_staged_file(self) -> None:
+        with tempfile.NamedTemporaryFile(delete=False) as staged:
+            staged_path = staged.name
+        process = SimpleNamespace(
+            returncode=None,
+            kill=Mock(),
+            communicate=AsyncMock(side_effect=[asyncio.CancelledError(), (b"", b"")]),
+        )
+        async def scenario() -> None:
+            with patch.object(self.service, "_stage_granted_file", return_value=staged_path), \\
+                 patch("app.services.agent_sandbox_service.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)), \\
+                 patch.object(self.service, "_force_remove", new=AsyncMock()) as remove:
+                with self.assertRaises(asyncio.CancelledError):
+                    await self.service.read_granted_file("agent-a", "notes.md")
+                process.kill.assert_called_once()
+                remove.assert_awaited_once()
+                self.assertFalse(Path(staged_path).exists())
+        asyncio.run(scenario())
 
 
 if __name__ == "__main__":
