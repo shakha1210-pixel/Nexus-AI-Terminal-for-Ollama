@@ -42,6 +42,9 @@ try {
     Add-Check "Sandbox image build" $true $ImageName
 
     $utf8 = New-Object System.Text.UTF8Encoding($false)
+    if ($probePath.Contains(",")) {
+        throw "Temporary file path contains a comma, which Docker --mount cannot safely parse."
+    }
     [System.IO.File]::WriteAllText($probePath, $expectedContent, $utf8)
 
     $probeScript = "import json,pathlib; print(json.dumps({'content':pathlib.Path('/input/file').read_text(encoding='utf-8')}))"
@@ -101,7 +104,9 @@ catch {
     exit 1
 }
 finally {
-    & docker rm -f $containerName 2>$null | Out-Null
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        & docker rm -f $containerName 2>$null | Out-Null
+    }
     if (Test-Path $probePath) {
         Remove-Item -LiteralPath $probePath -Force
     }
