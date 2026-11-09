@@ -48,7 +48,7 @@ export default function ProviderDiagnostics() {
       setItems((current) => current.map((item) => ({
         ...item,
         cooldown_remaining_seconds: Math.max(0, item.cooldown_remaining_seconds - 1),
-        state: item.cooldown_remaining_seconds <= 1 ? "available" : item.state,
+        state: item.state === "cooldown" && item.cooldown_remaining_seconds <= 1 ? "half_open" : item.state,
       })));
     }, 1000);
     return () => { window.clearInterval(timer); window.clearInterval(poll); };
