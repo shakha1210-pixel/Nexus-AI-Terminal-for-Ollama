@@ -314,4 +314,7 @@ export const en = {
   "diagnostics.tip.connection_check": "The provider did not respond. Check service status, endpoint URL, and authentication.",
   "diagnostics.recovering": "Recovery check",
   "diagnostics.tip.recovery_probe": "Provider recovery is being checked automatically. The status will update when the probe finishes.",
+  "agent.diffPreview": "Change preview",
+  "agent.originalVersion": "Current file",
+  "agent.proposedVersion": "Proposed file",
 } as const;
