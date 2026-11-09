@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bot, Play, ShieldCheck, Wrench } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
+import { useTranslation } from "../i18n";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
@@ -15,6 +16,7 @@ type ApprovalRequest = {
 };
 
 export default function AgentPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
+  const { t } = useTranslation();
   const [agentId, setAgentId] = useState("default");
   const [model, setModel] = useState("");
   const [task, setTask] = useState("");
@@ -29,6 +31,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [approvalBusy, setApprovalBusy] = useState<string | null>(null);
   const [approvalMessage, setApprovalMessage] = useState("");
+  const modeLabel = mode === "read_only" ? t("agent.readOnly") : mode === "approval_required" ? t("agent.approvalRequired") : mode === "autopilot" ? t("agent.autopilot") : t("agent.locked");
 
   const loadApprovals = async () => {
     try {
@@ -48,11 +51,11 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
         body: JSON.stringify({ approve }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail ?? "Approval decision failed.");
-      setApprovalMessage(approve ? "Approved: the exact proposed content was written." : "Proposal rejected; the file was not changed.");
+      if (!response.ok) throw new Error(data.detail ?? t("agent.approvalDecisionFailed"));
+      setApprovalMessage(approve ? t("agent.approved") : t("agent.rejected"));
       await loadApprovals();
     } catch (err) {
-      setApprovalMessage(err instanceof Error ? err.message : "Approval error.");
+      setApprovalMessage(err instanceof Error ? err.message : t("agent.approvalError"));
       await loadApprovals();
     } finally { setApprovalBusy(null); }
   };
@@ -79,9 +82,9 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
         body: JSON.stringify({ mode: nextMode }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail ?? "Access mode o‘zgarmadi.");
-      setMode(data.mode); setIsolated(Boolean(data.isolated)); setControlMessage("Access mode updated.");
-    } catch (err) { setControlMessage(err instanceof Error ? err.message : "Control error."); }
+      if (!response.ok) throw new Error(data.detail ?? t("agent.modeError"));
+      setMode(data.mode); setIsolated(Boolean(data.isolated)); setControlMessage(t("agent.modeUpdated"));
+    } catch (err) { setControlMessage(err instanceof Error ? err.message : t("agent.controlError")); }
     finally { setControlBusy(false); }
   };
 
@@ -94,10 +97,10 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
         body: JSON.stringify(nextIsolated ? { reason: "Manual isolation from NEXUS UI" } : {}),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail ?? "Isolation state update failed.");
+      if (!response.ok) throw new Error(data.detail ?? t("agent.isolationUpdateError"));
       setMode(data.mode); setIsolated(Boolean(data.isolated));
-      setControlMessage(nextIsolated ? "Agent isolated; active Ollama request cancelled." : "Agent released in read-only mode.");
-    } catch (err) { setControlMessage(err instanceof Error ? err.message : "Isolation error."); }
+      setControlMessage(nextIsolated ? t("agent.isolated") : t("agent.released"));
+    } catch (err) { setControlMessage(err instanceof Error ? err.message : t("agent.isolationError")); }
     finally { setControlBusy(false); }
   };
 
@@ -111,7 +114,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
     setRunning(true);
     setOutput("");
     setError("");
-    setStatus("Starting agent…");
+    setStatus(t("agent.starting"));
     try {
       const response = await fetch(`${API_BASE}/api/agents/${encodeURIComponent(agentId)}/run`, {
         method: "POST",
@@ -122,7 +125,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
         const body = await response.json().catch(() => ({}));
         throw new Error(body.detail ?? `Agent API xatosi: ${response.status}`);
       }
-      if (!response.body) throw new Error("Agent stream mavjud emas.");
+      if (!response.body) throw new Error(t("agent.streamUnavailable"));
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -138,18 +141,18 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
           if (!dataLine) continue;
           const payload = JSON.parse(dataLine.slice(6));
           if (eventName === "status") setStatus(payload.message);
-          if (eventName === "tool") setStatus(`Tool: ${payload.name} — ${payload.result}`);
+          if (eventName === "tool") setStatus(`${t("agent.tool")}: ${payload.name} — ${payload.result}`);
           if (eventName === "token") setOutput((current) => current + payload.content);
           if (eventName === "approval") {
-            setStatus(payload.error ?? payload.message ?? "Edit proposal submitted for approval.");
+            setStatus(payload.error ?? payload.message ?? t("agent.proposalSubmitted"));
             void loadApprovals();
           }
-          if (eventName === "error") setError(payload.message ?? "Agent xatoligi.");
-          if (eventName === "done") setStatus(`Completed · ${payload.tool_calls} tool calls`);
+          if (eventName === "error") setError(payload.message ?? t("agent.runError"));
+          if (eventName === "done") setStatus(t("agent.completed").replace("{count}", String(payload.tool_calls)));
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Agent ishga tushmadi.");
+      setError(err instanceof Error ? err.message : t("agent.startError"));
     } finally {
       setRunning(false);
     }
@@ -157,39 +160,39 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
 
   return <section className="agent-runtime">
     <div className="agent-runtime-header">
-      <div><p className="eyebrow">CONTROLLED EXECUTION</p><h2>Agent Runtime</h2><p>Give an agent a task. It can read only files explicitly granted to its Agent ID.</p></div>
+      <div><p className="eyebrow">{t("pages.controlledExecution")}</p><h2>{t("nav.agentRuntime")}</h2><p>{t("agent.intro")}</p></div>
       <div className="agent-runtime-icon"><Bot size={25} /></div>
     </div>
     <div className="agent-runtime-controls">
-      <label>Agent ID<input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
-      <label>Provider model · {providerId}<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
-      <label>Access mode<select value={mode} onChange={(event) => void updateMode(event.target.value as typeof mode)} disabled={controlBusy || isolated}>
-        <option value="read_only">Read-only</option><option value="approval_required">Approval required</option><option value="autopilot">Autopilot</option><option value="locked">Locked</option>
+      <label>{t("agent.id")}<input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
+      <label>{t("agent.providerModel")} · {providerId}<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
+      <label>{t("agent.accessMode")}<select value={mode} onChange={(event) => void updateMode(event.target.value as typeof mode)} disabled={controlBusy || isolated}>
+        <option value="read_only">{t("agent.readOnly")}</option><option value="approval_required">{t("agent.approvalRequired")}</option><option value="autopilot">{t("agent.autopilot")}</option><option value="locked">{t("agent.locked")}</option>
       </select></label>
-      <div className="agent-control-actions"><button className={isolated ? "secondary-button" : "danger-button"} onClick={() => void setIsolation(!isolated)} disabled={controlBusy}>{isolated ? "Release agent" : "Isolate agent"}</button><span className={isolated ? "agent-isolation-state active" : "agent-isolation-state"}>{isolated ? "ISOLATED" : mode.toUpperCase()}</span></div>
+      <div className="agent-control-actions"><button className={isolated ? "secondary-button" : "danger-button"} onClick={() => void setIsolation(!isolated)} disabled={controlBusy}>{isolated ? t("agent.release") : t("agent.isolate")}</button><span className={isolated ? "agent-isolation-state active" : "agent-isolation-state"}>{isolated ? t("agent.isolatedBadge") : modeLabel}</span></div>
     </div>
     {controlMessage && <p className="agent-control-message" role="status">{controlMessage}</p>}
-    {(mode === "approval_required" || approvals.length > 0) && <section className="agent-approval-queue" aria-label="File edit approval queue">
-      <div className="agent-approval-heading"><div><strong>Approval Queue</strong><small>Har bir tasdiq faqat ko‘rsatilgan fayl va mazmun uchun bir marta amal qiladi.</small></div><button type="button" onClick={() => void loadApprovals()}>Refresh</button></div>
-      {mode !== "approval_required" && <p className="agent-approval-empty">Agent rejimi o‘zgargan. Yangi tasdiq berish bloklangan; mavjud takliflarni rad etishingiz mumkin.</p>}
+    {(mode === "approval_required" || approvals.length > 0) && <section className="agent-approval-queue" aria-label={t("agent.approvalQueue")}>
+      <div className="agent-approval-heading"><div><strong>{t("agent.approvalQueue")}</strong><small>{t("agent.approvalDescription")}</small></div><button type="button" onClick={() => void loadApprovals()}>{t("actions.refresh")}</button></div>
+      {mode !== "approval_required" && <p className="agent-approval-empty">{t("agent.modeChanged")}</p>}
       {approvalMessage && <p className="agent-control-message" role="status">{approvalMessage}</p>}
-      {!approvals.length && <p className="agent-approval-empty">Pending approval yo‘q.</p>}
+      {!approvals.length && <p className="agent-approval-empty">{t("agent.noPending")}</p>}
       {approvals.map((item) => <article className="agent-approval-item" key={item.request_id}>
-        <div className="agent-approval-meta"><strong>{item.path}</strong><span>Expires: {new Date(item.expires_at).toLocaleTimeString()}</span></div>
+        <div className="agent-approval-meta"><strong>{item.path}</strong><span>{t("agent.expires")}: {new Date(item.expires_at).toLocaleTimeString()}</span></div>
         <pre>{item.proposed_content}</pre>
         <div className="agent-approval-actions">
-          <button type="button" className="secondary-button" disabled={approvalBusy !== null} onClick={() => void decideApproval(item.request_id, false)}>Reject</button>
-          <button type="button" className="primary-button" disabled={approvalBusy !== null || mode !== "approval_required" || isolated} onClick={() => void decideApproval(item.request_id, true)}>{approvalBusy === item.request_id ? "Applying…" : "Approve exact edit"}</button>
+          <button type="button" className="secondary-button" disabled={approvalBusy !== null} onClick={() => void decideApproval(item.request_id, false)}>{t("agent.reject")}</button>
+          <button type="button" className="primary-button" disabled={approvalBusy !== null || mode !== "approval_required" || isolated} onClick={() => void decideApproval(item.request_id, true)}>{approvalBusy === item.request_id ? t("agent.applying") : t("agent.approveExact")}</button>
         </div>
       </article>)}
     </section>}
-    <label className="agent-task-label">Task<textarea value={task} onChange={(event) => setTask(event.target.value)} rows={5} maxLength={12000} placeholder="Example: Read the files I have granted access to and summarize the project structure." disabled={running || !connected || isolated || mode === "locked"} /></label>
-    <div className="agent-runtime-actions"><span className="agent-runtime-status">{running ? <><span className="agent-pulse" />{status}</> : status || "Ready"}</span><button className="primary-button" onClick={() => void runAgent()} disabled={!connected || running || isolated || mode === "locked" || !model || !task.trim()}><Play size={15} />{running ? "Running…" : "Run agent"}</button></div>
+    <label className="agent-task-label">{t("agent.task")}<textarea value={task} onChange={(event) => setTask(event.target.value)} rows={5} maxLength={12000} placeholder={t("agent.taskPlaceholder")} disabled={running || !connected || isolated || mode === "locked"} /></label>
+    <div className="agent-runtime-actions"><span className="agent-runtime-status">{running ? <><span className="agent-pulse" />{status}</> : status || t("agent.ready")}</span><button className="primary-button" onClick={() => void runAgent()} disabled={!connected || running || isolated || mode === "locked" || !model || !task.trim()}><Play size={15} />{running ? t("agent.running") : t("agent.run")}</button></div>
     <div className="agent-capabilities">
-      <div><ShieldCheck size={17} /><span><strong>Access mode enforced</strong><small>Autopilot is still limited to explicitly granted read access in this build.</small></span></div>
-      <div><Wrench size={17} /><span><strong>Isolation control</strong><small>Locks the agent and cancels its active provider request. No agent shell or external network tool exists.</small></span></div>
+      <div><ShieldCheck size={17} /><span><strong>{t("agent.accessEnforced")}</strong><small>{t("agent.autopilotNote")}</small></span></div>
+      <div><Wrench size={17} /><span><strong>{t("agent.isolationControl")}</strong><small>{t("agent.isolationNote")}</small></span></div>
     </div>
-    {output && <div className="agent-output"><div className="agent-output-title">AGENT RESPONSE</div><pre>{output}</pre></div>}
+    {output && <div className="agent-output"><div className="agent-output-title">{t("agent.response")}</div><pre>{output}</pre></div>}
     {error && <div className="chat-error" role="alert">{error}</div>}
   </section>;
 }

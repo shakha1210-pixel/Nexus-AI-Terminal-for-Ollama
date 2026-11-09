@@ -30,6 +30,8 @@ class OllamaService:
     async def get_status(self) -> dict:
         try:
             payload = await self._get("/api/version")
+            if not isinstance(payload, dict):
+                return {"connected": False, "version": None, "mode": self.mode, "message": "Ollama javobi kutilgan formatda emas."}
             version = payload.get("version")
             if not isinstance(version, str) or not version:
                 return {"connected": False, "version": None, "mode": self.mode, "message": "Ollama javobi kutilgan formatda emas."}
