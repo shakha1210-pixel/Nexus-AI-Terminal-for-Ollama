@@ -108,6 +108,7 @@ export const uz = {
   "chat.promptPlaceholder": "Lokal modelingizga savol bering…",
   "chat.generating": "Yaratilmoqda",
   "chat.stop": "To‘xtatish",
+  "chat.retry": "Qayta urinish",
   "chat.send": "Yuborish",
   "chat.footnote": "Faqat agentga o‘qish ruxsati aniq berilgan fayllar biriktiriladi. Enter — yuborish · Shift+Enter — yangi qator.",
   "models.connecting": "Ollama bilan ulanmoqda…",
