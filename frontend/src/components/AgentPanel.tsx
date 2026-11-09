@@ -150,7 +150,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
     </div>
     {controlMessage && <p className="agent-control-message" role="status">{controlMessage}</p>}
     {(mode === "approval_required" || approvals.length > 0) && <section className="agent-approval-queue" aria-label={t("agent.approvalQueue")}>
-      <div className="agent-approval-heading"><div><strong>{t("agent.approvalQueue")}</strong>{approvals.length > 0 && <span className="agent-approval-count" aria-hidden="true">{approvals.length > 99 ? "99+" : approvals.length}</span>}<small>{t("agent.approvalDescription")}</small></div><button type="button" onClick={() => void loadApprovals()}>{t("actions.refresh")}</button></div>
+      <div className="agent-approval-heading"><div><strong>{t("agent.approvalQueue")}</strong>{approvals.length > 0 && <span className="agent-approval-count">{approvals.length > 99 ? "99+" : approvals.length}</span>}<small>{t("agent.approvalDescription")}</small></div><button type="button" onClick={() => void loadApprovals()}>{t("actions.refresh")}</button></div>
       {mode !== "approval_required" && <p className="agent-approval-empty">{t("agent.modeChanged")}</p>}
       {approvalMessage && <p className="agent-control-message" role="status">{approvalMessage}</p>}
       {!approvals.length && <p className="agent-approval-empty">{t("agent.noPending")}</p>}
