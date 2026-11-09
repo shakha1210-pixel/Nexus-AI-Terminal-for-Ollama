@@ -303,4 +303,6 @@ export const uz = {
   "diagnostics.tip.connectivity": "Ulanish yoki server holatini tekshiring. Vaqtinchalik xatolar uchun cooldown avtomatik qo‘llanadi.",
   "diagnostics.tip.connection_check": "Provider javob bermadi. Xizmat holati, endpoint manzili va autentifikatsiyani tekshiring."
 
+  "diagnostics.recovering": "Tiklanish tekshiruvi",
+  "diagnostics.tip.recovery_probe": "Provider tiklanishi avtomatik tekshirilmoqda. Tekshiruv yakunlangach holat yangilanadi.",
 } as const;
