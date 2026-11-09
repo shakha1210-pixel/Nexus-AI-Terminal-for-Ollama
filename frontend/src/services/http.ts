@@ -98,8 +98,10 @@ export async function readEventStream(
         boundary = buffer.search(/\r?\n\r?\n/);
       }
     }
-    buffer += decoder.decode();
-    if (buffer.trim()) await dispatch(buffer);
+    if (!signal?.aborted) {
+      buffer += decoder.decode();
+      if (buffer.trim()) await dispatch(buffer);
+    }
   } finally {
     signal?.removeEventListener("abort", cancel);
     reader.releaseLock();
