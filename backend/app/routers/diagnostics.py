@@ -34,7 +34,7 @@ async def provider_diagnostics() -> dict:
                 "level": "warning",
                 "message": "Provider vaqtincha kutish rejimida. Kutish tugashini kuzating yoki ruxsat etilgan boshqa provider’ni tanlang.",
             })
-        if state["last_error_kind"] == "rate_limit":
+        if state["last_error_kind"] == "rate_limit" and state["state"] == "cooldown":
             recommendations.append({
                 "code": "rate_limit",
                 "level": "warning",
