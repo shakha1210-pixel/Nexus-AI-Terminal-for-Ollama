@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from app.services.app_data import get_data_dir, get_store_path
+from app.services.app_data import get_data_dir, get_store_dir, get_store_path
 
 
 class AppDataTests(unittest.TestCase):
@@ -22,6 +22,18 @@ class AppDataTests(unittest.TestCase):
                 self.assertEqual(target.read_text(encoding="utf-8"), '{"theme":"dark"}')
                 target.write_text('{"theme":"light"}', encoding="utf-8")
                 self.assertEqual(get_store_path("preferences.json", legacy).read_text(encoding="utf-8"), '{"theme":"light"}')
+
+    def test_legacy_directory_migrates_once_without_overwrite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            legacy = root / "legacy-conversations"
+            legacy.mkdir()
+            (legacy / "conversation.json").write_text('{"messages":[]}', encoding="utf-8")
+            with patch.dict(os.environ, {"NEXUS_DATA_DIR": str(root / "data")}):
+                target = get_store_dir("conversations", legacy)
+                self.assertEqual((target / "conversation.json").read_text(encoding="utf-8"), '{"messages":[]}')
+                (target / "conversation.json").write_text('{"messages":[1]}', encoding="utf-8")
+                self.assertEqual(get_store_dir("conversations", legacy).joinpath("conversation.json").read_text(encoding="utf-8"), '{"messages":[1]}')
 
     def test_missing_legacy_file_is_not_created(self):
         with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ, {"NEXUS_DATA_DIR": tmp}):
