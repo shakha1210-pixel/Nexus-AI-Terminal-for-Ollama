@@ -202,6 +202,7 @@ button:focus-visible, a:focus-visible, select:focus-visible {
   box-shadow: inset 2px 0 var(--accent);
 }
 .nav-item.active svg { color: var(--accent); }
+.nav-item-disabled { opacity: .42; cursor: not-allowed; }
 .topbar {
   position: sticky;
   top: 0;
