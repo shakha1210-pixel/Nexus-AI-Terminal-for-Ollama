@@ -105,10 +105,10 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
 
   return <section className="chat-workspace">
     <aside className="chat-history">
-      <div className="chat-history-head"><strong>{t("chat.conversations")}</strong><button onClick={newConversation} title={t("chat.newConversation")}><Plus size={16} /></button></div>
+      <div className="chat-history-head"><strong>{t("chat.conversations")}</strong><button onClick={newConversation} title={t("chat.newConversation")} disabled={busy}><Plus size={16} /></button></div>
       {conversations.map((item) => <div className={`chat-history-item ${conversationId === item.id ? "active" : ""}`} key={item.id}>
-        <button className="chat-history-open" onClick={() => void openConversation(item.id)}><MessageSquare size={14} /><span>{item.title || t("chat.newConversation")}</span></button>
-        <button className="chat-history-delete" title={t("chat.deleteConversation")} onClick={() => void deleteConversation(item.id)}><Trash2 size={13} /></button>
+        <button className="chat-history-open" onClick={() => void openConversation(item.id)} disabled={busy}><MessageSquare size={14} /><span>{item.title || t("chat.newConversation")}</span></button>
+        <button className="chat-history-delete" title={t("chat.deleteConversation")} onClick={() => void deleteConversation(item.id)} disabled={busy}><Trash2 size={13} /></button>
       </div>)}
       {!conversations.length && <p className="chat-history-empty">{t("chat.noSavedConversations")}</p>}
     </aside>
