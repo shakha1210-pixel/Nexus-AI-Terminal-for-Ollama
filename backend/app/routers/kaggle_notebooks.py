@@ -23,7 +23,7 @@ async def search_notebooks(
 @router.get("/{owner}/{slug}/download")
 async def download_notebook(owner: str, slug: str) -> FileResponse:
     try:
-        path = await __import__("asyncio").to_thread(
+        path = await asyncio.to_thread(
             kaggle_notebook_service.download, f"{owner}/{slug}"
         )
     except KaggleNotebookError as exc:
