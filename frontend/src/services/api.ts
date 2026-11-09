@@ -2,6 +2,13 @@ import type { OllamaModel, OllamaStatus } from "../types/ollama";
 import type { KaggleNotebookSearchResponse, KaggleStatus } from "../types/kaggle";
 import type { UIPreferences } from "../types/preferences";
 import type { ProviderCatalog, ProviderPolicy } from "../types/providers";
+import { request } from "./http";
+
+import type { OllamaModel, OllamaStatus } from "../types/ollama";
+import type { KaggleNotebookSearchResponse, KaggleStatus } from "../types/kaggle";
+import type { UIPreferences } from "../types/preferences";
+import type { ProviderCatalog, ProviderPolicy } from "../types/providers";
+import { request } from "./http";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
