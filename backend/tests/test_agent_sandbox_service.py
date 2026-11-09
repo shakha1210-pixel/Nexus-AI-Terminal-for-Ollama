@@ -45,7 +45,7 @@ class AgentSandboxServiceTests(unittest.TestCase):
     def test_stage_rejects_non_utf8_and_oversized_files(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "binary.txt"
-            path.write_bytes(b"\\xff")
+            path.write_bytes(bytes([255]))
             with patch(
                 "app.services.agent_sandbox_service.agent_access_service.list_permissions",
                 return_value={"permissions": [{"path": "binary.txt"}]},
