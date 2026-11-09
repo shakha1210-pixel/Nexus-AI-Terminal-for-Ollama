@@ -295,9 +295,8 @@ export const en = {
   "diagnostics.loadError": "Could not load diagnostic data.",
   "diagnostics.empty": "No diagnostic data yet.",
   "diagnostics.noBlockingWait": "Cooldown does not block the server; the remaining time updates automatically.",
-  "settings.restartNote": "Saving an OpenAI-compatible key reloads the provider. The endpoint URL is configured through .env."
-
-  "diagnostics.connection": "Connection",,
+  "settings.restartNote": "Saving an OpenAI-compatible key reloads the provider. The endpoint URL is configured through .env.",
+  "diagnostics.connection": "Connection",
   "diagnostics.tip.wait_or_switch": "This provider is temporarily cooling down. Wait for the timer or select another permitted provider.",
   "diagnostics.tip.rate_limit": "The request limit was reached. Wait until Retry-After expires before sending another request.",
   "diagnostics.tip.credentials": "Authentication was rejected. Check the API key and endpoint permissions; automatic retries are disabled.",
