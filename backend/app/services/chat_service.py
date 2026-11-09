@@ -29,10 +29,15 @@ class ChatService:
             if store_path is None else None
         )
         self._lock = threading.RLock()
+        self._legacy_migration_checked = False
 
     def _ensure_store_dir(self) -> None:
-        if self._legacy_store_path is not None and not self.store_path.exists():
-            get_store_dir("conversations", self._legacy_store_path)
+        if self._legacy_store_path is None or self._legacy_migration_checked:
+            return
+        with self._lock:
+            if not self._legacy_migration_checked:
+                get_store_dir("conversations", self._legacy_store_path)
+                self._legacy_migration_checked = True
 
     @staticmethod
     def _valid_id(value: str) -> str:
