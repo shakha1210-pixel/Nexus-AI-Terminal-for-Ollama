@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -84,6 +86,8 @@ async def run_agent(agent_id: str, payload: AgentRunRequest) -> StreamingRespons
         first = await generator.__anext__()
     except AgentRuntimeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="Agent ishga tushmadi. Kutilmagan server xatoligi yuz berdi.") from exc
 
     async def events():
         yield first
@@ -91,14 +95,17 @@ async def run_agent(agent_id: str, payload: AgentRunRequest) -> StreamingRespons
             async for event in generator:
                 yield event
         except AgentRuntimeError as exc:
-            import json
-            yield "event: error\ndata: " + json.dumps({"message": str(exc)}, ensure_ascii=False) + "\n\n"
+            yield "event: error\\ndata: " + json.dumps({"message": str(exc)}, ensure_ascii=False) + "\\n\\n"
+        except Exception:
+            yield "event: error\\ndata: " + json.dumps(
+                {"message": "Agent oqimida kutilmagan xatolik yuz berdi."}, ensure_ascii=False
+            ) + "\\n\\n"
 
     return StreamingResponse(events(), media_type="text/event-stream", headers={
         "Cache-Control": "no-cache", "X-Accel-Buffering": "no",
     })
 
- 
+
 @router.get("/{agent_id}/control")
 async def get_agent_control(agent_id: str) -> dict:
     try:
