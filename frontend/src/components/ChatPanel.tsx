@@ -3,6 +3,7 @@ import { Bot, MessageSquare, Plus, Send, Trash2 } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
+import { openEventStream, readEventStream, request } from "../services/http";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 type Message = { role: "user" | "assistant"; content: string };
@@ -33,14 +34,14 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   }, [models, model]);
 
   const refreshHistory = async () => {
-    try { setConversations(await apiGet<Conversation[]>("/api/chat/conversations")); }
+    try { setConversations(await request<Conversation[]>("/api/chat/conversations")); }
     catch (err) { setError(err instanceof Error ? err.message : t("chat.historyLoadError")); }
   };
   useEffect(() => { void refreshHistory(); }, []);
 
   const openConversation = async (id: string) => {
     try {
-      const result = await apiGet<{ id: string; messages: Message[] }>(`/api/chat/conversations/${id}`);
+      const result = await request<{ id: string; messages: Message[] }>(`/api/chat/conversations/${id}`);
       setConversationId(result.id);
       setMessages(result.messages.filter((item) => item.role === "user" || item.role === "assistant"));
       setError("");
@@ -73,36 +74,19 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
     setBusy(true);
     try {
       const paths = pathsInput.split(",").map((path) => path.trim()).filter(Boolean);
-      const response = await fetch(`${API_BASE}/api/chat/stream`, {
+      const response = await openEventStream("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider_id: providerId, model, message: text, conversation_id: conversationId, agent_id: agentId, paths }),
       });
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.detail ?? `Chat API xatosi: ${response.status}`);
-      }
-      if (!response.body) throw new Error("Streaming javob mavjud emas.");
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
       let streamError = "";
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split("\n\n");
-        buffer = events.pop() ?? "";
-        for (const event of events) {
-          const eventName = event.match(/^event: (.+)$/m)?.[1];
-          const dataLine = event.split("\n").find((line) => line.startsWith("data: "));
-          if (!dataLine) continue;
-          const payload = JSON.parse(dataLine.slice(6));
-          if (eventName === "meta") setConversationId(payload.conversation_id);
-          if (eventName === "token") setMessages((current) => current.map((item, index) => index === current.length - 1 ? { ...item, content: item.content + payload.content } : item));
-          if (eventName === "error") streamError = payload.message ?? t("chat.modelError");
-        }
-      }
+      await readEventStream(response, ({ event, data }) => {
+        if (!data) return;
+        const payload = JSON.parse(data);
+        if (event === "meta") setConversationId(payload.conversation_id);
+        if (event === "token") setMessages((current) => current.map((item, index) => index === current.length - 1 ? { ...item, content: item.content + payload.content } : item));
+        if (event === "error") streamError = payload.message ?? t("chat.modelError");
+      });
       if (streamError) setError(streamError);
       await refreshHistory();
     } catch (err) {
