@@ -20,7 +20,6 @@ type ApprovalRequest = {
 export default function AgentPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const { t } = useTranslation();
   const { agentId, setAgentId } = useAgentContext();
-  const [agentId, setAgentId] = useState("default");
   const [model, setModel] = useState("");
   const [task, setTask] = useState("");
   const [output, setOutput] = useState("");
