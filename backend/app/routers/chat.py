@@ -14,6 +14,7 @@ class ChatRequest(BaseModel):
     conversation_id: str | None = None
     agent_id: str = Field(default="default", min_length=1, max_length=64)
     paths: list[str] = Field(default_factory=list, max_length=10)
+    retry_last: bool = False
 
 
 def _error(exc: ChatError) -> HTTPException:
@@ -47,7 +48,7 @@ async def stream_chat(payload: ChatRequest) -> StreamingResponse:
         generator = chat_service.stream_chat(
             model=payload.model, message=payload.message,
             conversation_id=payload.conversation_id, agent_id=payload.agent_id,
-            paths=payload.paths, provider_id=payload.provider_id,
+            paths=payload.paths, provider_id=payload.provider_id, retry_last=payload.retry_last,
         )
         # Validate request and installed model before returning the stream.
         first = await generator.__anext__()
