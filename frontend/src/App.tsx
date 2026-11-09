@@ -15,6 +15,7 @@ import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
 import type { KaggleStatus } from "./types/kaggle";
 import { useTranslation } from "./i18n";
+import { AgentProvider } from "./contexts/AgentContext";
 import "./providers-styles.css";
 
 type Theme = "dark" | "light";
