@@ -238,34 +238,6 @@ function App() {
           </div>
         </header>
 
-        {activeView === "dashboard" ? null : activeView === "explorer" ? (
-          <section className="page-content workstation-page">
-            <div className="page-heading">
-              <div><p className="eyebrow">{t("pages.localDevelopment")}</p><h1>{t("nav.explorer")}</h1><p className="page-subtitle">{t("pages.explorerSubtitle")}</p></div>
-            </div>
-
-          </section>
-        ) : activeView === "providers" ? (
-          <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">{t("pages.inferenceBackends")}</p><h1>{t("nav.providers")}</h1><p className="page-subtitle">{t("pages.providersSubtitle")}</p></div></div>
-
-          </section>
-        ) : activeView === "settings" ? (
-          <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">{t("nav.system")}</p><h1>{t("nav.settings")}</h1><p className="page-subtitle">{t("settings.pageSubtitle")}</p></div></div>
-
-          </section>
-        ) : activeView === "agents" ? (
-          <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">{t("pages.controlledExecution")}</p><h1>{t("nav.agents")}</h1><p className="page-subtitle">{t("pages.agentsSubtitle")}</p></div></div>
-
-          </section>
-        ) : (
-          <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">{t("pages.localInference")}</p><h1>{t("nav.conversations")}</h1><p className="page-subtitle">{t("pages.chatSubtitle")}</p></div></div>
-
-          </section>
-        )}
         {visitedViews.has("dashboard") && <div hidden={activeView !== "dashboard"} style={{ display: activeView === "dashboard" ? "block" : "none" }}>
         <section className="page-content">
           <div className="page-heading">
