@@ -626,3 +626,20 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 :where(button,a,input,textarea,select,[tabindex]):focus-visible { outline:2px solid var(--focus-ring); outline-offset:3px; }
 .main-content:focus { outline:none; }
 @media (max-width:760px) { .sidebar-nav { width:100%; } .sidebar-nav .nav-group { align-items:center; } .sidebar-nav .nav-item { width:42px; min-height:42px; } }
+
+
+/* Chat workspace file attachments */
+.chat-attachment-control { position:relative; align-self:end; }
+.chat-attach-toggle { display:inline-flex; align-items:center; gap:7px; min-height:32px; padding:0 10px; color:var(--text); background:var(--surface-2); border:1px solid var(--border); border-radius:5px; font:inherit; font-size:10px; cursor:pointer; }
+.chat-attach-toggle:disabled { opacity:.55; cursor:not-allowed; }
+.chat-attach-toggle span { color:var(--muted); font-variant-numeric:tabular-nums; }
+.chat-attachment-picker { position:absolute; z-index:5; left:0; bottom:calc(100% + 7px); width:min(340px, calc(100vw - 48px)); max-height:220px; overflow:auto; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:7px; box-shadow:0 12px 30px #0003; }
+.chat-attachment-option { display:flex; align-items:flex-start; gap:8px; padding:7px 5px; color:var(--text); font-size:10px; overflow-wrap:anywhere; cursor:pointer; }
+.chat-attachment-option input { margin:1px 0 0; accent-color:var(--accent); }
+.chat-attachment-note,.chat-attachment-picker p { margin:7px 5px 3px; color:var(--muted); font-size:9px; line-height:1.45; }
+.chat-attachment-chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 9px; }
+.chat-attachment-chip { display:inline-flex; align-items:center; gap:5px; max-width:100%; padding:4px 6px 4px 9px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:999px; font-size:9px; }
+.chat-attachment-chip > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat-attachment-chip button { display:grid; place-items:center; padding:2px; color:var(--muted); background:transparent; border:0; cursor:pointer; }
+.chat-attachment-chip button:disabled { opacity:.5; cursor:not-allowed; }
+@media(max-width:480px) { .chat-attachment-control { align-self:stretch; } .chat-attach-toggle { width:100%; justify-content:center; } .chat-attachment-picker { width:calc(100vw - 56px); } }
