@@ -86,6 +86,9 @@ async def get_asset(path: str):
         }.get(asset_path.suffix.lower(), "application/octet-stream")
         if not media_type.startswith("image/"):
             raise WorkspaceError("Bu fayl rasm emas.")
-        return FileResponse(asset_path, media_type=media_type)
+        headers = {"X-Content-Type-Options": "nosniff"}
+        if media_type == "image/svg+xml":
+            headers["Content-Security-Policy"] = "sandbox; default-src 'none'"
+        return FileResponse(asset_path, media_type=media_type, headers=headers)
     except WorkspaceError as exc:
         raise _handle_workspace_error(exc) from exc
