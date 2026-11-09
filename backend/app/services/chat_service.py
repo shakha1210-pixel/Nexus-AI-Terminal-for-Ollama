@@ -11,6 +11,7 @@ from typing import AsyncIterator
 import httpx
 
 from app.services.agent_access_service import AgentAccessError, agent_access_service
+from app.services.app_data import get_store_dir
 from app.providers.base import ProviderCapabilities
 from app.providers.manager import ProviderCapabilityError, provider_manager
 from app.services.provider_resilience_service import ProviderCooldownError
@@ -22,7 +23,8 @@ class ChatError(ValueError):
 
 class ChatService:
     def __init__(self, store_path: Path | None = None) -> None:
-        self.store_path = store_path or (Path(__file__).resolve().parents[2] / ".nexus" / "conversations")
+        legacy_dir = Path(__file__).resolve().parents[2] / ".nexus" / "conversations"
+        self.store_path = store_path or get_store_dir("conversations", legacy_dir)
         self._lock = threading.RLock()
 
     @staticmethod
