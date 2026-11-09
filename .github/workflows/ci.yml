@@ -41,17 +41,46 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate Docker smoke-test PowerShell syntax
+      - name: Validate PowerShell script syntax
         shell: pwsh
         run: |
-          $tokens = $null
-          $parseErrors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile(
+          $files = @(
             "scripts/docker-agent-sandbox-smoke-test.ps1",
-            [ref]$tokens,
-            [ref]$parseErrors
-          ) | Out-Null
-          if ($parseErrors.Count -gt 0) {
-            $parseErrors | Format-List
-            throw "PowerShell syntax validation failed."
+            "scripts/windows-smoke-test.ps1",
+            "scripts/build.ps1"
+          )
+          foreach ($file in $files) {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $file,
+              [ref]$tokens,
+              [ref]$parseErrors
+            ) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              $parseErrors | Format-List
+              throw "PowerShell syntax validation failed: $file"
+            }
           }
+
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+      - name: Build Windows installer
+        shell: pwsh
+        run: ./scripts/build.ps1 -Clean
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NEXUS-AI-Windows-Installer
+          path: dist/installer/NEXUS-AI-Setup.exe
+          if-no-files-found: error
