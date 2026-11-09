@@ -19,12 +19,18 @@ import { AgentProvider } from "./contexts/AgentContext";
 import "./providers-styles.css";
 
 type Theme = "dark" | "light";
+type View = "dashboard" | "explorer" | "chat" | "agents" | "providers" | "settings";
 
 
 function App() {
   const { t, language, setLanguage } = useTranslation();
   const [theme, setTheme] = useState<Theme>("dark");
-  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers" | "settings">("dashboard");
+  const [activeView, setActiveView] = useState<View>("dashboard");
+  const [visitedViews, setVisitedViews] = useState<Set<View>>(() => new Set(["dashboard"]));
+  const navigateTo = useCallback((view: View) => {
+    setActiveView(view);
+    setVisitedViews((current) => current.has(view) ? current : new Set(current).add(view));
+  }, []);
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [kaggleStatus, setKaggleStatus] = useState<KaggleStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
@@ -180,10 +186,10 @@ function App() {
 
         <div className="nav-group">
           <p className="nav-label">{t("nav.workspace")}</p>
-          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" onClick={() => setActiveView("dashboard")}><LayoutDashboard size={17} />{t("nav.dashboard")}</a>
-          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" onClick={() => setActiveView("explorer")}><HardDrive size={17} />{t("nav.explorer")}</a>
-          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" onClick={() => setActiveView("chat")}><MessageSquare size={17} />{t("nav.conversations")}</a>
-          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" onClick={() => setActiveView("agents")}><Bot size={17} />{t("nav.agents")}</a>
+          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" onClick={() => navigateTo("dashboard")}><LayoutDashboard size={17} />{t("nav.dashboard")}</a>
+          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" onClick={() => navigateTo("explorer")}><HardDrive size={17} />{t("nav.explorer")}</a>
+          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" onClick={() => navigateTo("chat")}><MessageSquare size={17} />{t("nav.conversations")}</a>
+          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" onClick={() => navigateTo("agents")}><Bot size={17} />{t("nav.agents")}</a>
           <a className="nav-item" href="#workflows"><Workflow size={17} />{t("nav.workflows")}</a>
         </div>
 
@@ -191,14 +197,14 @@ function App() {
           <p className="nav-label">{t("nav.resources")}</p>
           <a className="nav-item" href="#models"><Boxes size={17} />{t("nav.models")}<span className="nav-count">{models.length}</span></a>
           <a className="nav-item" href="#knowledge"><Database size={17} />{t("nav.knowledge")}</a>
-          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" onClick={() => setActiveView("providers")}><Network size={17} />{t("nav.providers")}</a>
+          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" onClick={() => navigateTo("providers")}><Network size={17} />{t("nav.providers")}</a>
           <a className="nav-item" href="#integrations"><Workflow size={17} />{t("nav.integrations")}</a>
         </div>
 
         <div className="nav-group">
           <p className="nav-label">{t("nav.system")}</p>
           <a className="nav-item" href="#runtime"><Activity size={17} />{t("nav.runtime")}</a>
-          <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" onClick={() => setActiveView("settings")}><Settings size={17} />{t("nav.settings")}</a>
+          <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" onClick={() => navigateTo("settings")}><Settings size={17} />{t("nav.settings")}</a>
         </div>
 
         <div className="sidebar-bottom">
@@ -239,7 +245,7 @@ function App() {
               <h1>{t("nav.dashboard")}</h1>
               <p className="page-subtitle">{t("dashboard.subtitle")}</p>
             </div>
-            <button className="primary-button" onClick={() => setActiveView("agents")}><Plus size={16} />{t("dashboard.createAgent")}</button>
+            <button className="primary-button" onClick={() => navigateTo("agents")}><Plus size={16} />{t("dashboard.createAgent")}</button>
           </div>
 
           {error && <div className="error-banner">{error}</div>}
@@ -322,11 +328,11 @@ function App() {
 
           </section>
         )}
-        <div hidden={activeView !== "dashboard"} style={{ display: activeView === "dashboard" ? "block" : "none" }} className="kaggle-section">
+        {visitedViews.has("dashboard") && <div hidden={activeView !== "dashboard"} style={{ display: activeView === "dashboard" ? "block" : "none" }} className="kaggle-section">
           <KagglePanel status={kaggleStatus} onStatusChange={setKaggleStatus} onModeChange={() => { void refresh(); }} />
         </div>
-        <section hidden={activeView !== "explorer"} style={{ display: activeView === "explorer" ? "block" : "none" }} className="page-content workstation-page"><WorkspacePanel /></section>
-        <section hidden={activeView !== "providers"} style={{ display: activeView === "providers" ? "block" : "none" }} className="page-content workstation-page">
+        {visitedViews.has("explorer") && <section hidden={activeView !== "explorer"} style={{ display: activeView === "explorer" ? "block" : "none" }} className="page-content workstation-page"><WorkspacePanel /></section>
+        {visitedViews.has("providers") && <section hidden={activeView !== "providers"} style={{ display: activeView === "providers" ? "block" : "none" }} className="page-content workstation-page">
           <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
             void api.setActiveProvider(providerId).then((result) => {
               setActiveProvider(result.provider_id);
@@ -336,13 +342,13 @@ function App() {
             });
           }} />
         </section>
-        <section hidden={activeView !== "settings"} style={{ display: activeView === "settings" ? "block" : "none" }} className="page-content workstation-page"><SettingsPanel /></section>
-        <section hidden={activeView !== "agents"} style={{ display: activeView === "agents" ? "block" : "none" }} className="page-content workstation-page">
+        {visitedViews.has("settings") && <section hidden={activeView !== "settings"} style={{ display: activeView === "settings" ? "block" : "none" }} className="page-content workstation-page"><SettingsPanel /></section>
+        {visitedViews.has("agents") && <section hidden={activeView !== "agents"} style={{ display: activeView === "agents" ? "block" : "none" }} className="page-content workstation-page">
           <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
         </section>
-        <section hidden={activeView !== "chat"} style={{ display: activeView === "chat" ? "block" : "none" }} className="page-content workstation-page">
+        {visitedViews.has("chat") && <section hidden={activeView !== "chat"} style={{ display: activeView === "chat" ? "block" : "none" }} className="page-content workstation-page">
           <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
-        </section>
+        </section>}
       </main>
     </div>
   );
