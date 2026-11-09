@@ -10,6 +10,7 @@ import ChatPanel from "./components/ChatPanel";
 import AgentPanel from "./components/AgentPanel";
 import ModelsPanel from "./components/ModelsPanel";
 import ProviderPanel from "./components/ProviderPanel";
+import SettingsPanel from "./components/SettingsPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
 import type { KaggleStatus } from "./types/kaggle";
@@ -22,7 +23,7 @@ type Theme = "dark" | "light";
 function App() {
   const { t, language, setLanguage } = useTranslation();
   const [theme, setTheme] = useState<Theme>("dark");
-  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers">("dashboard");
+  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers" | "settings">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [kaggleStatus, setKaggleStatus] = useState<KaggleStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
@@ -134,6 +135,7 @@ function App() {
         if (!active) return;
         setTheme(preferences.theme);
         setSoundEnabled(preferences.sound_enabled);
+        setLanguage(preferences.language ?? "uz");
       })
       .catch(() => {
         // Keep safe local defaults when the preferences endpoint is unavailable.
@@ -151,13 +153,13 @@ function App() {
   useEffect(() => {
     if (!preferencesReady) return;
     const timer = window.setTimeout(() => {
-      void api.savePreferences({ theme, sound_enabled: soundEnabled })
+      void api.savePreferences({ theme, sound_enabled: soundEnabled, language })
         .catch((err: unknown) => {
           setError(err instanceof Error ? `${t("settings.preferencesSaveError")}: ${err.message}` : t("settings.preferencesSaveError"));
         });
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [theme, soundEnabled, preferencesReady]);
+  }, [theme, soundEnabled, language, preferencesReady]);
 
   const connected = providerConnected;
   const ollamaConnected = status?.connected === true;
@@ -196,7 +198,7 @@ function App() {
         <div className="nav-group">
           <p className="nav-label">{t("nav.system")}</p>
           <a className="nav-item" href="#runtime"><Activity size={17} />{t("nav.runtime")}</a>
-          <a className="nav-item" href="#settings"><Settings size={17} />{t("nav.settings")}</a>
+          <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" onClick={() => setActiveView("settings")}><Settings size={17} />{t("nav.settings")}</a>
         </div>
 
         <div className="sidebar-bottom">
@@ -214,7 +216,7 @@ function App() {
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumbs"><span>{t("nav.workspaceTitle")}</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? t("nav.dashboard") : activeView === "explorer" ? t("nav.explorer") : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? t("nav.providers") : t("nav.aiChat")}</strong></div>
+          <div className="breadcrumbs"><span>{t("nav.workspaceTitle")}</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? t("nav.dashboard") : activeView === "explorer" ? t("nav.explorer") : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? t("nav.providers") : activeView === "settings" ? t("nav.settings") : t("nav.aiChat")}</strong></div>
           <div className="topbar-actions">
             <label className="language-switch" aria-label={t("actions.language")}><span>{t("actions.language")}</span><select value={language} onChange={(event) => setLanguage(event.target.value as "uz" | "en")}><option value="uz">O‘zbekcha</option><option value="en">English</option></select></label>
             <div className="environment"><span className="environment-dot" />{t("workspace.environment")}</div>
@@ -310,6 +312,11 @@ function App() {
                 setError(err instanceof Error ? err.message : t("providers.selectionError"));
               });
             }} />
+          </section>
+        ) : activeView === "settings" ? (
+          <section className="page-content workstation-page">
+            <div className="page-heading"><div><p className="eyebrow">{t("nav.system")}</p><h1>{t("nav.settings")}</h1><p className="page-subtitle">{t("settings.pageSubtitle")}</p></div></div>
+            <SettingsPanel />
           </section>
         ) : activeView === "agents" ? (
           <section className="page-content workstation-page">

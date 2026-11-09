@@ -238,3 +238,12 @@ python desktop/launcher.py
 ```
 
 `create_icon.py` ko‘p o‘lchamli `desktop/assets/icon.ico` faylini yaratadi. Preflight skripti Python, frontend build, WebView2 Runtime fayllari va ikonka mavjudligini tekshiradi; u hech narsa o‘rnatmaydi yoki dasturni ishga tushirmaydi. Yakuniy WebView2, oynani yopish/minimize, tray va qayta ochish sinovlari haqiqiy Windows qurilmasida qo‘lda bajarilishi kerak.
+
+
+### Sozlamalar va maxfiy kalitlar (Stage 3)
+
+- Theme, ovoz va UI tili foydalanuvchi ma’lumotlari papkasida saqlanadi: Windows’da `%LOCALAPPDATA%\\NEXUS AI`.
+- Eski `backend/.nexus` sozlamalari yangi papkaga birinchi ishga tushishda nusxalanadi; eski fayllar o‘chirilmaydi.
+- Kaggle, tunnel va OpenAI-compatible API kalitlari Windows Credential Manager’da saqlanadi. Ular oddiy JSON fayllarga yozilmaydi va API orqali qayta o‘qilmaydi.
+- `.env` qiymatlari ustuvor; Credential Manager qiymatlari `.env` bo‘sh bo‘lganda ishlatiladi.
+- Credential Manager integratsiyasi Windows desktop uchun mo‘ljallangan. Boshqa platformalarda maxfiy ma’lumotni saqlash xavfsiz backend bo‘lmasa rad etiladi.

@@ -12,6 +12,7 @@ from app.services.agent_approval_service import AgentApprovalError, agent_approv
 from app.services.agent_control_service import AgentControlError, agent_control_service
 from app.providers.base import ProviderCapabilities
 from app.providers.manager import ProviderCapabilityError, provider_manager
+from app.services.provider_resilience_service import ProviderCooldownError
 
 
 class AgentRuntimeError(ValueError):
@@ -215,6 +216,8 @@ class AgentRuntimeService:
         except (httpx.HTTPError, RuntimeError, ValueError, KeyError) as exc:
             if isinstance(exc, AgentRuntimeError):
                 raise
+            if isinstance(exc, ProviderCooldownError):
+                raise AgentRuntimeError(f"Provider vaqtincha kutish rejimida. Taxminan {exc.retry_after:.0f} soniya kuting yoki boshqa ruxsat etilgan provider’ni tanlang.") from exc
             raise AgentRuntimeError(f"Provider agent so‘rovi bajarilmadi: {type(exc).__name__}") from exc
         raise AgentRuntimeError("Agent javobni yakunlay olmadi.")
 
