@@ -4,6 +4,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app.routers.workspace import workspace_service
+from app.services.provider_policy_service import provider_policy_service
+from app.services.provider_runtime_service import provider_runtime_service
 
 from fastapi.testclient import TestClient
 
@@ -28,25 +30,21 @@ class FrontendServingTests(unittest.TestCase):
 
     def test_root_serves_frontend_index(self) -> None:
         response = self.client.get("/")
-
         self.assertEqual(response.status_code, 200)
         self.assertIn("NEXUS frontend", response.text)
 
     def test_spa_route_falls_back_to_index(self) -> None:
         response = self.client.get("/settings/providers")
-
         self.assertEqual(response.status_code, 200)
         self.assertIn("NEXUS frontend", response.text)
 
     def test_asset_is_served_from_dist(self) -> None:
         response = self.client.get("/assets/app.js")
-
         self.assertEqual(response.status_code, 200)
         self.assertIn("console.log", response.text)
 
     def test_unknown_api_route_remains_json_404(self) -> None:
         response = self.client.get("/api/route-that-does-not-exist")
-
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Not Found"})
 
@@ -64,9 +62,18 @@ class FrontendServingTests(unittest.TestCase):
         self.assertEqual(response.headers.get("content-security-policy"), "sandbox; default-src 'none'")
         self.assertEqual(response.headers.get("x-content-type-options"), "nosniff")
 
+    def test_lifespan_initializes_provider_services(self) -> None:
+        with (
+            patch.object(provider_runtime_service, "initialize") as runtime_init,
+            patch.object(provider_policy_service, "initialize") as policy_init,
+            TestClient(create_app(self.dist), base_url="http://127.0.0.1") as client,
+        ):
+            self.assertEqual(client.get("/api/health").status_code, 200)
+        runtime_init.assert_called_once_with()
+        policy_init.assert_called_once_with()
+
     def test_health_route_is_not_shadowed_by_static_mount(self) -> None:
         response = self.client.get("/api/health")
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
 
