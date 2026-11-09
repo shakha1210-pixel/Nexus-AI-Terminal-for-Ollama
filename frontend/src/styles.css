@@ -582,3 +582,10 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 
 .language-switch { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
 .language-switch select { height: 30px; padding: 0 7px; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; font: inherit; cursor: pointer; }
+
+
+.kaggle-field input { width: 100%; min-width: 0; height: 38px; padding: 0 11px; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; font: inherit; }
+.kaggle-field input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.kaggle-notebook-results { display: grid; gap: 0; }
+.kaggle-notebook-results .detail-row { align-items: center; }
+@media (max-width: 520px) { .kaggle-notebook-results .detail-row { align-items: flex-start; flex-direction: column; } }

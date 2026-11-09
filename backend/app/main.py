@@ -10,6 +10,7 @@ from app.routers.agents import router as agents_router
 from app.routers.chat import router as chat_router
 from app.routers.diagnostics import router as diagnostics_router
 from app.routers.kaggle import router as kaggle_router
+from app.routers.kaggle_notebooks import router as kaggle_notebooks_router
 from app.routers.ollama import router as ollama_router
 from app.routers.preferences import router as preferences_router
 from app.routers.providers import router as providers_router
@@ -38,6 +39,7 @@ def create_app(frontend_dist: Path | None = None) -> FastAPI:
 
     application.include_router(ollama_router)
     application.include_router(kaggle_router)
+    application.include_router(kaggle_notebooks_router)
     application.include_router(preferences_router)
     application.include_router(providers_router)
     application.include_router(secrets_router)

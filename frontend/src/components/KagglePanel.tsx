@@ -3,6 +3,7 @@ import { Cloud, Play, Repeat } from "lucide-react";
 import { api } from "../services/api";
 import type { KaggleState, KaggleStatus } from "../types/kaggle";
 import { useTranslation } from "../i18n";
+import KaggleNotebookLibrary from "./KaggleNotebookLibrary";
 
 const MODELS = ["llama3.2", "llama3.1:8b", "qwen2.5:7b", "mistral", "gemma2:9b"];
 const BUSY = ["pushing", "queued", "starting"];
@@ -25,6 +26,7 @@ export default function KagglePanel({ status, onStatusChange, onModeChange }: { 
   const inProgress = BUSY.includes(state);
 
   return (
+    <>
     <section className="panel kaggle-panel" id="kaggle">
       <div className="panel-header">
         <div><h2>{t("kaggle.title")}</h2><p>{t("kaggle.subtitle")}</p></div>
@@ -55,5 +57,7 @@ export default function KagglePanel({ status, onStatusChange, onModeChange }: { 
         {error && <div className="error-banner kaggle-error">{error}</div>}
       </div>
     </section>
+    <KaggleNotebookLibrary />
+    </>
   );
 }
