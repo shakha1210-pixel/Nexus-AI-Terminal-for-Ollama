@@ -3,6 +3,7 @@ import { Bot, MessageSquare, Plus, RefreshCw, Send, Square, Trash2 } from "lucid
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
+import MarkdownMessage from "./MarkdownMessage";
 import { openEventStream, readEventStream, request } from "../services/http";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -141,7 +142,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
       </div>
       <div className="chat-messages">
         {!messages.length && <div className="chat-empty"><Bot size={34} /><strong>{t("chat.startConversation")}</strong><p>{t("chat.routingInfo")}</p></div>}
-        {messages.map((item, index) => <article className={`chat-message ${item.role}`} key={index}><span>{item.role === "user" ? t("chat.you") : "NEXUS"}</span><p>{item.content || (busy && index === messages.length - 1 ? t("chat.thinking") : "")}</p></article>)}
+        {messages.map((item, index) => <article className={`chat-message ${item.role}`} key={index}><span>{item.role === "user" ? t("chat.you") : "NEXUS"}</span><MarkdownMessage content={item.content || (busy && index === messages.length - 1 ? t("chat.thinking") : "")} /></article>)}
         <div ref={messagesEndRef} aria-hidden="true" />
       </div>
       <div className="chat-composer">
