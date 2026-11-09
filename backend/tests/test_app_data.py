@@ -23,6 +23,28 @@ class AppDataTests(unittest.TestCase):
                 target.write_text('{"theme":"light"}', encoding="utf-8")
                 self.assertEqual(get_store_path("preferences.json", legacy).read_text(encoding="utf-8"), '{"theme":"light"}')
 
+    def test_interrupted_file_migration_leaves_no_partial_destination_and_can_retry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            legacy = root / "legacy.json"
+            legacy.write_text('{"complete":true}', encoding="utf-8")
+            data_dir = root / "data"
+            with patch.dict(os.environ, {"NEXUS_DATA_DIR": str(data_dir)}):
+                def interrupted_copy(source, destination):
+                    Path(destination).write_text('{"partial":', encoding="utf-8")
+                    raise OSError("simulated interruption")
+
+                with patch("app.services.app_data.shutil.copy2", side_effect=interrupted_copy):
+                    with self.assertRaises(OSError):
+                        get_store_path("preferences.json", legacy)
+
+                target = data_dir / "preferences.json"
+                self.assertFalse(target.exists())
+                self.assertEqual(list(data_dir.glob("*.migration")), [])
+
+                migrated = get_store_path("preferences.json", legacy)
+                self.assertEqual(migrated.read_text(encoding="utf-8"), '{"complete":true}')
+
     def test_legacy_directory_migrates_once_without_overwrite(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
