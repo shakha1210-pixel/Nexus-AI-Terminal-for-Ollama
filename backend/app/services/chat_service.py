@@ -153,9 +153,9 @@ class ChatService:
             request_message["images"] = image_data
         if retry_last:
             messages = data["messages"]
-            if messages and messages[-1].get("role") == "assistant":
+            if messages and isinstance(messages[-1], dict) and messages[-1].get("role") == "assistant":
                 messages.pop()
-            if not messages or messages[-1].get("role") != "user" or messages[-1].get("content") != user_content:
+            if not messages or not isinstance(messages[-1], dict) or messages[-1].get("role") != "user" or messages[-1].get("content") != user_content:
                 raise ChatError("Qayta urinish uchun oxirgi foydalanuvchi xabari mos kelmadi.")
         else:
             data["messages"].append(user_message)
