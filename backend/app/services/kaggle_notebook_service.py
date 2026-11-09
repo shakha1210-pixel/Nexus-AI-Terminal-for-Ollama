@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from app.config import settings
 from app.services.app_data import get_data_dir
 from app.services.secrets_service import secrets_service
 
@@ -30,8 +31,8 @@ class KaggleNotebookService:
 
     @staticmethod
     def _credentials() -> tuple[str, str]:
-        username = os.getenv("KAGGLE_USERNAME", "")
-        key = os.getenv("KAGGLE_KEY", "") or secrets_service.get("kaggle-key") or ""
+        username = settings.kaggle_username or os.getenv("KAGGLE_USERNAME", "")
+        key = settings.kaggle_key or os.getenv("KAGGLE_KEY", "") or secrets_service.get("kaggle-key") or ""
         return username, key
 
     def _run(self, args: list[str], *, timeout: int = 120) -> str:
