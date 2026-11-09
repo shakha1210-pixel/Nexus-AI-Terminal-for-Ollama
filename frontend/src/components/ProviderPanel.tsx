@@ -118,7 +118,7 @@ export default function ProviderPanel({ activeProvider, onProviderChange }: { ac
         <div className="provider-number-grid">
           <label className="provider-field"><span>{t("providers.maxSwitches")}</span><input type="number" min={0} max={5} value={policy.max_switches_per_request} onChange={(e) => update("max_switches_per_request", Number(e.target.value))} /></label>
           <label className="provider-field"><span>{t("providers.retries")}</span><input type="number" min={0} max={10} value={policy.retry_limit} onChange={(e) => update("retry_limit", Number(e.target.value))} /></label>
-          <label className="provider-field"><span>{t("providers.cooldown")}</span><input type="number" min={0} max={3600} value={policy.cooldown_seconds} onChange={(e) => update("cooldown_seconds", Number(e.target.value))} /></label>
+          <label className="provider-field"><span>{t("providers.cooldown")}</span><input type="number" min={0} max={3600} value={policy.cooldown_seconds} onChange={(e) => update("cooldown_seconds", Number(e.target.value))} /><small>{t("providers.cooldownHelp")}</small></label>
         </div>
         <label className="provider-field"><span>{t("providers.allowedPath")}</span><input value={pathText} onChange={(e) => { setPathText(e.target.value); setSaved(false); }} placeholder="openai-compatible → ollama" />
           <small>{t("providers.pathHelp")}</small>
