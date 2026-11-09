@@ -68,14 +68,13 @@ function App() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const nextStatus = await api.getOllamaStatus();
+      const [nextStatus, catalog] = await Promise.all([
+        api.getOllamaStatus(),
+        api.getProviderCatalog(),
+      ]);
       setStatus(nextStatus);
-      if (nextStatus.connected) {
-        setModels(await api.getModels());
-      } else {
-        setModels([]);
-      }
-      const catalog = await api.getProviderCatalog();
+      const nextModels = nextStatus.connected ? await api.getModels() : [];
+      setModels(nextModels);
       setActiveProvider(catalog.active_provider);
       const selected = catalog.providers.find((provider) => provider.id === catalog.active_provider);
       setProviderConnected(Boolean(selected?.connected));
