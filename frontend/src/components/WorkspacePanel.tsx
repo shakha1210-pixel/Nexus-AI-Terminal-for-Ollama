@@ -28,7 +28,6 @@ export default function WorkspacePanel() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("");
-  const [agentId, setAgentId] = useState("default");
   const [readGranted, setReadGranted] = useState(false);
   const uploadRef = useRef<HTMLInputElement>(null);
   const loadTree = useCallback(async (path = currentPath) => {
