@@ -186,6 +186,10 @@ def configure_runtime_streams() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     configure_runtime_streams()
+    if getattr(sys, "frozen", False):
+        bundled_kaggle = PROJECT_ROOT / "kaggle.exe"
+        if bundled_kaggle.is_file():
+            os.environ.setdefault("NEXUS_KAGGLE_BINARY", str(bundled_kaggle))
     args = parse_args(argv)
     os.chdir(BACKEND_DIR)
     instance = SingleInstance()
