@@ -322,11 +322,11 @@ function App() {
 
           </section>
         )}
-        <div hidden={activeView !== "dashboard"} className="kaggle-section">
+        <div hidden={activeView !== "dashboard"} style={{ display: activeView === "dashboard" ? "block" : "none" }} className="kaggle-section">
           <KagglePanel status={kaggleStatus} onStatusChange={setKaggleStatus} onModeChange={() => { void refresh(); }} />
         </div>
-        <section hidden={activeView !== "explorer"} className="page-content workstation-page"><WorkspacePanel /></section>
-        <section hidden={activeView !== "providers"} className="page-content workstation-page">
+        <section hidden={activeView !== "explorer"} style={{ display: activeView === "explorer" ? "block" : "none" }} className="page-content workstation-page"><WorkspacePanel /></section>
+        <section hidden={activeView !== "providers"} style={{ display: activeView === "providers" ? "block" : "none" }} className="page-content workstation-page">
           <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
             void api.setActiveProvider(providerId).then((result) => {
               setActiveProvider(result.provider_id);
@@ -336,11 +336,11 @@ function App() {
             });
           }} />
         </section>
-        <section hidden={activeView !== "settings"} className="page-content workstation-page"><SettingsPanel /></section>
-        <section hidden={activeView !== "agents"} className="page-content workstation-page">
+        <section hidden={activeView !== "settings"} style={{ display: activeView === "settings" ? "block" : "none" }} className="page-content workstation-page"><SettingsPanel /></section>
+        <section hidden={activeView !== "agents"} style={{ display: activeView === "agents" ? "block" : "none" }} className="page-content workstation-page">
           <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
         </section>
-        <section hidden={activeView !== "chat"} className="page-content workstation-page">
+        <section hidden={activeView !== "chat"} style={{ display: activeView === "chat" ? "block" : "none" }} className="page-content workstation-page">
           <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
         </section>
       </main>
