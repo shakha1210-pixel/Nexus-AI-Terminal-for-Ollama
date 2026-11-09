@@ -99,6 +99,8 @@ class ProviderResilienceService:
                 return
             if retry_after is not None:
                 duration = retry_after
+            elif kind == "rate_limit":
+                duration = self.base_cooldown
             elif state.consecutive_failures >= self.failure_threshold:
                 exponent = state.consecutive_failures - self.failure_threshold
                 duration = min(self.max_cooldown, self.base_cooldown * (2 ** exponent))
