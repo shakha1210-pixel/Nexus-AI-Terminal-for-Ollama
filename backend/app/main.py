@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 import os
 
@@ -19,6 +20,17 @@ from app.routers.secrets import router as secrets_router
 from app.routers.workspace import router as workspace_router
 
 
+@asynccontextmanager
+async def lifespan(_application):
+    # Defer disk migration and OS credential access until the application starts.
+    from app.services.provider_runtime_service import provider_runtime_service
+    from app.services.provider_policy_service import provider_policy_service
+
+    provider_runtime_service.initialize()
+    provider_policy_service.initialize()
+    yield
+
+
 def resolve_frontend_dist() -> Path:
     configured = os.getenv("NEXUS_FRONTEND_DIST")
     if configured:
@@ -28,7 +40,7 @@ def resolve_frontend_dist() -> Path:
 
 
 def create_app(frontend_dist: Path | None = None) -> FastAPI:
-    application = FastAPI(title=settings.app_name, version="0.2.0")
+    application = FastAPI(title=settings.app_name, version="0.2.0", lifespan=lifespan)
 
     application.add_middleware(
         TrustedHostMiddleware,
