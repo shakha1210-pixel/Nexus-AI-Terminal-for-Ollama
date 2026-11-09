@@ -30,7 +30,7 @@ class KaggleNotebookServiceTests(unittest.TestCase):
         self.assertEqual(len(result["items"]), 1)
         self.assertEqual(result["items"][0]["ref"], "owner/notebook")
         args = run.call_args.args[0]
-        self.assertEqual(args[-4:], ["-s", "transformer", "-p", "2", "--csv"][-4:])
+        self.assertEqual(args[-5:], ["-s", "transformer", "-p", "2", "--csv"])
 
     def test_search_rejects_short_query_before_running_cli(self) -> None:
         with patch("app.services.kaggle_notebook_service.subprocess.run") as run:
