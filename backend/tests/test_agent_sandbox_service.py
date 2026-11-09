@@ -80,9 +80,9 @@ class AgentSandboxServiceTests(unittest.TestCase):
             communicate=AsyncMock(return_value=(b"", b"")),
         )
         async def scenario() -> None:
-            with patch.object(self.service, "_stage_granted_file", return_value=staged_path), \\
-                 patch("app.services.agent_sandbox_service.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)), \\
-                 patch("app.services.agent_sandbox_service.asyncio.wait_for", new=AsyncMock(side_effect=asyncio.TimeoutError)), \\
+            with patch.object(self.service, "_stage_granted_file", return_value=staged_path), \
+                 patch("app.services.agent_sandbox_service.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)), \
+                 patch("app.services.agent_sandbox_service.asyncio.wait_for", new=AsyncMock(side_effect=asyncio.TimeoutError)), \
                  patch.object(self.service, "_force_remove", new=AsyncMock()) as remove:
                 with self.assertRaisesRegex(AgentSandboxError, "vaqt limiti"):
                     await self.service.read_granted_file("agent-a", "notes.md")
@@ -100,8 +100,8 @@ class AgentSandboxServiceTests(unittest.TestCase):
             communicate=AsyncMock(side_effect=[asyncio.CancelledError(), (b"", b"")]),
         )
         async def scenario() -> None:
-            with patch.object(self.service, "_stage_granted_file", return_value=staged_path), \\
-                 patch("app.services.agent_sandbox_service.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)), \\
+            with patch.object(self.service, "_stage_granted_file", return_value=staged_path), \
+                 patch("app.services.agent_sandbox_service.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)), \
                  patch.object(self.service, "_force_remove", new=AsyncMock()) as remove:
                 with self.assertRaises(asyncio.CancelledError):
                     await self.service.read_granted_file("agent-a", "notes.md")
