@@ -154,7 +154,8 @@ function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-  }, [theme]);
+    document.documentElement.lang = language;
+  }, [theme, language]);
 
   useEffect(() => {
     if (!preferencesReady) return;
@@ -173,6 +174,7 @@ function App() {
   return (
     <AgentProvider>
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">{t("accessibility.skipToContent")}</a>
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><Command size={19} strokeWidth={2.2} /></div>
@@ -185,6 +187,7 @@ function App() {
           <ChevronDown size={15} />
         </button>
 
+        <nav className="sidebar-nav" aria-label={t("nav.workspaceTitle")}> 
         <div className="nav-group">
           <p className="nav-label">{t("nav.workspace")}</p>
           <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" aria-label={t("nav.dashboard")} title={t("nav.dashboard")} aria-current={activeView === "dashboard" ? "page" : undefined} onClick={() => navigateTo("dashboard")}><LayoutDashboard size={17} aria-hidden="true" />{t("nav.dashboard")}</a>
@@ -199,7 +202,7 @@ function App() {
           <a className="nav-item" href="#models" aria-label={t("nav.models")} title={t("nav.models")}><Boxes size={17} aria-hidden="true" />{t("nav.models")}<span className="nav-count">{models.length}</span></a>
           <a className="nav-item" href="#knowledge" aria-label={t("nav.knowledge")} title={t("nav.knowledge")}><Database size={17} aria-hidden="true" />{t("nav.knowledge")}</a>
           <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" aria-label={t("nav.providers")} title={t("nav.providers")} aria-current={activeView === "providers" ? "page" : undefined} onClick={() => navigateTo("providers")}><Network size={17} aria-hidden="true" />{t("nav.providers")}</a>
-          <a className="nav-item" href="#integrations" aria-label={t("nav.integrations")} title={t("nav.integrations")}><Workflow size={17} />{t("nav.integrations")}</a>
+          <a className="nav-item" href="#integrations" aria-label={t("nav.integrations")} title={t("nav.integrations")}><Workflow size={17} aria-hidden="true" />{t("nav.integrations")}</a>
         </div>
 
         <div className="nav-group">
@@ -208,6 +211,7 @@ function App() {
           <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" aria-label={t("nav.settings")} title={t("nav.settings")} aria-current={activeView === "settings" ? "page" : undefined} onClick={() => navigateTo("settings")}><Settings size={17} aria-hidden="true" />{t("nav.settings")}</a>
         </div>
 
+        </nav>
         <div className="sidebar-bottom">
           <div className="local-card">
             <div className="local-card-icon"><ShieldCheck size={16} /></div>
