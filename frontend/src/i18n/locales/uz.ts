@@ -295,9 +295,8 @@ export const uz = {
   "diagnostics.loadError": "Diagnostika ma’lumotlarini yuklab bo‘lmadi.",
   "diagnostics.empty": "Hozircha diagnostika ma’lumoti yo‘q.",
   "diagnostics.noBlockingWait": "Kutish serverni band qilmaydi; qolgan vaqt avtomatik yangilanadi.",
-  "settings.restartNote": "OpenAI-compatible kaliti saqlanganda provider qayta sozlanadi. Endpoint manzili .env orqali belgilanadi."
-
-  "diagnostics.connection": "Ulanish",,
+  "settings.restartNote": "OpenAI-compatible kaliti saqlanganda provider qayta sozlanadi. Endpoint manzili .env orqali belgilanadi.",
+  "diagnostics.connection": "Ulanish",
   "diagnostics.tip.wait_or_switch": "Provider vaqtincha kutish rejimida. Kutish tugashini kuzating yoki ruxsat etilgan boshqa provider’ni tanlang.",
   "diagnostics.tip.rate_limit": "So‘rovlar limiti oshgan. Retry-After muddati tugamaguncha yangi so‘rov yubormang.",
   "diagnostics.tip.credentials": "Autentifikatsiya rad etildi. API kaliti va endpoint ruxsatlarini tekshiring; avtomatik qayta urinish bajarilmaydi.",
