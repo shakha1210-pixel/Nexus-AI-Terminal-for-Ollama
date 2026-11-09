@@ -212,6 +212,7 @@ faylini yuklab olib ishga tushirish kifoya. Installer:
 - `%LOCALAPPDATA%\\NEXUS AI` ichidagi foydalanuvchi sozlamalari va loglarni
   uninstall vaqtida saqlab qoladi.
 - Ollama’ni paketlamaydi. Ollama alohida o‘rnatiladi.
+- Kaggle Notebook qidirish/yuklash uchun kerakli Kaggle CLI ham paket ichida bo‘ladi; haqiqiy Kaggle hisob ma’lumotlari foydalanuvchi sozlamalaridan olinadi.
 - WebView2 Runtime bo‘lmasa, launcher standart brauzerga fallback qiladi;
   WebView2’ni alohida o‘rnatish mumkin.
 
