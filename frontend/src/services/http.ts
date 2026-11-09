@@ -7,8 +7,13 @@ export type ServerSentEvent = {
   retry?: number;
 };
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, init);
+export type RequestOptions = Omit<RequestInit, "body"> & { body?: unknown };
+
+export async function request<T>(path: string, init?: RequestOptions): Promise<T> {
+  const headers = new Headers(init?.headers);
+  const body = init?.body === undefined ? undefined : JSON.stringify(init.body);
+  if (body !== undefined && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  const response = await fetch(`${API_BASE}${path}`, { ...init, headers, body });
   if (!response.ok) {
     let message = `API xatosi: ${response.status}`;
     try {
