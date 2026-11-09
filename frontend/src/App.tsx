@@ -290,7 +290,7 @@ function App() {
           </div>
 
           <div className="kaggle-section">
-            <KagglePanel status={kaggleStatus} onStatusChange={setKaggleStatus} onModeChange={() => { void refresh(); }} />
+
           </div>
 
           <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>{t("dashboard.localFirstWorkspace")}</span></div>
@@ -300,7 +300,7 @@ function App() {
             <div className="page-heading">
               <div><p className="eyebrow">{t("pages.localDevelopment")}</p><h1>{t("nav.explorer")}</h1><p className="page-subtitle">{t("pages.explorerSubtitle")}</p></div>
             </div>
-            <WorkspacePanel />
+
           </section>
         ) : activeView === "providers" ? (
           <section className="page-content workstation-page">
@@ -317,17 +317,17 @@ function App() {
         ) : activeView === "settings" ? (
           <section className="page-content workstation-page">
             <div className="page-heading"><div><p className="eyebrow">{t("nav.system")}</p><h1>{t("nav.settings")}</h1><p className="page-subtitle">{t("settings.pageSubtitle")}</p></div></div>
-            <SettingsPanel />
+
           </section>
         ) : activeView === "agents" ? (
           <section className="page-content workstation-page">
             <div className="page-heading"><div><p className="eyebrow">{t("pages.controlledExecution")}</p><h1>{t("nav.agents")}</h1><p className="page-subtitle">{t("pages.agentsSubtitle")}</p></div></div>
-            <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
+
           </section>
         ) : (
           <section className="page-content workstation-page">
             <div className="page-heading"><div><p className="eyebrow">{t("pages.localInference")}</p><h1>{t("nav.conversations")}</h1><p className="page-subtitle">{t("pages.chatSubtitle")}</p></div></div>
-            <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
+
           </section>
         )}
       </main>
