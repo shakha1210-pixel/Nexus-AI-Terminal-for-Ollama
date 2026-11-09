@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 
@@ -13,7 +15,7 @@ async def search_notebooks(
     page: int = Query(default=1, ge=1, le=100),
 ) -> dict:
     try:
-        return await __import__("asyncio").to_thread(kaggle_notebook_service.search, q, page)
+        return await asyncio.to_thread(kaggle_notebook_service.search, q, page)
     except KaggleNotebookError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
