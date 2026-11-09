@@ -6,6 +6,7 @@ from app.providers.policy import ProviderSwitchPolicy
 from app.providers.manager import provider_manager
 from app.schemas.providers import ProviderPolicyUpdate
 from app.services.app_data import get_store_path
+from app.services.lazy_service import LazyService
 
 _LEGACY_DIR = Path(__file__).resolve().parents[2] / ".nexus"
 
@@ -59,4 +60,4 @@ class ProviderPolicyService:
             return self._to_policy(self._policy)
 
 
-provider_policy_service = ProviderPolicyService()
+provider_policy_service = LazyService(ProviderPolicyService)
