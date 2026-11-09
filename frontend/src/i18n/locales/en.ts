@@ -301,8 +301,7 @@ export const en = {
   "diagnostics.tip.rate_limit": "The request limit was reached. Wait until Retry-After expires before sending another request.",
   "diagnostics.tip.credentials": "Authentication was rejected. Check the API key and endpoint permissions; automatic retries are disabled.",
   "diagnostics.tip.connectivity": "Check the network and provider status. Cooldown is applied automatically to transient failures.",
-  "diagnostics.tip.connection_check": "The provider did not respond. Check service status, endpoint URL, and authentication."
-
+  "diagnostics.tip.connection_check": "The provider did not respond. Check service status, endpoint URL, and authentication.",
   "diagnostics.recovering": "Recovery check",
   "diagnostics.tip.recovery_probe": "Provider recovery is being checked automatically. The status will update when the probe finishes.",
 } as const;
