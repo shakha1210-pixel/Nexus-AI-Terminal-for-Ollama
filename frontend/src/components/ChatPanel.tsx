@@ -5,15 +5,8 @@ import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
 import { openEventStream, readEventStream, request } from "../services/http";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 type Message = { role: "user" | "assistant"; content: string };
 type Conversation = { id: string; title: string; updated_at: string; message_count: number };
-
-async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`);
-  if (!response.ok) throw new Error(`API xatosi: ${response.status}`);
-  return response.json() as Promise<T>;
-}
 
 export default function ChatPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const { t } = useTranslation();
@@ -23,7 +16,6 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
-  const [agentId, setAgentId] = useState("default");
   const [pathsInput, setPathsInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -58,8 +50,7 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
   const deleteConversation = async (id: string) => {
     if (!window.confirm(t("chat.deleteConfirm"))) return;
     try {
-      const response = await fetch(`${API_BASE}/api/chat/conversations/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error(t("chat.deleteError"));
+      await request<{ deleted: string }>(`/api/chat/conversations/${id}`, { method: "DELETE" });
       if (conversationId === id) newConversation();
       await refreshHistory();
     } catch (err) { setError(err instanceof Error ? err.message : t("chat.deleteError")); }
