@@ -6,6 +6,7 @@ import re
 import threading
 from pathlib import Path
 
+from app.services.app_data import get_store_path
 from app.services.workspace_service import WorkspaceError, workspace_service
 
 
@@ -21,7 +22,8 @@ class AgentAccessService:
     MAX_CONTEXT_FILE_BYTES = 10 * 1024 * 1024
 
     def __init__(self, store_path: Path | None = None) -> None:
-        self.store_path = store_path or (Path(__file__).resolve().parents[2] / ".nexus" / "agent_permissions.json")
+        legacy_path = Path(__file__).resolve().parents[2] / ".nexus" / "agent_permissions.json"
+        self.store_path = store_path or get_store_path("agent_permissions.json", legacy_path)
         self._lock = threading.RLock()
 
     @staticmethod
