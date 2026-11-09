@@ -8,7 +8,7 @@ brauzerdagi interfeys bilan Ollama o‘rtasida API gateway vazifasini bajaradi.
 > Ollama modellarini ko‘rish, ixtiyoriy Kaggle GPU boshqaruvi va lokal workspace Explorer ishlaydi.
 > Kaggle uchun operator o‘z hisob ma’lumotlari va notebook secret’larini
 > sozlashi kerak. Ollama bilan streaming chat va suhbat tarixini saqlash mavjud. Agent Runtime dastlabki versiyasi mavjud: agent faqat ruxsat berilgan workspace matnli fayllarini o‘qiy oladi. Workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va chatga tanlangan fayllarni kontekst sifatida biriktirish mavjud.
-> Ollama modellarini UI orqali yuklash va o‘chirish mavjud.
+> Ollama modellarini UI orqali yuklash va o‘chirish mavjud. Provider Manager hozir native Ollama (local/Kaggle) va ixtiyoriy OpenAI-compatible API’ni umumiy interfeysga birlashtiradi; Chat va Agent bir xil faol provider/model tanlovidan foydalanadi. Anthropic va Gemini adapterlari keyingi bosqich uchun rejalashtirilgan. Provider Manager hozir native Ollama (local/Kaggle) va ixtiyoriy OpenAI-compatible API’ni umumiy interfeysga birlashtiradi; Chat va Agent bir xil faol provider/model tanlovidan foydalanadi. Anthropic va Gemini adapterlari keyingi bosqich uchun rejalashtirilgan.
 
 Loyiha [MIT litsenziyasi](LICENSE) ostida tarqatiladi.
 
@@ -99,6 +99,10 @@ Backend sozlamalari `backend/.env` faylidan o‘qiladi:
 | `NGROK_DOMAIN` | `https://` siz ngrok statik domeni | Bo‘sh |
 | `TUNNEL_USER` | Tunnel basic-auth foydalanuvchisi | `nexus` |
 | `TUNNEL_PASSWORD` | Kuchli tunnel paroli | Bo‘sh |
+| `OPENAI_COMPATIBLE_BASE_URL` | OpenAI-compatible API manzili, odatda `https://host/v1` | Bo‘sh |
+| `OPENAI_COMPATIBLE_API_KEY` | Provider API kaliti; faqat backend’da saqlanadi | Bo‘sh |
+| `OPENAI_COMPATIBLE_BASE_URL` | OpenAI-compatible API manzili, odatda `https://host/v1` | Bo‘sh |
+| `OPENAI_COMPATIBLE_API_KEY` | Provider API kaliti; faqat backend’da saqlanadi | Bo‘sh |
 
 Kaggle notebook uchun Kaggle Notebook Secrets’da `NGROK_TOKEN` va
 `TUNNEL_PASSWORD` ham bo‘lishi kerak. Backend’dagi tunnel paroli Kaggle
@@ -139,7 +143,12 @@ Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida l
 | `GET` | `/api/chat/conversations` | Suhbatlar ro‘yxatini olish |
 | `GET` | `/api/chat/conversations/{conversation_id}` | Suhbat tarixini olish |
 | `DELETE` | `/api/chat/conversations/{conversation_id}` | Suhbatni o‘chirish |
-| `POST` | `/api/chat/stream` | Ollama bilan streaming chat; body: model, message, conversation_id?, agent_id?, paths? |
+| `POST` | `/api/chat/stream` | Tanlangan provider bilan streaming chat; body: provider_id?, model, message, conversation_id?, agent_id?, paths? |
+| `GET` | `/api/providers/catalog` | Konfiguratsiyalangan providerlar, ulanish holati va modellari |
+| `GET` | `/api/providers/active` | Umumiy faol provider tanlovini olish |
+| `PUT` | `/api/providers/active` | Chat va Agent uchun umumiy provider tanlash; body: `{"provider_id":"ollama"}` yoki `{"provider_id":"openai-compatible"}` |
+| `GET` | `/api/providers/policy` | Fallback switching siyosatini olish |
+| `PUT` | `/api/providers/policy` | Fallback switching siyosatini saqlash |
 | `GET` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini olish |
 | `PUT` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini saqlash; body: `{"theme":"dark","sound_enabled":false}` |
 | `POST` | `/api/kaggle/start` | Kaggle runtime’ni boshlash; body: `{"model":"llama3.2"}` |
@@ -183,9 +192,9 @@ nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
 
 - `GET /api/agents/{agent_id}/control` — joriy rejim va izolyatsiya holati.
 - `PUT /api/agents/{agent_id}/control/mode` — `read_only`, `approval_required`, `autopilot` yoki `locked` rejimini tanlash.
-- `POST /api/agents/{agent_id}/isolate` — agentni qulflash va faol Ollama so‘rovini bekor qilish.
+- `POST /api/agents/{agent_id}/isolate` — agentni qulflash va faol provider so‘rovini bekor qilish.
 - `POST /api/agents/{agent_id}/release` — izolyatsiyadan chiqarish; xavfsiz `read_only` rejimiga qaytaradi.
 
 `approval_required` rejimida agentga `workspace_propose_file_edit` vositasi beriladi. Bu vosita faqat mavjud UTF-8 matnli faylni almashtirish taklifini yaratadi; faylni o‘zi yozmaydi. Taklif Approval Queue’da to‘liq matn va fayl yo‘li bilan ko‘rsatiladi. Foydalanuvchi tasdiqlasa, aynan shu mazmun bir marta yoziladi; rad etsa yoki 10 daqiqada ko‘rib chiqilmasa, bajarilmaydi. Taklif yaratilgandan keyin asl fayl o‘zgargan bo‘lsa, tasdiq bekor qilinadi va yangi taklif talab etiladi. Hozircha yangi fayl yaratish, o‘chirish, papka o‘zgartirish yoki ko‘p faylli amallar tasdiqlash vositasida mavjud emas.
 
-`autopilot` hamon faqat mavjud read-only vositalar bilan cheklangan. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Tasdiqlash API’si hozirgi local-first backend arxitekturasiga tayanadi; backendni ishonchsiz tarmoqka ochmang, chunki autentifikatsiya qatlami hali mavjud emas. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
+`autopilot` hamon faqat mavjud read-only vositalar bilan cheklangan. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Provider Manager orqali tanlangan modelning tool-calling imkoniyati tekshiriladi; qo‘llab-quvvatlanmasa Agent ishga tushmaydi. Provider Manager orqali tanlangan modelning tool-calling imkoniyati tekshiriladi; qo‘llab-quvvatlanmasa Agent ishga tushmaydi. Tasdiqlash API’si hozirgi local-first backend arxitekturasiga tayanadi; backendni ishonchsiz tarmoqka ochmang, chunki autentifikatsiya qatlami hali mavjud emas. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.

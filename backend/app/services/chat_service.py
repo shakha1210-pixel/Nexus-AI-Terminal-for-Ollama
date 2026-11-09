@@ -11,7 +11,8 @@ from typing import AsyncIterator
 import httpx
 
 from app.services.agent_access_service import AgentAccessError, agent_access_service
-from app.services.ollama_service import ollama_service
+from app.providers.base import ProviderCapabilities
+from app.providers.manager import ProviderCapabilityError, provider_manager
 
 
 class ChatError(ValueError):
@@ -78,18 +79,20 @@ class ChatService:
 
     async def stream_chat(
         self, *, model: str, message: str, conversation_id: str | None,
-        agent_id: str, paths: list[str],
+        agent_id: str, paths: list[str], provider_id: str | None = None,
     ) -> AsyncIterator[str]:
         model = model.strip()
         message = message.strip()
         if not model or len(model) > 160 or not message or len(message) > 20000:
             raise ChatError("Model yoki xabar bo‘sh, yoxud ruxsat etilgan hajmdan katta.")
+        selected_provider = provider_id or provider_manager.active_provider_id or "ollama"
         try:
-            installed = {item["name"] for item in await ollama_service.get_models()}
+            provider_models = await provider_manager.list_models(selected_provider)
         except (httpx.HTTPError, ValueError, KeyError) as exc:
-            raise ChatError("Ollama modellari bilan bog‘lanib bo‘lmadi.") from exc
-        if model not in installed:
-            raise ChatError("Tanlangan model lokal Ollama’da o‘rnatilmagan.")
+            raise ChatError(f"'{selected_provider}' provider bilan bog‘lanib bo‘lmadi.") from exc
+        model_info = next((item for item in provider_models if item.id == model), None)
+        if model_info is None:
+            raise ChatError("Tanlangan model joriy provider’da mavjud emas.")
 
         if conversation_id:
             data = self._read(conversation_id)
@@ -114,6 +117,13 @@ class ChatService:
             elif item["kind"] == "image":
                 image_data.append(item["content_base64"])
                 user_content += f"\n\n[Image attachment: {item['path']}]"
+        if image_data:
+            try:
+                provider_manager.require_capabilities(
+                    selected_provider, model_info, ProviderCapabilities(vision=True)
+                )
+            except ProviderCapabilityError as exc:
+                raise ChatError(str(exc)) from exc
         user_message = {"role": "user", "content": user_content}
         request_message = dict(user_message)
         if image_data:
@@ -125,35 +135,24 @@ class ChatService:
 
         yield "event: meta\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\n\n"
         request_messages = [*data["messages"][:-1], request_message]
-        payload = {"model": model, "messages": request_messages, "stream": True}
         assistant_text = ""
         try:
-            async with httpx.AsyncClient(timeout=None, auth=ollama_service.auth) as client:
-                async with client.stream("POST", f"{ollama_service.base_url}/api/chat", json=payload) as response:
-                    response.raise_for_status()
-                    async for line in response.aiter_lines():
-                        if not line:
-                            continue
-                        try:
-                            chunk = json.loads(line)
-                        except json.JSONDecodeError:
-                            continue
-                        if chunk.get("error"):
-                            raise ChatError(str(chunk["error"])[:500])
-                        content = (chunk.get("message") or {}).get("content", "")
-                        if content:
-                            assistant_text += content
-                            yield "event: token\ndata: " + json.dumps({"content": content}, ensure_ascii=False) + "\n\n"
-                        if chunk.get("done"):
-                            break
+            async for chunk in provider_manager.stream(selected_provider, request_messages, model):
+                content = (chunk.get("message") or {}).get("content", "")
+                if content:
+                    assistant_text += content
+                    yield "event: token\ndata: " + json.dumps({"content": content}, ensure_ascii=False) + "\n\n"
+                if chunk.get("done"):
+                    break
             if assistant_text:
                 data["messages"].append({"role": "assistant", "content": assistant_text})
                 data["updated_at"] = datetime.now(timezone.utc).isoformat()
                 with self._lock:
                     self._write(data)
             yield "event: done\ndata: " + json.dumps({"conversation_id": conversation_id}) + "\n\n"
-        except (httpx.HTTPError, ChatError) as exc:
-            yield "event: error\ndata: " + json.dumps({"message": f"Ollama chat xatosi: {type(exc).__name__}" if isinstance(exc, httpx.HTTPError) else str(exc)}, ensure_ascii=False) + "\n\n"
+        except (httpx.HTTPError, ChatError, ValueError, RuntimeError, KeyError) as exc:
+            message_text = str(exc) if isinstance(exc, ChatError) else f"Provider chat xatosi: {type(exc).__name__}"
+            yield "event: error\ndata: " + json.dumps({"message": message_text}, ensure_ascii=False) + "\n\n"
 
 
 chat_service = ChatService()

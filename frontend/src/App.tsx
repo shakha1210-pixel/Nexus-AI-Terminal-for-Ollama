@@ -9,18 +9,23 @@ import WorkspacePanel from "./components/WorkspacePanel";
 import ChatPanel from "./components/ChatPanel";
 import AgentPanel from "./components/AgentPanel";
 import ModelsPanel from "./components/ModelsPanel";
+import ProviderPanel from "./components/ProviderPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
 import "./kaggle-styles.css";
+import "./providers-styles.css";
 
 type Theme = "dark" | "light";
 
 
 function App() {
   const [theme, setTheme] = useState<Theme>("dark");
-  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents">("dashboard");
+  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents" | "providers">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
+  const [providerModels, setProviderModels] = useState<OllamaModel[]>([]);
+  const [activeProvider, setActiveProvider] = useState("ollama");
+  const [providerConnected, setProviderConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
@@ -64,11 +69,26 @@ function App() {
       } else {
         setModels([]);
       }
+      const catalog = await api.getProviderCatalog();
+      setActiveProvider(catalog.active_provider);
+      const selected = catalog.providers.find((provider) => provider.id === catalog.active_provider);
+      setProviderConnected(Boolean(selected?.connected));
+      setProviderModels((selected?.models ?? []).map((item) => ({
+        name: item.name,
+        size: typeof item.metadata.size === "number" ? item.metadata.size : null,
+        modified_at: typeof item.metadata.modified_at === "string" ? item.metadata.modified_at : null,
+        digest: typeof item.metadata.digest === "string" ? item.metadata.digest : null,
+        family: typeof item.metadata.family === "string" ? item.metadata.family : null,
+        parameter_size: typeof item.metadata.parameter_size === "string" ? item.metadata.parameter_size : null,
+        quantization_level: typeof item.metadata.quantization_level === "string" ? item.metadata.quantization_level : null,
+      })));
       setUpdatedAt(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Noma’lum xatolik yuz berdi.");
       setStatus({ connected: false, version: null, mode: "local", message: "Backend API bilan aloqa yo‘q." });
       setModels([]);
+      setProviderModels([]);
+      setProviderConnected(false);
     } finally {
       refreshing.current = false;
       if (!silent) setLoading(false);
@@ -115,7 +135,8 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [theme, soundEnabled, preferencesReady]);
 
-  const connected = status?.connected === true;
+  const connected = providerConnected;
+  const ollamaConnected = status?.connected === true;
 
   return (
     <div className="app-shell">
@@ -144,7 +165,8 @@ function App() {
           <p className="nav-label">RESOURCES</p>
           <a className="nav-item" href="#models"><Boxes size={17} />Models<span className="nav-count">{models.length}</span></a>
           <a className="nav-item" href="#knowledge"><Database size={17} />Knowledge Base</a>
-          <a className="nav-item" href="#integrations"><Network size={17} />Integrations</a>
+          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" onClick={() => setActiveView("providers")}><Network size={17} />Model Providers</a>
+          <a className="nav-item" href="#integrations"><Workflow size={17} />Integrations</a>
         </div>
 
         <div className="nav-group">
@@ -168,7 +190,7 @@ function App() {
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? "Agent Runtime" : "AI Chat"}</strong></div>
+          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? "Agent Runtime" : activeView === "providers" ? "Model Providers" : "AI Chat"}</strong></div>
           <div className="topbar-actions">
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
             <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label="Change theme" title="Change theme">
@@ -203,7 +225,7 @@ function App() {
           <div className="stats-grid">
             <article className="stat-card">
               <div className="stat-top"><span>Ollama runtime</span><div className="stat-icon"><Activity size={17} /></div></div>
-              <div className="stat-value status-value"><span className={`status-dot ${connected ? "online" : "offline"}`} />{loading && !status ? "Checking…" : connected ? "Connected" : "Offline"}</div>
+              <div className="stat-value status-value"><span className={`status-dot ${ollamaConnected ? "online" : "offline"}`} />{loading && !status ? "Checking…" : ollamaConnected ? "Connected" : "Offline"}</div>
               <p className="stat-foot">{status?.version ? `Version ${status.version}` : "Local model runtime"}</p>
             </article>
             <article className="stat-card">
@@ -224,13 +246,13 @@ function App() {
           </div>
 
           <div className="content-grid">
-            <ModelsPanel models={models} connected={connected} onRefresh={() => void refresh(true)} />
+            <ModelsPanel models={models} connected={ollamaConnected} onRefresh={() => void refresh(true)} />
 
             <section className="panel runtime-panel" id="runtime">
               <div className="panel-header"><div><h2>Runtime connection</h2><p>{status?.mode === "kaggle" ? "Kaggle inference service" : "Local inference service"}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
               <div className="runtime-status">
-                <div className={`runtime-indicator ${connected ? "is-online" : ""}`}><span /></div>
-                <div><strong>{connected ? "Runtime operational" : "Runtime unavailable"}</strong><p>{status?.message ?? "Checking connection…"}</p></div>
+                <div className={`runtime-indicator ${ollamaConnected ? "is-online" : ""}`}><span /></div>
+                <div><strong>{ollamaConnected ? "Runtime operational" : "Runtime unavailable"}</strong><p>{status?.message ?? "Checking connection…"}</p></div>
               </div>
               <div className="detail-row"><span>Service</span><strong>Ollama</strong></div>
               <div className="detail-row"><span>Selected runtime</span><code>{status?.mode === "kaggle" ? "Kaggle GPU" : "127.0.0.1:11434"}</code></div>
@@ -252,15 +274,27 @@ function App() {
             </div>
             <WorkspacePanel />
           </section>
+        ) : activeView === "providers" ? (
+          <section className="page-content workstation-page">
+            <div className="page-heading"><div><p className="eyebrow">INFERENCE BACKENDS</p><h1>Model Providers</h1><p className="page-subtitle">Manage provider adapters and guarded fallback behavior.</p></div></div>
+            <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
+              void api.setActiveProvider(providerId).then((result) => {
+                setActiveProvider(result.provider_id);
+                void refresh(true);
+              }).catch((err: unknown) => {
+                setError(err instanceof Error ? err.message : "Provider selection failed.");
+              });
+            }} />
+          </section>
         ) : activeView === "agents" ? (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>My Agents</h1><p className="page-subtitle">Run a local agent with tightly scoped workspace access.</p></div></div>
-            <AgentPanel models={models} connected={connected} />
+            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>My Agents</h1><p className="page-subtitle">Run an agent through the shared provider with tightly scoped workspace access.</p></div></div>
+            <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         ) : (
           <section className="page-content workstation-page">
-            <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>Conversations</h1><p className="page-subtitle">Chat with locally installed Ollama models.</p></div></div>
-            <ChatPanel models={models} connected={connected} />
+            <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>Conversations</h1><p className="page-subtitle">Chat with the model selected in Model Providers.</p></div></div>
+            <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
           </section>
         )}
       </main>

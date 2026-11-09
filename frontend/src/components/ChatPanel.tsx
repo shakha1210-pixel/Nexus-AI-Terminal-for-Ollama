@@ -12,7 +12,7 @@ async function apiGet<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export default function ChatPanel({ models, connected }: { models: OllamaModel[]; connected: boolean }) {
+export default function ChatPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const [model, setModel] = useState("");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -72,7 +72,7 @@ export default function ChatPanel({ models, connected }: { models: OllamaModel[]
       const response = await fetch(`${API_BASE}/api/chat/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model, message: text, conversation_id: conversationId, agent_id: agentId, paths }),
+        body: JSON.stringify({ provider_id: providerId, model, message: text, conversation_id: conversationId, agent_id: agentId, paths }),
       });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
@@ -118,11 +118,11 @@ export default function ChatPanel({ models, connected }: { models: OllamaModel[]
     </aside>
     <div className="chat-main">
       <div className="chat-toolbar">
-        <div><p className="eyebrow">LOCAL INFERENCE</p><h2>AI Chat</h2></div>
+        <div><p className="eyebrow">SHARED PROVIDER · {providerId}</p><h2>AI Chat</h2></div>
         <label>Model<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
       </div>
       <div className="chat-messages">
-        {!messages.length && <div className="chat-empty"><Bot size={34} /><strong>Start a conversation</strong><p>Messages are sent to your selected Ollama model on the configured runtime.</p></div>}
+        {!messages.length && <div className="chat-empty"><Bot size={34} /><strong>Start a conversation</strong><p>Messages are routed through the shared NEXUS Provider Manager.</p></div>}
         {messages.map((item, index) => <article className={`chat-message ${item.role}`} key={index}><span>{item.role === "user" ? "YOU" : "NEXUS"}</span><p>{item.content || (busy && index === messages.length - 1 ? "Thinking…" : "")}</p></article>)}
       </div>
       <div className="chat-composer">

@@ -14,7 +14,7 @@ type ApprovalRequest = {
   expires_at: string;
 };
 
-export default function AgentPanel({ models, connected }: { models: OllamaModel[]; connected: boolean }) {
+export default function AgentPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const [agentId, setAgentId] = useState("default");
   const [model, setModel] = useState("");
   const [task, setTask] = useState("");
@@ -116,7 +116,7 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
       const response = await fetch(`${API_BASE}/api/agents/${encodeURIComponent(agentId)}/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model, task: task.trim() }),
+        body: JSON.stringify({ provider_id: providerId, model, task: task.trim() }),
       });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
@@ -162,7 +162,7 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
     </div>
     <div className="agent-runtime-controls">
       <label>Agent ID<input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
-      <label>Local model<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
+      <label>Provider model · {providerId}<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
       <label>Access mode<select value={mode} onChange={(event) => void updateMode(event.target.value as typeof mode)} disabled={controlBusy || isolated}>
         <option value="read_only">Read-only</option><option value="approval_required">Approval required</option><option value="autopilot">Autopilot</option><option value="locked">Locked</option>
       </select></label>
@@ -187,7 +187,7 @@ export default function AgentPanel({ models, connected }: { models: OllamaModel[
     <div className="agent-runtime-actions"><span className="agent-runtime-status">{running ? <><span className="agent-pulse" />{status}</> : status || "Ready"}</span><button className="primary-button" onClick={() => void runAgent()} disabled={!connected || running || isolated || mode === "locked" || !model || !task.trim()}><Play size={15} />{running ? "Running…" : "Run agent"}</button></div>
     <div className="agent-capabilities">
       <div><ShieldCheck size={17} /><span><strong>Access mode enforced</strong><small>Autopilot is still limited to explicitly granted read access in this build.</small></span></div>
-      <div><Wrench size={17} /><span><strong>Isolation control</strong><small>Locks the agent and cancels its active Ollama request. No agent shell or external network tool exists.</small></span></div>
+      <div><Wrench size={17} /><span><strong>Isolation control</strong><small>Locks the agent and cancels its active provider request. No agent shell or external network tool exists.</small></span></div>
     </div>
     {output && <div className="agent-output"><div className="agent-output-title">AGENT RESPONSE</div><pre>{output}</pre></div>}
     {error && <div className="chat-error" role="alert">{error}</div>}
