@@ -317,4 +317,5 @@ export const en = {
   "agent.diffPreview": "Change preview",
   "agent.originalVersion": "Current file",
   "agent.proposedVersion": "Proposed file",
+  "agent.originalUnavailable": "Original snapshot unavailable for this older request.",
 } as const;
