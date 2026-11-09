@@ -1,5 +1,5 @@
 import type { OllamaModel, OllamaStatus } from "../types/ollama";
-import type { KaggleStatus } from "../types/kaggle";
+import type { KaggleNotebookSearchResponse, KaggleStatus } from "../types/kaggle";
 import type { UIPreferences } from "../types/preferences";
 import type { ProviderCatalog, ProviderPolicy } from "../types/providers";
 
@@ -28,6 +28,7 @@ export const api = {
   getOllamaStatus: () => request<OllamaStatus>("/api/ollama/status"),
   getModels: () => request<OllamaModel[]>("/api/ollama/models"),
   getKaggleStatus: () => request<KaggleStatus>("/api/kaggle/status"),
+  searchKaggleNotebooks: (query: string, page = 1) => request<KaggleNotebookSearchResponse>(`/api/kaggle/notebooks/search?q=${encodeURIComponent(query)}&page=${page}`),
   startKaggle: (model: string) => request<KaggleStatus>("/api/kaggle/start", { method: "POST", body: { model } }),
   setMode: (mode: "local" | "kaggle") => request<KaggleStatus>("/api/kaggle/mode", { method: "POST", body: { mode } }),
   getPreferences: () => request<UIPreferences>("/api/preferences"),
