@@ -69,15 +69,15 @@ try {
         "--onedir",
         "--windowed",
         "--name", "NEXUS AI",
+        "--icon", "$Root\desktop\assets\icon.ico",
         "--paths", "backend",
         "--paths", ".",
         "--distpath", "dist/windows",
         "--workpath", ".build/pyinstaller",
         "--specpath", ".build/spec",
-        "--add-data", "backend/app;backend/app",
-        "--add-data", "frontend/dist;frontend/dist",
-        "--add-data", "desktop/assets;desktop/assets",
-        "--collect-all", "kaggle",
+        "--add-data", "$Root\backend\app;backend\app",
+        "--add-data", "$Root\frontend\dist;frontend\dist",
+        "--add-data", "$Root\desktop\assets;desktop\assets",
         "--collect-all", "webview",
         "--collect-all", "pystray",
         "--collect-all", "keyring",
@@ -91,9 +91,39 @@ try {
     )
     Invoke-Native -File $Python -Arguments $PyInstallerArgs
 
+    # Kaggle's CLI is a separate executable used by the notebook search/download service.
+    # Dummy build-only credentials let PyInstaller inspect Kaggle modules without embedding real secrets.
+    $PreviousKaggleUsername = $env:KAGGLE_USERNAME
+    $PreviousKaggleKey = $env:KAGGLE_KEY
+    try {
+        $env:KAGGLE_USERNAME = "nexus-build-placeholder"
+        $env:KAGGLE_KEY = "nexus-build-placeholder"
+        $KaggleArgs = @(
+            "-m", "PyInstaller",
+            "--noconfirm",
+            "--clean",
+            "--onefile",
+            "--console",
+            "--name", "kaggle",
+            "--distpath", "dist/windows/NEXUS AI",
+            "--workpath", ".build/kaggle-cli",
+            "--specpath", ".build/spec-kaggle",
+            "--collect-all", "kaggle",
+            "desktop/kaggle_cli.py"
+        )
+        Invoke-Native -File $Python -Arguments $KaggleArgs
+    }
+    finally {
+        $env:KAGGLE_USERNAME = $PreviousKaggleUsername
+        $env:KAGGLE_KEY = $PreviousKaggleKey
+    }
+
     $Executable = Join-Path $DistRoot "NEXUS AI\NEXUS AI.exe"
     if (-not (Test-Path $Executable)) {
         throw "PyInstaller bajarilmadi: $Executable topilmadi."
+    }
+    if (-not (Test-Path (Join-Path $DistRoot "NEXUS AI\kaggle.exe"))) {
+        throw "Kaggle CLI paketi yaratilmadi."
     }
 
     $Iscc = Get-Command ISCC.exe -ErrorAction SilentlyContinue
