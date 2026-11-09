@@ -10,7 +10,7 @@ type ApprovalRequest = {
   request_id: string;
   path: string;
   operation: string;
-  original_content: string;
+  original_content: string | null;
   proposed_content: string;
   status: string;
   created_at: string;
@@ -157,7 +157,7 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
       {approvals.map((item) => <article className="agent-approval-item" key={item.request_id}>
         <div className="agent-approval-meta"><strong>{item.path}</strong><span>{t("agent.expires")}: {new Date(item.expires_at).toLocaleTimeString()}</span></div>
         <div className="agent-approval-diff" aria-label={t("agent.diffPreview")}>
-          <div><strong>{t("agent.originalVersion")}</strong><pre>{item.original_content}</pre></div>
+          <div><strong>{t("agent.originalVersion")}</strong><pre>{item.original_content ?? t("agent.originalUnavailable")}</pre></div>
           <div><strong>{t("agent.proposedVersion")}</strong><pre>{item.proposed_content}</pre></div>
         </div>
         <div className="agent-approval-actions">
