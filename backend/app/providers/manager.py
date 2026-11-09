@@ -74,27 +74,37 @@ class ProviderManager:
 
     async def chat(self, provider_id: str, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> dict[str, Any]:
         provider_resilience_service.before_request(provider_id)
+        completed = False
         try:
             result = await self.registry.get(provider_id).chat(messages, model, **kwargs)
+            completed = True
+            provider_resilience_service.record_success(provider_id)
+            return result
         except Exception as exc:
             provider_resilience_service.record_failure(provider_id, exc)
             raise
-        provider_resilience_service.record_success(provider_id)
-        return result
+        finally:
+            if not completed:
+                provider_resilience_service.release_probe(provider_id)
 
     def stream(self, provider_id: str, messages: list[dict[str, Any]], model: str, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
         async def guarded_stream() -> AsyncIterator[dict[str, Any]]:
             provider_resilience_service.before_request(provider_id)
+            completed = False
             try:
                 async for chunk in self.registry.get(provider_id).stream(messages, model, **kwargs):
                     yield chunk
                     if chunk.get("done"):
                         provider_resilience_service.record_success(provider_id)
                 # A clean stream end without an explicit done marker is still a successful transport.
+                completed = True
                 provider_resilience_service.record_success(provider_id)
             except Exception as exc:
                 provider_resilience_service.record_failure(provider_id, exc)
                 raise
+            finally:
+                if not completed:
+                    provider_resilience_service.release_probe(provider_id)
         return guarded_stream()
 
 
