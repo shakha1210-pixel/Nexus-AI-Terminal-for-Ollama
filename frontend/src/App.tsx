@@ -171,6 +171,7 @@ function App() {
   const ollamaConnected = status?.connected === true;
 
   return (
+    <AgentProvider>
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
@@ -347,6 +348,7 @@ function App() {
         </section>}
       </main>
     </div>
+    </AgentProvider>
   );
 }
 
