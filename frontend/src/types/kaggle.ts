@@ -9,3 +9,18 @@ export interface KaggleStatus {
   mode: "local" | "kaggle";
   message: string;
 }
+
+
+export interface KaggleNotebookItem {
+  ref: string;
+  title: string;
+  author: string;
+  last_run: string;
+  votes: number;
+}
+
+export interface KaggleNotebookSearchResponse {
+  query: string;
+  page: number;
+  items: KaggleNotebookItem[];
+}
