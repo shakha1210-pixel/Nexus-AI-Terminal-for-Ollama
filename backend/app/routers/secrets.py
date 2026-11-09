@@ -18,7 +18,7 @@ async def get_secret_status() -> dict[str, bool]:
 
 
 @router.put("")
-async def save_secret(body: SecretUpdate) -> dict[str, bool]:
+async def save_secret(body: SecretUpdate) -> dict:
     try:
         secrets_service.set(body.name, body.value)
         runtime = provider_runtime_service.refresh_openai_adapter() if body.name == "openai-compatible-api-key" else None
@@ -30,7 +30,7 @@ async def save_secret(body: SecretUpdate) -> dict[str, bool]:
 
 
 @router.delete("/{name}")
-async def delete_secret(name: str) -> dict[str, bool]:
+async def delete_secret(name: str) -> dict:
     try:
         deleted = secrets_service.delete(name)
         runtime = provider_runtime_service.refresh_openai_adapter() if name == "openai-compatible-api-key" else None
