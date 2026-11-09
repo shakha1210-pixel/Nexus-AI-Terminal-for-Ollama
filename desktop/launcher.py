@@ -144,6 +144,14 @@ def start_vite() -> subprocess.Popen:
     raise RuntimeError("Vite development server did not become ready within 20 seconds.")
 
 
+def handle_window_closing(stop_event: threading.Event, hide_window) -> bool:
+    """Hide normal window closes; allow an explicit tray exit to close it."""
+    if stop_event.is_set():
+        return True
+    hide_window()
+    return False
+
+
 def run_browser_mode(url: str, server, server_thread: threading.Thread, stop_event: threading.Event) -> None:
     def request_exit() -> None:
         stop_event.set()
@@ -239,8 +247,7 @@ def main(argv: list[str] | None = None) -> int:
 
         if tray and tray.available:
             def minimize_to_tray() -> bool:
-                window.hide()
-                return False
+                return handle_window_closing(stop_event, window.hide)
             window.events.closing += minimize_to_tray
 
         webview.start(gui="edgechromium" if os.name == "nt" else None)
