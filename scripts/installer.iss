@@ -19,10 +19,11 @@ OutputDir=..\dist\installer
 OutputBaseFilename=NEXUS-AI-Setup
 SetupIconFile=..\desktop\assets\icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
+AppMutex=Local\NexusAITerminal
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-CloseApplications=no
+CloseApplications=yes
 RestartApplications=no
 Uninstallable=yes
 
