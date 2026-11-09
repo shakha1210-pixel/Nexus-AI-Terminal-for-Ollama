@@ -38,6 +38,7 @@ class WorkspaceServiceTests(unittest.TestCase):
         self.assertIn("sample.bin", names)
 
     def test_does_not_list_symlinks(self) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
         outside = Path(self.temp_dir.name) / "outside"
         outside.mkdir()
         (outside / "secret.txt").write_text("private", encoding="utf-8")
