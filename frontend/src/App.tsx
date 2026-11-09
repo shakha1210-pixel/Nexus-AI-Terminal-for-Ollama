@@ -1,38 +1,60 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Activity, Bot, Boxes, ChevronDown, CircleHelp, Command, Cpu,
+  Activity, Bot, Boxes, ChevronDown, CircleHelp, Command,
   Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
-  Plus, RefreshCw, Settings, ShieldCheck, Sun, Workflow,
+  Plus, RefreshCw, HardDrive, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
 } from "lucide-react";
 import KagglePanel from "./components/KagglePanel";
+import WorkspacePanel from "./components/WorkspacePanel";
+import ChatPanel from "./components/ChatPanel";
+import AgentPanel from "./components/AgentPanel";
+import ModelsPanel from "./components/ModelsPanel";
 import { api } from "./services/api";
 import type { OllamaModel, OllamaStatus } from "./types/ollama";
 import "./kaggle-styles.css";
 
 type Theme = "dark" | "light";
 
-function formatBytes(bytes: number | null): string {
-  if (bytes === null || !Number.isFinite(bytes)) return "—";
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
-}
 
 function App() {
   const [theme, setTheme] = useState<Theme>("dark");
+  const [activeView, setActiveView] = useState<"dashboard" | "explorer" | "chat" | "agents">("dashboard");
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [preferencesReady, setPreferencesReady] = useState(false);
+  const refreshing = useRef(false);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const playUiSound = useCallback((frequency = 660) => {
+    if (!soundEnabled || typeof window === "undefined") return;
+    try {
+      const AudioContextClass = window.AudioContext;
+      if (!AudioContextClass) return;
+      const context = new AudioContextClass();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.035, context.currentTime + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.09);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.1);
+      oscillator.onended = () => void context.close();
+    } catch {
+      // Audio feedback is optional; UI actions must work without it.
+    }
+  }, [soundEnabled]);
+
+  const refresh = useCallback(async (silent = false) => {
+    if (refreshing.current) return;
+    refreshing.current = true;
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const nextStatus = await api.getOllamaStatus();
@@ -48,19 +70,50 @@ function App() {
       setStatus({ connected: false, version: null, mode: "local", message: "Backend API bilan aloqa yo‘q." });
       setModels([]);
     } finally {
-      setLoading(false);
+      refreshing.current = false;
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
-    const timer = window.setInterval(() => void refresh(), 15000);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refresh(true);
+    }, 15000);
     return () => window.clearInterval(timer);
   }, [refresh]);
 
   useEffect(() => {
+    let active = true;
+    void api.getPreferences()
+      .then((preferences) => {
+        if (!active) return;
+        setTheme(preferences.theme);
+        setSoundEnabled(preferences.sound_enabled);
+      })
+      .catch(() => {
+        // Keep safe local defaults when the preferences endpoint is unavailable.
+      })
+      .finally(() => {
+        if (active) setPreferencesReady(true);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    if (!preferencesReady) return;
+    const timer = window.setTimeout(() => {
+      void api.savePreferences({ theme, sound_enabled: soundEnabled })
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? `Preferences could not be saved: ${err.message}` : "Preferences could not be saved.");
+        });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [theme, soundEnabled, preferencesReady]);
 
   const connected = status?.connected === true;
 
@@ -80,9 +133,10 @@ function App() {
 
         <div className="nav-group">
           <p className="nav-label">WORKSPACE</p>
-          <a className="nav-item active" href="#dashboard"><LayoutDashboard size={17} />Dashboard</a>
-          <a className="nav-item" href="#conversations"><MessageSquare size={17} />Conversations</a>
-          <a className="nav-item" href="#agents"><Bot size={17} />My Agents</a>
+          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" onClick={() => setActiveView("dashboard")}><LayoutDashboard size={17} />Dashboard</a>
+          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" onClick={() => setActiveView("explorer")}><HardDrive size={17} />Explorer</a>
+          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" onClick={() => setActiveView("chat")}><MessageSquare size={17} />Conversations</a>
+          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" onClick={() => setActiveView("agents")}><Bot size={17} />My Agents</a>
           <a className="nav-item" href="#workflows"><Workflow size={17} />Workflows</a>
         </div>
 
@@ -114,19 +168,21 @@ function App() {
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>Dashboard</strong></div>
+          <div className="breadcrumbs"><span>Workspace</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? "Dashboard" : activeView === "explorer" ? "Explorer" : activeView === "agents" ? "Agent Runtime" : "AI Chat"}</strong></div>
           <div className="topbar-actions">
             <div className="environment"><span className="environment-dot" />LOCAL ENVIRONMENT</div>
-            <button className="icon-button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Change theme">
+            <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label="Change theme" title="Change theme">
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
             </button>
-            <button className="icon-button" onClick={() => void refresh()} aria-label="Refresh data" disabled={loading}>
+            <button className="icon-button" onClick={() => { playUiSound(520); void refresh(); }} aria-label="Refresh data" title="Refresh data" disabled={loading}>
               <RefreshCw size={16} className={loading ? "spin" : ""} />
             </button>
+            <button className="icon-button" onClick={() => setSoundEnabled((enabled) => !enabled)} disabled={!preferencesReady} aria-label={soundEnabled ? "Disable sound effects" : "Enable sound effects"} title={soundEnabled ? "Sound effects on" : "Sound effects off"} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}</button>
             <div className="profile-avatar top-avatar">U</div>
           </div>
         </header>
 
+        {activeView === "dashboard" ? (
         <section className="page-content">
           <div className="page-heading">
             <div>
@@ -134,7 +190,7 @@ function App() {
               <h1>Dashboard</h1>
               <p className="page-subtitle">Your local AI environment at a glance.</p>
             </div>
-            <button className="primary-button" onClick={() => window.location.hash = "agents"}><Plus size={16} />Create agent</button>
+            <button className="primary-button" onClick={() => setActiveView("agents")}><Plus size={16} />Create agent</button>
           </div>
 
           {error && <div className="error-banner">{error}</div>}
@@ -158,7 +214,7 @@ function App() {
             <article className="stat-card">
               <div className="stat-top"><span>AI agents</span><div className="stat-icon"><Bot size={17} /></div></div>
               <div className="stat-value">—</div>
-              <p className="stat-foot">Agent workspace coming next</p>
+              <p className="stat-foot">Permission-scoped agent runtime</p>
             </article>
             <article className="stat-card">
               <div className="stat-top"><span>Workflows</span><div className="stat-icon"><Workflow size={17} /></div></div>
@@ -168,38 +224,7 @@ function App() {
           </div>
 
           <div className="content-grid">
-            <section className="panel models-panel" id="models">
-              <div className="panel-header">
-                <div><h2>Installed models</h2><p>Models available on this machine</p></div>
-                <button className="text-button" onClick={() => void refresh()}>Refresh <RefreshCw size={13} /></button>
-              </div>
-              {!connected ? (
-                <div className="empty-state">
-                  <div className="empty-icon"><Cpu size={22} /></div>
-                  <strong>Ollama is not connected</strong>
-                  <p>Start Ollama and make sure its local API is available at <code>127.0.0.1:11434</code>.</p>
-                </div>
-              ) : models.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon"><Boxes size={22} /></div>
-                  <strong>No models found</strong>
-                  <p>Pull a model using Ollama to see it listed here.</p>
-                  <code>ollama pull llama3.2</code>
-                </div>
-              ) : (
-                <div className="model-list">
-                  {models.map((model) => (
-                    <div className="model-row" key={model.digest ?? model.name}>
-                      <div className="model-symbol"><Cpu size={17} /></div>
-                      <div className="model-info"><strong>{model.name}</strong><span>{[model.family, model.parameter_size, model.quantization_level].filter(Boolean).join(" · ") || "Local model"}</span></div>
-                      <span className="model-size">{formatBytes(model.size)}</span>
-                      <span className="model-ready"><span className="status-dot online" />Ready</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="panel-footer"><span>{models.length} model{models.length === 1 ? "" : "s"} detected</span><span>Powered by Ollama</span></div>
-            </section>
+            <ModelsPanel models={models} connected={connected} onRefresh={() => void refresh(true)} />
 
             <section className="panel runtime-panel" id="runtime">
               <div className="panel-header"><div><h2>Runtime connection</h2><p>{status?.mode === "kaggle" ? "Kaggle inference service" : "Local inference service"}</p></div><Gauge size={18} className="panel-muted-icon" /></div>
@@ -220,6 +245,24 @@ function App() {
 
           <div className="bottom-note"><span className="note-mark">N</span><span>NEXUS AI <b>0.1.0</b></span><span className="note-separator">·</span><span>Local-first intelligence workspace</span></div>
         </section>
+        ) : activeView === "explorer" ? (
+          <section className="page-content workstation-page">
+            <div className="page-heading">
+              <div><p className="eyebrow">LOCAL DEVELOPMENT</p><h1>Explorer</h1><p className="page-subtitle">Manage project files and prepare context for your AI agents.</p></div>
+            </div>
+            <WorkspacePanel />
+          </section>
+        ) : activeView === "agents" ? (
+          <section className="page-content workstation-page">
+            <div className="page-heading"><div><p className="eyebrow">CONTROLLED EXECUTION</p><h1>My Agents</h1><p className="page-subtitle">Run a local agent with tightly scoped workspace access.</p></div></div>
+            <AgentPanel models={models} connected={connected} />
+          </section>
+        ) : (
+          <section className="page-content workstation-page">
+            <div className="page-heading"><div><p className="eyebrow">LOCAL INFERENCE</p><h1>Conversations</h1><p className="page-subtitle">Chat with locally installed Ollama models.</p></div></div>
+            <ChatPanel models={models} connected={connected} />
+          </section>
+        )}
       </main>
     </div>
   );
