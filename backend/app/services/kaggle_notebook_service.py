@@ -132,13 +132,25 @@ class KaggleNotebookService:
                 raise KaggleNotebookError("Yuklangan fayl yaroqli Jupyter notebook formatida emas.")
 
         target = destination_dir / f"{owner}__{slug}.ipynb"
-        temporary = destination_dir / f".{owner}__{slug}.tmp"
+        temporary_path: Path | None = None
         try:
-            temporary.write_bytes(payload)
-            os.replace(temporary, target)
+            # A unique staging file prevents concurrent downloads of the same
+            # notebook from overwriting each other's temporary content.
+            with tempfile.NamedTemporaryFile(
+                mode="wb",
+                prefix=f".{owner}__{slug}.",
+                suffix=".tmp",
+                dir=destination_dir,
+                delete=False,
+            ) as temporary_file:
+                temporary_path = Path(temporary_file.name)
+                temporary_file.write(payload)
+                temporary_file.flush()
+                os.fsync(temporary_file.fileno())
+            os.replace(temporary_path, target)
         finally:
-            if temporary.exists():
-                temporary.unlink()
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
         return target
 
 
