@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bot, MessageSquare, Plus, Send, Trash2 } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
+import { useAgentContext } from "../contexts/AgentContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 type Message = { role: "user" | "assistant"; content: string };
@@ -15,6 +16,7 @@ async function apiGet<T>(path: string): Promise<T> {
 
 export default function ChatPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const { t } = useTranslation();
+  const { agentId, setAgentId } = useAgentContext();
   const [model, setModel] = useState("");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
