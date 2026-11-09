@@ -42,7 +42,7 @@ class AgentSandboxServiceTests(unittest.TestCase):
                 asyncio.run(self.service.read_granted_file("agent-a", "notes.md"))
             spawn.assert_not_called()
 
-    def test_stage_rejects_non_utf8_and_oversized_files(self) -> None:
+    def test_stage_rejects_non_utf8_files(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "binary.txt"
             path.write_bytes(bytes([255]))
@@ -55,6 +55,20 @@ class AgentSandboxServiceTests(unittest.TestCase):
             ):
                 with self.assertRaises(AgentSandboxError):
                     self.service._stage_granted_file("agent-a", "binary.txt")
+
+    def test_stage_rejects_files_over_2mb(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "large.txt"
+            path.write_bytes(b"x" * (self.service.MAX_FILE_BYTES + 1))
+            with patch(
+                "app.services.agent_sandbox_service.agent_access_service.list_permissions",
+                return_value={"permissions": [{"path": "large.txt"}]},
+            ), patch(
+                "app.services.agent_sandbox_service.workspace_service.resolve",
+                return_value=path,
+            ):
+                with self.assertRaisesRegex(AgentSandboxError, "2 MB"):
+                    self.service._stage_granted_file("agent-a", "large.txt")
 
 
 if __name__ == "__main__":
