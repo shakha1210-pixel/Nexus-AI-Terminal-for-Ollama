@@ -305,14 +305,7 @@ function App() {
         ) : activeView === "providers" ? (
           <section className="page-content workstation-page">
             <div className="page-heading"><div><p className="eyebrow">{t("pages.inferenceBackends")}</p><h1>{t("nav.providers")}</h1><p className="page-subtitle">{t("pages.providersSubtitle")}</p></div></div>
-            <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
-              void api.setActiveProvider(providerId).then((result) => {
-                setActiveProvider(result.provider_id);
-                void refresh(true);
-              }).catch((err: unknown) => {
-                setError(err instanceof Error ? err.message : t("providers.selectionError"));
-              });
-            }} />
+
           </section>
         ) : activeView === "settings" ? (
           <section className="page-content workstation-page">
@@ -330,6 +323,27 @@ function App() {
 
           </section>
         )}
+        <div hidden={activeView !== "dashboard"} className="kaggle-section">
+          <KagglePanel status={kaggleStatus} onStatusChange={setKaggleStatus} onModeChange={() => { void refresh(); }} />
+        </div>
+        <section hidden={activeView !== "explorer"} className="page-content workstation-page"><WorkspacePanel /></section>
+        <section hidden={activeView !== "providers"} className="page-content workstation-page">
+          <ProviderPanel activeProvider={activeProvider} onProviderChange={(providerId) => {
+            void api.setActiveProvider(providerId).then((result) => {
+              setActiveProvider(result.provider_id);
+              void refresh(true);
+            }).catch((err: unknown) => {
+              setError(err instanceof Error ? err.message : t("providers.selectionError"));
+            });
+          }} />
+        </section>
+        <section hidden={activeView !== "settings"} className="page-content workstation-page"><SettingsPanel /></section>
+        <section hidden={activeView !== "agents"} className="page-content workstation-page">
+          <AgentPanel models={providerModels} connected={connected} providerId={activeProvider} />
+        </section>
+        <section hidden={activeView !== "chat"} className="page-content workstation-page">
+          <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
+        </section>
       </main>
     </div>
   );
