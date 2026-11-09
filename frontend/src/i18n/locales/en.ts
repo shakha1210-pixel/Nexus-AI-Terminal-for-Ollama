@@ -109,6 +109,7 @@ export const en = {
   "chat.generating": "Generating",
   "chat.stop": "Stop generating",
   "chat.retry": "Retry",
+  "chat.retry": "Retry",
   "chat.send": "Send",
   "chat.footnote": "Only files explicitly granted read access to this agent can be attached. Press Enter to send · Shift+Enter for a new line.",
   "models.connecting": "Connecting to Ollama…",
