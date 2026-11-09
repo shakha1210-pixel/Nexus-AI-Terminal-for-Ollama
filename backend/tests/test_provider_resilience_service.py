@@ -1,4 +1,5 @@
 import unittest
+from time import monotonic
 
 import httpx
 
@@ -40,6 +41,25 @@ class ProviderResilienceServiceTests(unittest.TestCase):
         response = httpx.Response(401, request=request)
         service.record_failure("openai-compatible", httpx.HTTPStatusError("unauthorized", request=request, response=response))
         service.before_request("openai-compatible")
+
+    def test_only_one_recovery_probe_can_run_after_cooldown(self):
+        service = ProviderResilienceService(base_cooldown=2, max_cooldown=4, failure_threshold=1)
+        service.record_failure("ollama", httpx.ConnectError("offline"))
+        service._states["ollama"].cooldown_until = monotonic() - 0.1
+        self.assertTrue(service.begin_recovery_probe("ollama"))
+        self.assertFalse(service.begin_recovery_probe("ollama"))
+        with self.assertRaises(ProviderCooldownError):
+            service.before_request("ollama")
+        service.record_success("ollama")
+        service.before_request("ollama")
+
+    def test_cancelled_probe_can_be_released_without_sticking_circuit(self):
+        service = ProviderResilienceService(base_cooldown=2, max_cooldown=4, failure_threshold=1)
+        service.record_failure("ollama", httpx.ConnectError("offline"))
+        service._states["ollama"].cooldown_until = monotonic() - 0.1
+        self.assertTrue(service.begin_recovery_probe("ollama"))
+        service.release_probe("ollama")
+        self.assertTrue(service.begin_recovery_probe("ollama"))
 
     def test_success_resets_failure_state_and_cooldown(self):
         service = ProviderResilienceService(base_cooldown=2, max_cooldown=4, failure_threshold=1)
