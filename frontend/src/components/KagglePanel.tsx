@@ -26,6 +26,7 @@ export default function KagglePanel({ status, onStatusChange, onModeChange }: { 
   const inProgress = BUSY.includes(state);
 
   return (
+    <>
     <section className="panel kaggle-panel" id="kaggle">
       <div className="panel-header">
         <div><h2>{t("kaggle.title")}</h2><p>{t("kaggle.subtitle")}</p></div>
@@ -57,5 +58,6 @@ export default function KagglePanel({ status, onStatusChange, onModeChange }: { 
       </div>
     </section>
     <KaggleNotebookLibrary />
+    </>
   );
 }
