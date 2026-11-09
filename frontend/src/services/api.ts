@@ -35,6 +35,7 @@ export const api = {
   setMode: (mode: "local" | "kaggle") => request<KaggleStatus>("/api/kaggle/mode", { method: "POST", body: { mode } }),
   getPreferences: () => request<UIPreferences>("/api/preferences"),
   savePreferences: (preferences: UIPreferences) => request<UIPreferences>("/api/preferences", { method: "PUT", body: preferences }),
+  getAgentIds: () => request<{ agent_ids: string[] }>("/api/agents"),
   getProviderPolicy: () => request<ProviderPolicy>("/api/providers/policy"),
   saveProviderPolicy: (policy: ProviderPolicy) => request<ProviderPolicy>("/api/providers/policy", { method: "PUT", body: policy }),
   getProviderCatalog: () => getProviderCatalogCached(),
