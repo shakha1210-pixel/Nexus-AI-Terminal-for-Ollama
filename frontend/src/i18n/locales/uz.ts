@@ -317,4 +317,5 @@ export const uz = {
   "agent.diffPreview": "O‘zgarishlar ko‘rinishi",
   "agent.originalVersion": "Amaldagi fayl",
   "agent.proposedVersion": "Taklif qilingan fayl",
+  "agent.originalUnavailable": "Bu eski so‘rov uchun dastlabki nusxa saqlanmagan.",
 } as const;
