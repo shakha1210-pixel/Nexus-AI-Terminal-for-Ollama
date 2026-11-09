@@ -205,11 +205,11 @@ nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
 Oddiy foydalanuvchi uchun GitHub Releases sahifasidan `NEXUS-AI-Setup.exe`
 faylini yuklab olib ishga tushirish kifoya. Installer:
 
-- Dasturni joriy foydalanuvchining `%LOCALAPPDATA%\\Programs\\NEXUS AI`
+- Dasturni joriy foydalanuvchining `%LOCALAPPDATA%\Programs\\NEXUS AI`
   papkasiga o‘rnatadi; administrator huquqi talab qilinmaydi.
 - Start Menu yorlig‘ini yaratadi; Desktop yorlig‘i ixtiyoriy.
 - Windows’ning standart uninstall mexanizmi orqali olib tashlanadi.
-- `%LOCALAPPDATA%\\NEXUS AI` ichidagi foydalanuvchi sozlamalari va loglarni
+- `%LOCALAPPDATA%\NEXUS AI` ichidagi foydalanuvchi sozlamalari va loglarni
   uninstall vaqtida saqlab qoladi.
 - Ollama’ni paketlamaydi. Ollama alohida o‘rnatiladi.
 - Kaggle Notebook qidirish/yuklash uchun kerakli Kaggle CLI ham paket ichida bo‘ladi; haqiqiy Kaggle hisob ma’lumotlari foydalanuvchi sozlamalaridan olinadi.
@@ -281,7 +281,7 @@ python desktop/launcher.py
 
 ### Sozlamalar va maxfiy kalitlar (Stage 3)
 
-- Theme, ovoz va UI tili foydalanuvchi ma’lumotlari papkasida saqlanadi: Windows’da `%LOCALAPPDATA%\\NEXUS AI`.
+- Theme, ovoz va UI tili foydalanuvchi ma’lumotlari papkasida saqlanadi: Windows’da `%LOCALAPPDATA%\NEXUS AI`.
 - Eski `backend/.nexus` sozlamalari yangi papkaga birinchi ishga tushishda nusxalanadi; eski fayllar o‘chirilmaydi.
 - Kaggle, tunnel va OpenAI-compatible API kalitlari Windows Credential Manager’da saqlanadi. Ular oddiy JSON fayllarga yozilmaydi va API orqali qayta o‘qilmaydi.
 - `.env` qiymatlari ustuvor; Credential Manager qiymatlari `.env` bo‘sh bo‘lganda ishlatiladi.
