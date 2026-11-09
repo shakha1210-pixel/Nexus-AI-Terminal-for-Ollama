@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Activity, AlertTriangle, CheckCircle2, RefreshCw, Timer } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, RefreshCw, Timer, LoaderCircle } from "lucide-react";
 import { api } from "../services/api";
 import { useTranslation } from "../i18n";
 
 type Diagnostic = {
   provider_id: string;
   connected: boolean | null;
-  state: "available" | "cooldown";
+  state: "available" | "cooldown" | "half_open";
   cooldown_remaining_seconds: number;
   consecutive_failures: number;
   last_error_kind: string | null;
@@ -26,6 +26,7 @@ export default function ProviderDiagnostics() {
     credentials: t("diagnostics.tip.credentials"),
     connectivity: t("diagnostics.tip.connectivity"),
     connection_check: t("diagnostics.tip.connection_check"),
+    recovery_probe: t("diagnostics.tip.recovery_probe"),
   }[code] ?? code);
 
   const refresh = useCallback(async () => {
@@ -42,6 +43,7 @@ export default function ProviderDiagnostics() {
 
   useEffect(() => {
     void refresh();
+    const poll = window.setInterval(() => { void refresh(); }, 15000);
     const timer = window.setInterval(() => {
       setItems((current) => current.map((item) => ({
         ...item,
@@ -49,7 +51,7 @@ export default function ProviderDiagnostics() {
         state: item.cooldown_remaining_seconds <= 1 ? "available" : item.state,
       })));
     }, 1000);
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); window.clearInterval(poll); };
   }, [refresh]);
 
   return <section className="panel diagnostics-panel">
@@ -59,7 +61,7 @@ export default function ProviderDiagnostics() {
         <div className="diagnostic-top">
           <strong>{item.provider_id}</strong>
           <span className={item.state === "cooldown" ? "diagnostic-state cooling" : "diagnostic-state"}>
-            {item.state === "cooldown" ? <><Timer size={13} /> {t("diagnostics.cooldown")}</> : <><CheckCircle2 size={13} /> {t("diagnostics.available")}</>}
+            {item.state === "cooldown" ? <><Timer size={13} /> {t("diagnostics.cooldown")}</> : item.state === "half_open" ? <><LoaderCircle size={13} /> {t("diagnostics.recovering")}</> : <><CheckCircle2 size={13} /> {t("diagnostics.available")}</> }
           </span>
         </div>
         <div className="diagnostic-meta">
