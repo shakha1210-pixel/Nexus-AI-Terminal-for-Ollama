@@ -2,6 +2,8 @@ import threading
 import unittest
 
 from app.services.lazy_service import LazyService
+from app.services.provider_policy_service import provider_policy_service
+from app.services.provider_runtime_service import provider_runtime_service
 
 
 class LazyServiceTests(unittest.TestCase):
@@ -30,6 +32,10 @@ class LazyServiceTests(unittest.TestCase):
             thread.join()
         self.assertEqual(len(calls), 1)
         self.assertTrue(all(item is results[0] for item in results))
+
+    def test_provider_services_are_not_constructed_during_import(self):
+        self.assertIsNone(provider_policy_service._instance)
+        self.assertIsNone(provider_runtime_service._instance)
 
 
 if __name__ == "__main__":
