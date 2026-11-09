@@ -27,3 +27,11 @@ def get_store_path(filename: str, legacy_path: Path | None = None) -> Path:
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(legacy_path, destination)
     return destination
+
+def get_store_dir(dirname: str, legacy_dir: Path | None = None) -> Path:
+    """Resolve a per-user data directory and migrate legacy contents once."""
+    destination = get_data_dir() / dirname
+    if not destination.exists() and legacy_dir is not None and legacy_dir.is_dir():
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(legacy_dir, destination)
+    return destination
