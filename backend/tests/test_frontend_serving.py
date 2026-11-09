@@ -52,6 +52,17 @@ class FrontendServingTests(unittest.TestCase):
         response = self.client.get("/api/health", headers={"host": "attacker.example"})
         self.assertEqual(response.status_code, 400)
 
+    def test_untrusted_host_is_rejected_before_cors_preflight(self) -> None:
+        response = self.client.options(
+            "/api/health",
+            headers={
+                "host": "attacker.example",
+                "origin": "http://localhost:5173",
+                "access-control-request-method": "GET",
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_svg_asset_is_sandboxed_and_nosniff(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
