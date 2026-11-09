@@ -54,6 +54,33 @@ class ChatProviderRoutingTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(conversation["messages"][-1], {"role": "assistant", "content": "partial answer"})
 
+    async def test_retry_reuses_last_user_message_without_duplicating_history(self):
+        manager = ProviderManager()
+        manager.register(FakeAdapter())
+        with tempfile.TemporaryDirectory() as directory:
+            service = ChatService(Path(directory))
+            conversation_id = "a" * 32
+            service._write({
+                "id": conversation_id,
+                "title": "hello",
+                "created_at": "2026-11-09T00:00:00+00:00",
+                "updated_at": "2026-11-09T00:00:00+00:00",
+                "messages": [
+                    {"role": "user", "content": "hello"},
+                    {"role": "assistant", "content": "partial answer"},
+                ],
+            })
+            with patch("app.services.chat_service.provider_manager", manager):
+                events = [event async for event in service.stream_chat(
+                    model="fake-model", message="hello", conversation_id=conversation_id,
+                    agent_id="default", paths=[], provider_id="fake-provider", retry_last=True,
+                )]
+            conversation = service.get_conversation(conversation_id)
+
+        self.assertTrue(any("event: done" in event for event in events))
+        self.assertEqual([item["role"] for item in conversation["messages"]], ["user", "assistant"])
+        self.assertEqual(conversation["messages"][-1]["content"], "provider-routed answer")
+
     async def test_chat_uses_selected_provider_adapter_stream(self):
         manager = ProviderManager()
         manager.register(FakeAdapter())
