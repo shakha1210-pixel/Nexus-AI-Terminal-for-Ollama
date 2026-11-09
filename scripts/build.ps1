@@ -45,22 +45,22 @@ try {
 
     New-Item -ItemType Directory -Force -Path $BuildRoot | Out-Null
     if (-not (Test-Path $Python)) {
-        Invoke-Native "python" -m venv $Venv
+        Invoke-Native -File "python" -Arguments @("-m", "venv", $Venv)
     }
 
-    Invoke-Native $Python -m pip install --upgrade pip
-    Invoke-Native $Python -m pip install -r backend/requirements.txt -r desktop/requirements.txt
+    Invoke-Native -File $Python -Arguments @("-m", "pip", "install", "--upgrade", "pip")
+    Invoke-Native -File $Python -Arguments @("-m", "pip", "install", "-r", "backend/requirements.txt", "-r", "desktop/requirements.txt")
 
     Push-Location frontend
     try {
-        Invoke-Native "npm" ci
-        Invoke-Native "npm" run build
+        Invoke-Native -File "npm" -Arguments @("ci")
+        Invoke-Native -File "npm" -Arguments @("run", "build")
     }
     finally {
         Pop-Location
     }
 
-    Invoke-Native $Python scripts/create_icon.py
+    Invoke-Native -File $Python -Arguments @("scripts/create_icon.py")
 
     $PyInstallerArgs = @(
         "-m", "PyInstaller",
@@ -89,7 +89,7 @@ try {
         "--hidden-import", "desktop.ollama_manager",
         "desktop/launcher.py"
     )
-    Invoke-Native $Python $PyInstallerArgs
+    Invoke-Native -File $Python -Arguments $PyInstallerArgs
 
     $Executable = Join-Path $DistRoot "NEXUS AI\NEXUS AI.exe"
     if (-not (Test-Path $Executable)) {
@@ -113,7 +113,7 @@ try {
         $IsccPath = $Iscc.Source
     }
 
-    Invoke-Native $IsccPath $InstallerScript
+    Invoke-Native -File $IsccPath -Arguments @($InstallerScript)
 
     $Setup = Join-Path $Root "dist\installer\NEXUS-AI-Setup.exe"
     if (-not (Test-Path $Setup)) {
