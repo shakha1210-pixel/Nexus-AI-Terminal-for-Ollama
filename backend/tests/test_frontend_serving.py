@@ -21,7 +21,7 @@ class FrontendServingTests(unittest.TestCase):
             "console.log('nexus');",
             encoding="utf-8",
         )
-        self.client = TestClient(create_app(self.dist))
+        self.client = TestClient(create_app(self.dist), base_url="http://127.0.0.1")
 
     def test_root_serves_frontend_index(self) -> None:
         response = self.client.get("/")
