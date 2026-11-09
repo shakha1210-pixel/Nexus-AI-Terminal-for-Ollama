@@ -10,6 +10,7 @@ type ApprovalRequest = {
   request_id: string;
   path: string;
   operation: string;
+  original_content: string | null;
   proposed_content: string;
   status: string;
   created_at: string;
@@ -155,7 +156,10 @@ export default function AgentPanel({ models, connected, providerId }: { models: 
       {!approvals.length && <p className="agent-approval-empty">{t("agent.noPending")}</p>}
       {approvals.map((item) => <article className="agent-approval-item" key={item.request_id}>
         <div className="agent-approval-meta"><strong>{item.path}</strong><span>{t("agent.expires")}: {new Date(item.expires_at).toLocaleTimeString()}</span></div>
-        <pre>{item.proposed_content}</pre>
+        <div className="agent-approval-diff" aria-label={t("agent.diffPreview")}>
+          <div><strong>{t("agent.originalVersion")}</strong><pre>{item.original_content ?? t("agent.originalUnavailable")}</pre></div>
+          <div><strong>{t("agent.proposedVersion")}</strong><pre>{item.proposed_content}</pre></div>
+        </div>
         <div className="agent-approval-actions">
           <button type="button" className="secondary-button" disabled={approvalBusy !== null} onClick={() => void decideApproval(item.request_id, false)}>{t("agent.reject")}</button>
           <button type="button" className="primary-button" disabled={approvalBusy !== null || mode !== "approval_required" || isolated} onClick={() => void decideApproval(item.request_id, true)}>{approvalBusy === item.request_id ? t("agent.applying") : t("agent.approveExact")}</button>
