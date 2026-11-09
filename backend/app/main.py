@@ -1,5 +1,9 @@
+from pathlib import Path
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.config import settings
 from app.routers.agents import router as agents_router
@@ -10,25 +14,67 @@ from app.routers.preferences import router as preferences_router
 from app.routers.providers import router as providers_router
 from app.routers.workspace import router as workspace_router
 
-app = FastAPI(title=settings.app_name, version="0.2.0")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-app.include_router(ollama_router)
-app.include_router(kaggle_router)
-app.include_router(preferences_router)
-app.include_router(providers_router)
-app.include_router(workspace_router)
-app.include_router(agents_router)
-app.include_router(chat_router)
+def resolve_frontend_dist() -> Path:
+    configured = os.getenv("NEXUS_FRONTEND_DIST")
+    if configured:
+        return Path(configured).expanduser().resolve()
+    project_root = Path(__file__).resolve().parents[2]
+    return project_root / "frontend" / "dist"
 
 
-@app.get("/api/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "service": settings.app_name}
+def create_app(frontend_dist: Path | None = None) -> FastAPI:
+    application = FastAPI(title=settings.app_name, version="0.2.0")
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
+
+    application.include_router(ollama_router)
+    application.include_router(kaggle_router)
+    application.include_router(preferences_router)
+    application.include_router(providers_router)
+    application.include_router(workspace_router)
+    application.include_router(agents_router)
+    application.include_router(chat_router)
+
+    @application.get("/api/health")
+    async def health() -> dict[str, str]:
+        return {"status": "ok", "service": settings.app_name}
+
+    @application.api_route(
+        "/api",
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    )
+    @application.api_route(
+        "/api/{path:path}",
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    )
+    async def unknown_api_route(path: str = "") -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+    static_dir = (frontend_dist or resolve_frontend_dist()).resolve()
+    index_file = static_dir / "index.html"
+    if static_dir.is_dir() and index_file.is_file():
+        @application.get("/{path:path}", include_in_schema=False)
+        async def frontend_fallback(path: str = ""):
+            requested = (static_dir / path).resolve()
+            try:
+                requested.relative_to(static_dir)
+            except ValueError:
+                return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+            if requested.is_file():
+                return FileResponse(requested)
+            if path.startswith("assets/"):
+                return JSONResponse(status_code=404, content={"detail": "Not Found"})
+            return FileResponse(index_file)
+
+    return application
+
+
+app = create_app()

@@ -3,7 +3,7 @@ import type { KaggleStatus } from "../types/kaggle";
 import type { UIPreferences } from "../types/preferences";
 import type { ProviderCatalog, ProviderPolicy } from "../types/providers";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 async function request<T>(path: string, init?: { method: "POST" | "PUT"; body: unknown }): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, init ? {

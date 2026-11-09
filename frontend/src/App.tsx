@@ -281,7 +281,7 @@ function App() {
               </div>
               <div className="detail-row"><span>{t("dashboard.service")}</span><strong>Ollama</strong></div>
               <div className="detail-row"><span>{t("dashboard.selectedRuntime")}</span><code>{status?.mode === "kaggle" ? "Kaggle GPU" : "127.0.0.1:11434"}</code></div>
-              <div className="detail-row"><span>{t("dashboard.apiGateway")}</span><code>127.0.0.1:8000</code></div>
+              <div className="detail-row"><span>{t("dashboard.apiGateway")}</span><code>{window.location.host}</code></div>
               <div className="runtime-hint"><ShieldCheck size={15} /><span>{t("dashboard.routedLocally")}</span></div>
             </section>
           </div>
