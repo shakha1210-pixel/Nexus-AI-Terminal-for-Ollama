@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bot, Play, ShieldCheck, Wrench } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
+import { useAgentContext } from "../contexts/AgentContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -17,6 +18,7 @@ type ApprovalRequest = {
 
 export default function AgentPanel({ models, connected, providerId }: { models: OllamaModel[]; connected: boolean; providerId: string }) {
   const { t } = useTranslation();
+  const { agentId, setAgentId } = useAgentContext();
   const [agentId, setAgentId] = useState("default");
   const [model, setModel] = useState("");
   const [task, setTask] = useState("");
