@@ -20,7 +20,8 @@ This file is the chronological record of meaningful project decisions, implement
 - [x] Consolidated the documentation structure around two README files and one development log.
 
 ### In progress
-- [ ] Review and merge the documentation pull request after checking the rendered Markdown and repository state.
+- [x] Opened [PR #31](https://github.com/shakha1210-pixel/Nexus-AI-Terminal-for-Ollama/pull/31) for documentation review.
+- [ ] Review the rendered Markdown and repository checks before merging.
 
 ### Planned
 - [ ] Redesign the primary application screen around the premium chat-first layout.
