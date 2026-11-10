@@ -25,6 +25,8 @@ This file is the chronological record of meaningful project decisions, implement
 
 ### Planned
 - [ ] Continue refining the primary application screen around the premium chat-first layout. First implementation pass is in draft [PR #32](https://github.com/shakha1210-pixel/Nexus-AI-Terminal-for-Ollama/pull/32).
+  - First pass: chat is the default view, navigation is simplified, conversation history has its own compact panel, advanced context and attachments are collapsed, and welcome prompts are localized.
+  - Initial frontend CI found one unused import; it was removed and the checks were restarted.
 - [ ] Keep conversation history and primary navigation in a compact sidebar.
 - [ ] Place API connections, credentials, permissions, appearance, and advanced configuration in Settings.
 - [ ] Expand dynamic provider/API connection management.
