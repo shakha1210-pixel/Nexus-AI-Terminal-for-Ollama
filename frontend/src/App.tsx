@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Activity, Bot, Boxes, ChevronDown, CircleHelp, Command,
+  Activity, Bot, Boxes, Briefcase, ChevronDown, CircleHelp, Command,
   Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
-  Plus, RefreshCw, HardDrive, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
+  Plus, RefreshCw, HardDrive, Search, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
 } from "lucide-react";
 import KagglePanel from "./components/KagglePanel";
 import WorkspacePanel from "./components/WorkspacePanel";
@@ -19,7 +19,7 @@ import { AgentProvider } from "./contexts/AgentContext";
 import "./providers-styles.css";
 
 type Theme = "dark" | "light";
-type View = "dashboard" | "explorer" | "chat" | "agents" | "providers" | "settings";
+type View = "dashboard" | "explorer" | "chat" | "agents" | "providers" | "settings" | "portfolio";
 
 const viewFromHash = (hash: string): View | null => {
   switch (hash.replace(/^#/, "")) {
@@ -29,6 +29,7 @@ const viewFromHash = (hash: string): View | null => {
     case "agents": return "agents";
     case "providers": return "providers";
     case "settings": return "settings";
+    case "portfolio": return "portfolio";
     default: return null;
   }
 };
@@ -40,6 +41,7 @@ const hashForView = (view: View): string => ({
   agents: "#agents",
   providers: "#providers",
   settings: "#settings",
+  portfolio: "#portfolio",
 })[view];
 
 function App() {
@@ -47,6 +49,8 @@ function App() {
   const [theme, setTheme] = useState<Theme>("dark");
   const [activeView, setActiveView] = useState<View>("dashboard");
   const [visitedViews, setVisitedViews] = useState<Set<View>>(() => new Set(["dashboard"]));
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteQuery, setPaletteQuery] = useState("");
   const navigateTo = useCallback((view: View) => {
     setActiveView(view);
     setVisitedViews((current) => current.has(view) ? current : new Set(current).add(view));
@@ -77,6 +81,20 @@ function App() {
       window.removeEventListener("hashchange", syncViewFromLocation);
     };
   }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+        setPaletteQuery("");
+      }
+      if (event.key === "Escape") setPaletteOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [kaggleStatus, setKaggleStatus] = useState<KaggleStatus | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
@@ -216,6 +234,23 @@ function App() {
 
   const connected = providerConnected;
   const ollamaConnected = status?.connected === true;
+  const commands: { view: View; label: string; detail: string }[] = [
+    { view: "dashboard", label: t("nav.dashboard"), detail: t("commands.dashboardDetail") },
+    { view: "explorer", label: t("nav.explorer"), detail: t("commands.explorerDetail") },
+    { view: "chat", label: t("nav.conversations"), detail: t("commands.chatDetail") },
+    { view: "agents", label: t("nav.agents"), detail: t("commands.agentsDetail") },
+    { view: "providers", label: t("nav.providers"), detail: t("commands.providersDetail") },
+    { view: "settings", label: t("nav.settings"), detail: t("commands.settingsDetail") },
+    { view: "portfolio", label: t("nav.portfolio"), detail: t("commands.portfolioDetail") },
+  ];
+  const filteredCommands = commands.filter((item) =>
+    (item.label + " " + item.detail).toLowerCase().includes(paletteQuery.trim().toLowerCase())
+  );
+  const openCommand = (view: View) => {
+    navigateTo(view);
+    setPaletteOpen(false);
+    setPaletteQuery("");
+  };
 
   return (
     <AgentProvider>
@@ -240,6 +275,7 @@ function App() {
           <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" aria-label={t("nav.explorer")} title={t("nav.explorer")} aria-current={activeView === "explorer" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("explorer"); }}><HardDrive size={17} aria-hidden="true" />{t("nav.explorer")}</a>
           <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" aria-label={t("nav.conversations")} title={t("nav.conversations")} aria-current={activeView === "chat" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("chat"); }}><MessageSquare size={17} aria-hidden="true" />{t("nav.conversations")}</a>
           <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" aria-label={t("nav.agents")} title={t("nav.agents")} aria-current={activeView === "agents" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("agents"); }}><Bot size={17} aria-hidden="true" />{t("nav.agents")}</a>
+          <a className={`nav-item ${activeView === "portfolio" ? "active" : ""}`} href="#portfolio" aria-label={t("nav.portfolio")} title={t("nav.portfolio")} aria-current={activeView === "portfolio" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("portfolio"); }}><Briefcase size={17} aria-hidden="true" />{t("nav.portfolio")}</a>
           <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.workflows")} title={t("nav.workflows")}><Workflow size={17} aria-hidden="true" />{t("nav.workflows")}</span>
         </div>
 
@@ -273,8 +309,9 @@ function App() {
 
       <main className="main-content" id="main-content" tabIndex={-1}>
         <header className="topbar">
-          <div className="breadcrumbs"><span>{t("nav.workspaceTitle")}</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? t("nav.dashboard") : activeView === "explorer" ? t("nav.explorer") : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? t("nav.providers") : activeView === "settings" ? t("nav.settings") : t("nav.aiChat")}</strong></div>
+          <div className="breadcrumbs"><span>{t("nav.workspaceTitle")}</span><span className="crumb-separator">/</span><strong>{activeView === "dashboard" ? t("nav.dashboard") : activeView === "explorer" ? t("nav.explorer") : activeView === "agents" ? t("nav.agentRuntime") : activeView === "providers" ? t("nav.providers") : activeView === "settings" ? t("nav.settings") : activeView === "portfolio" ? t("nav.portfolio") : t("nav.aiChat")}</strong></div>
           <div className="topbar-actions">
+            <button className="command-trigger" type="button" onClick={() => { setPaletteOpen(true); setPaletteQuery(""); }} aria-label={t("actions.openCommands")} aria-keyshortcuts="Control+K Meta+K" title={t("actions.openCommands")}><Search size={15} /><span>{t("commands.open")}</span><kbd>Ctrl K</kbd></button>
             <label className="language-switch" aria-label={t("actions.language")}><span>{t("actions.language")}</span><select value={language} onChange={(event) => setLanguage(event.target.value as "uz" | "en")}><option value="uz">O‘zbekcha</option><option value="en">English</option></select></label>
             <div className="environment"><span className="environment-dot" />{t("workspace.environment")}</div>
             <button className="icon-button" onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playUiSound(740); }} disabled={!preferencesReady} aria-label={t("actions.changeTheme")} title={t("actions.changeTheme")}>
@@ -368,7 +405,24 @@ function App() {
         {visitedViews.has("chat") && <section hidden={activeView !== "chat"} style={{ display: activeView === "chat" ? "block" : "none" }} className="page-content workstation-page">
           <ChatPanel models={providerModels} connected={connected} providerId={activeProvider} />
         </section>}
+        {visitedViews.has("portfolio") && <section hidden={activeView !== "portfolio"} style={{ display: activeView === "portfolio" ? "block" : "none" }} className="page-content workstation-page portfolio-page">
+          <div className="page-heading"><div><p className="eyebrow">{t("portfolio.eyebrow")}</p><h1>{t("portfolio.title")}</h1><p className="page-subtitle">{t("portfolio.subtitle")}</p></div></div>
+          <section className="panel portfolio-empty">
+            <div className="portfolio-orbit"><Briefcase size={25} aria-hidden="true" /></div>
+            <h2>{t("portfolio.emptyTitle")}</h2>
+            <p>{t("portfolio.emptyDescription")}</p>
+          </section>
+        </section>}
       </main>
+      {paletteOpen && <div className="command-overlay" onMouseDown={() => setPaletteOpen(false)}>
+        <section className="command-palette" role="dialog" aria-modal="true" aria-labelledby="command-palette-title" onMouseDown={(event) => event.stopPropagation()}>
+          <div className="command-search"><Search size={17} aria-hidden="true" /><input autoFocus type="search" value={paletteQuery} onChange={(event) => setPaletteQuery(event.target.value)} placeholder={t("commands.placeholder")} aria-label={t("commands.placeholder")} /><kbd>ESC</kbd><button type="button" className="icon-button" onClick={() => setPaletteOpen(false)} aria-label={t("commands.close")}>×</button></div>
+          <p className="command-label" id="command-palette-title">{t("commands.title")}</p>
+          <div className="command-results">
+            {filteredCommands.length ? filteredCommands.map((item) => <button type="button" className="command-item" key={item.view} onClick={() => openCommand(item.view)}><span><strong>{item.label}</strong><small>{item.detail}</small></span><span className="command-enter" aria-hidden="true">↵</span></button>) : <p className="command-empty">{t("commands.empty")}</p>}
+          </div>
+        </section>
+      </div>}
     </div>
     </AgentProvider>
   );
