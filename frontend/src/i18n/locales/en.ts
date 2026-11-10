@@ -328,4 +328,11 @@ export const en = {
   "agent.proposedVersion": "Proposed file",
   "agent.originalUnavailable": "Original snapshot unavailable for this older request.",
   "accessibility.skipToContent": "Skip to main content",
+  "chat.welcomeTitle": "What would you like to work on?",
+  "chat.welcomeSubtitle": "Ask a question, explore an idea, or bring a file into the conversation.",
+  "chat.suggestionExplain": "Explain a concept",
+  "chat.suggestionBuild": "Help me write code",
+  "chat.suggestionAnalyze": "Analyze a workspace file",
+  "chat.advancedContext": "Context and attachments",
+  "chat.advancedContextNote": "Optional agent and file context",
 } as const;
