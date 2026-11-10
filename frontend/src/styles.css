@@ -646,3 +646,147 @@ button:not(:disabled):active { transform: translateY(1px) scale(.985); }
 
 .agent-approval-heading > div { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
 .agent-approval-count { display:inline-flex; min-width:18px; height:18px; align-items:center; justify-content:center; padding:0 5px; color:var(--bg); background:var(--green); border-radius:999px; font-size:10px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1; }
+
+
+/* NEXUS control system: consistent inputs, selects and actions across every workspace. */
+:root {
+  --control-bg: color-mix(in srgb, var(--surface-2) 88%, var(--bg));
+  --control-border: color-mix(in srgb, var(--border) 88%, var(--muted));
+  --control-radius: 10px;
+  --control-height: 40px;
+  --focus-ring: color-mix(in srgb, #71dff7 72%, transparent);
+}
+
+:where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea
+) {
+  color: var(--text);
+  background-color: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-radius);
+  font: inherit;
+  transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select) {
+  min-height: var(--control-height);
+}
+
+:where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea
+) {
+  padding: 9px 12px;
+}
+
+:where(input, textarea)::placeholder {
+  color: var(--subtle);
+  opacity: 1;
+}
+
+:where(input, select, textarea):hover:not(:disabled) {
+  border-color: color-mix(in srgb, #71dff7 28%, var(--control-border));
+}
+
+:where(input, select, textarea):focus {
+  border-color: color-mix(in srgb, #71dff7 72%, var(--border));
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #71dff7 11%, transparent);
+}
+
+:where(input, select, textarea):disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+select {
+  appearance: none;
+  padding: 0 38px 0 12px;
+  color-scheme: dark;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2397a8bd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+
+select option {
+  color: var(--text);
+  background: var(--surface);
+}
+
+:root[data-theme="light"] select { color-scheme: light; }
+
+textarea {
+  min-height: 88px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.primary-button,
+.secondary-button,
+.model-pull-button {
+  min-height: 40px;
+  padding: 0 15px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+}
+
+.primary-button {
+  color: #07131b;
+  background: linear-gradient(115deg, #a9efff, #70d3ee);
+  border: 1px solid color-mix(in srgb, #a9efff 78%, #70d3ee);
+  box-shadow: 0 3px 12px color-mix(in srgb, #62d5f4 12%, transparent);
+}
+
+.primary-button:hover:not(:disabled) {
+  background: linear-gradient(115deg, #c0f5ff, #83def5);
+  box-shadow: 0 5px 18px color-mix(in srgb, #62d5f4 20%, transparent);
+  transform: translateY(-1px);
+}
+
+.secondary-button,
+.model-pull-button {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-2) 84%, transparent);
+  border: 1px solid var(--control-border);
+}
+
+.secondary-button:hover:not(:disabled),
+.model-pull-button:hover:not(:disabled) {
+  color: #9cecff;
+  background: color-mix(in srgb, #71dff7 8%, var(--surface-2));
+  border-color: color-mix(in srgb, #71dff7 36%, var(--border));
+}
+
+:where(.workspace-icon-btn, .icon-button, .chat-history-head button, .chat-history-delete) {
+  border-radius: 9px;
+  transition: color .16s ease, background .16s ease, border-color .16s ease;
+}
+
+:where(.workspace-icon-btn, .icon-button):hover:not(:disabled) {
+  color: #9cecff;
+  background: color-mix(in srgb, #71dff7 8%, var(--surface-2));
+  border-color: color-mix(in srgb, #71dff7 24%, var(--border));
+}
+
+:where(button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+:root[data-theme="light"] .primary-button {
+  color: #07131b;
+  background: linear-gradient(115deg, #a9efff, #70d3ee);
+  border-color: #83dced;
+}
+
+@media (max-width: 620px) {
+  :root { --control-height: 42px; }
+  .primary-button, .secondary-button, .model-pull-button { min-height: 42px; }
+}
