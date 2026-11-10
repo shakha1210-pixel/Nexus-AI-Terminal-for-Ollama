@@ -87,7 +87,8 @@
 .chat-first-shell .chat-toolbar select {
   min-width: 170px;
   height: 34px;
-  padding-inline: 10px;
+  min-height: 34px;
+  padding: 0 32px 0 10px;
   border-radius: 9px;
   background: var(--surface-2);
   font-size: 10px;
