@@ -328,4 +328,11 @@ export const uz = {
   "agent.proposedVersion": "Taklif qilingan fayl",
   "agent.originalUnavailable": "Bu eski so‘rov uchun dastlabki nusxa saqlanmagan.",
   "accessibility.skipToContent": "Asosiy mazmunga o‘tish",
+  "chat.welcomeTitle": "Bugun nimadan boshlaymiz?",
+  "chat.welcomeSubtitle": "Savol bering, g‘oyani o‘rganing yoki suhbatga fayl kontekstini qo‘shing.",
+  "chat.suggestionExplain": "Mavzuni tushuntirib ber",
+  "chat.suggestionBuild": "Kod yozishda yordam ber",
+  "chat.suggestionAnalyze": "Workspace faylini tahlil qil",
+  "chat.advancedContext": "Kontekst va biriktirmalar",
+  "chat.advancedContextNote": "Ixtiyoriy agent va fayl konteksti",
 } as const;
