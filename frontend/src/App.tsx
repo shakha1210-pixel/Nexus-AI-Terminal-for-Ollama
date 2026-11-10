@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity, Bot, Boxes, ChevronDown, CircleHelp, Command,
-  Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
+  Gauge, LayoutDashboard, MessageSquare, Moon, Network,
   Plus, RefreshCw, HardDrive, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
 } from "lucide-react";
 import KagglePanel from "./components/KagglePanel";
