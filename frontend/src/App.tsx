@@ -243,6 +243,7 @@ function App() {
           </div>
           <div className="nav-group">
             <p className="nav-label">{t("nav.system")}</p>
+            <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" aria-label={t("nav.dashboard")} title={t("nav.dashboard")} aria-current={activeView === "dashboard" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("dashboard"); }}><LayoutDashboard size={17} aria-hidden="true" />{t("nav.dashboard")}</a>
             <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" aria-label={t("nav.providers")} title={t("nav.providers")} aria-current={activeView === "providers" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("providers"); }}><Network size={17} aria-hidden="true" />{t("nav.providers")}</a>
             <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" aria-label={t("nav.settings")} title={t("nav.settings")} aria-current={activeView === "settings" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("settings"); }}><Settings size={17} aria-hidden="true" />{t("nav.settings")}</a>
           </div>
