@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, MessageSquare, Paperclip, Plus, RefreshCw, Send, Square, Trash2, X } from "lucide-react";
+import { Bot, MessageSquare, Paperclip, Plus, RefreshCw, Send, Sparkles, Square, Trash2, X } from "lucide-react";
 import type { OllamaModel } from "../types/ollama";
 import { useTranslation } from "../i18n";
 import { useAgentContext } from "../contexts/AgentContext";
@@ -188,29 +188,41 @@ export default function ChatPanel({ models, connected, providerId }: { models: O
         <label>{t("models.model")}<select value={model} onChange={(event) => setModel(event.target.value)} disabled={!models.length}>{models.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label>
       </div>
       <div className="chat-messages">
-        {!messages.length && <div className="chat-empty"><Bot size={34} /><strong>{t("chat.startConversation")}</strong><p>{t("chat.routingInfo")}</p></div>}
+        {!messages.length && <div className="chat-empty">
+          <div className="chat-empty-mark"><Sparkles size={25} /></div>
+          <strong>{t("chat.welcomeTitle")}</strong>
+          <p>{t("chat.welcomeSubtitle")}</p>
+          <div className="chat-empty-suggestions">
+            <button type="button" onClick={() => setDraft(t("chat.suggestionExplain"))}><MessageSquare size={14} />{t("chat.suggestionExplain")}</button>
+            <button type="button" onClick={() => setDraft(t("chat.suggestionBuild"))}><Bot size={14} />{t("chat.suggestionBuild")}</button>
+            <button type="button" onClick={() => setDraft(t("chat.suggestionAnalyze"))}><Paperclip size={14} />{t("chat.suggestionAnalyze")}</button>
+          </div>
+        </div>}
         {messages.map((item, index) => <article className={`chat-message ${item.role}`} key={index}><span>{item.role === "user" ? t("chat.you") : "NEXUS"}</span><MarkdownMessage content={item.content || (busy && index === messages.length - 1 ? t("chat.thinking") : "")} /></article>)}
         <div ref={messagesEndRef} aria-hidden="true" />
       </div>
       <div className="chat-composer">
-        <div className="chat-context-row">
-          <label>{t("agent.id")} <input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
-          <div className="chat-attachment-control">
-            <button type="button" className="chat-attach-toggle" onClick={toggleAttachmentPicker} disabled={attachmentsLoading || busy} aria-expanded={attachmentsOpen}>
-              <Paperclip size={14} />{attachmentsLoading ? t("chat.attachmentsLoading") : t("chat.attachFiles")}
-              <span>{selectedPaths.length}/10</span>
-            </button>
-            {attachmentsOpen && <div className="chat-attachment-picker">
-              {!availablePaths.length ? <p>{t("chat.noReadableFiles")}</p> : availablePaths.map((path) => (
-                <label key={path} className="chat-attachment-option">
-                  <input type="checkbox" checked={selectedPaths.includes(path)} disabled={!selectedPaths.includes(path) && selectedPaths.length >= 10} onChange={() => toggleAttachment(path)} />
-                  <span>{path}</span>
-                </label>
-              ))}
-              <p className="chat-attachment-note">{t("chat.attachmentsPermissionNote")}</p>
-            </div>}
+        <details className="chat-advanced-context">
+          <summary><Paperclip size={14} />{t("chat.advancedContext")}<span>{selectedPaths.length ? `${selectedPaths.length} ${t("chat.selectedAttachments")}` : t("chat.advancedContextNote")}</span></summary>
+          <div className="chat-context-row">
+            <label>{t("agent.id")} <input value={agentId} onChange={(event) => setAgentId(event.target.value)} maxLength={64} /></label>
+            <div className="chat-attachment-control">
+              <button type="button" className="chat-attach-toggle" onClick={toggleAttachmentPicker} disabled={attachmentsLoading || busy} aria-expanded={attachmentsOpen}>
+                <Paperclip size={14} />{attachmentsLoading ? t("chat.attachmentsLoading") : t("chat.attachFiles")}
+                <span>{selectedPaths.length}/10</span>
+              </button>
+              {attachmentsOpen && <div className="chat-attachment-picker">
+                {!availablePaths.length ? <p>{t("chat.noReadableFiles")}</p> : availablePaths.map((path) => (
+                  <label key={path} className="chat-attachment-option">
+                    <input type="checkbox" checked={selectedPaths.includes(path)} disabled={!selectedPaths.includes(path) && selectedPaths.length >= 10} onChange={() => toggleAttachment(path)} />
+                    <span>{path}</span>
+                  </label>
+                ))}
+                <p className="chat-attachment-note">{t("chat.attachmentsPermissionNote")}</p>
+              </div>}
+            </div>
           </div>
-        </div>
+        </details>
         {selectedPaths.length > 0 && <div className="chat-attachment-chips" aria-label={t("chat.selectedAttachments")}>
           {selectedPaths.map((path) => <span className="chat-attachment-chip" key={path}>
             <span>{path}</span><button type="button" title={t("chat.removeAttachment")} onClick={() => toggleAttachment(path)} disabled={busy}><X size={12} /></button>
