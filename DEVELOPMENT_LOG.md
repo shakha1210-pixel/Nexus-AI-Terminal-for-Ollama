@@ -24,7 +24,7 @@ This file is the chronological record of meaningful project decisions, implement
 - [ ] Review the rendered Markdown and repository checks before merging.
 
 ### Planned
-- [ ] Redesign the primary application screen around the premium chat-first layout.
+- [ ] Continue refining the primary application screen around the premium chat-first layout. First implementation pass is in draft [PR #32](https://github.com/shakha1210-pixel/Nexus-AI-Terminal-for-Ollama/pull/32).
 - [ ] Keep conversation history and primary navigation in a compact sidebar.
 - [ ] Place API connections, credentials, permissions, appearance, and advanced configuration in Settings.
 - [ ] Expand dynamic provider/API connection management.
@@ -37,3 +37,4 @@ This file is the chronological record of meaningful project decisions, implement
 - The current provider manager supports native Ollama and an OpenAI-compatible adapter; arbitrary protocols may require adapters.
 - Kaggle is an optional user-configured compute integration, not a NEXUS-hosted inference service.
 - No application code or UI behavior was changed in this documentation task.
+- The first chat-first UI implementation is being developed separately from this documentation branch to keep review scopes isolated.
