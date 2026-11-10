@@ -1,44 +1,156 @@
-# NEXUS AI — O‘zbekcha
+# NEXUS
 
-NEXUS AI — kompyuteringizdagi Ollama xizmati va o‘rnatilgan modellar holatini
-ko‘rsatadigan, avvalo lokal ishlashga mo‘ljallangan dashboard. FastAPI backend
-brauzerdagi interfeys bilan Ollama o‘rtasida API gateway vazifasini bajaradi.
+**NEXUS — lokal ishlashga ustuvorlik beradigan universal AI workspace.** U AI suhbatlari, model/provider ulanishlari, agentlar yordamida ishlash va lokal workspace'ni yagona desktop muhitida birlashtiradi. Foydalanuvchi qaysi model va xizmatlarga ulanishni o‘zi tanlaydi; NEXUS esa ular bilan ishlash uchun qulay va izchil muhitni taqdim etadi.
 
-> **Loyiha holati:** Lokal dashboard, backend health/status endpointlari,
-> Ollama modellarini ko‘rish, ixtiyoriy Kaggle GPU boshqaruvi va lokal workspace Explorer ishlaydi.
-> Kaggle uchun operator o‘z hisob ma’lumotlari va notebook secret’larini
-> sozlashi kerak. Ollama bilan streaming chat va suhbat tarixini saqlash mavjud. Agent Runtime dastlabki versiyasi mavjud: agent faqat ruxsat berilgan workspace matnli fayllarini o‘qiy oladi. Workflow funksiyalari hali mavjud emas. Agentga aniq fayllar uchun read ruxsatini berish va chatga tanlangan fayllarni kontekst sifatida biriktirish mavjud.
-> Ollama modellarini UI orqali yuklash va o‘chirish mavjud. Provider Manager hozir native Ollama (local/Kaggle) va ixtiyoriy OpenAI-compatible API’ni umumiy interfeysga birlashtiradi; Chat va Agent bir xil faol provider/model tanlovidan foydalanadi. Anthropic va Gemini adapterlari keyingi bosqich uchun rejalashtirilgan. Provider Manager hozir native Ollama (local/Kaggle) va ixtiyoriy OpenAI-compatible API’ni umumiy interfeysga birlashtiradi; Chat va Agent bir xil faol provider/model tanlovidan foydalanadi. Anthropic va Gemini adapterlari keyingi bosqich uchun rejalashtirilgan.
+> **Loyiha yo‘nalishi:** NEXUS model provayderi yoki Cursor'ning to‘g‘ridan-to‘g‘ri nusxasi bo‘lishni maqsad qilmaydi. Uning vazifasi — foydalanuvchi o‘z API-compatible xizmatlarini, lokal modellarini va workspace vositalarini bir joyda ishlata oladigan moslashuvchan muhit yaratish.
 
-Loyiha [MIT litsenziyasi](LICENSE) ostida tarqatiladi.
+- [English documentation](README.md)
+- [Rivojlanish jurnali](DEVELOPMENT_LOG.md)
+- [Terminal buyruqlari va ishlash qo‘llanmasi](terminal%20commands.md)
+- [MIT litsenziyasi](LICENSE)
 
-## Talablar
+---
 
-- Windows 10/11, macOS yoki Linux
-- Python 3.10 yoki undan yangi
-- Node.js 20 yoki undan yangi (`npm` bilan)
-- Lokal modellar holati uchun o‘rnatilgan va ishlayotgan Ollama
+## Mahsulot tamoyillari
 
-## Lokal ishga tushirish
+- **Tanlov erkinligi:** model, provider, endpoint va hisoblash muhitini foydalanuvchi tanlaydi.
+- **Yagona workspace:** chat, agentlar, fayllar va model ulanishlari bir-biridan uzilgan mahsulotdek emas, o‘zaro bog‘langan holda ishlashi kerak.
+- **Local-first:** lokal inference va lokal workspace ma'lumotlari asosiy imkoniyat bo‘lib qoladi.
+- **Sodda yadro:** mavjud modulli ilovani rivojlantirish; zaruratsiz microservice yoki murakkab infratuzilma yaratmaslik.
+- **Xavfsizlik standart holatda:** maxfiy kalitlar oddiy sozlamalar, loglar yoki client javoblarida oshkor bo‘lmasligi; agent ruxsatlari aniq chegaralangan bo‘lishi kerak.
+- **Murakkablikni bosqichma-bosqich ochish:** odatiy interfeys sodda bo‘ladi, ilg‘or sozlamalar esa kerak bo‘lganda ochiladi.
 
-### 1. Ollama’ni ishga tushirish
+## Hozirgi amalga oshirilgan holat
 
-Ollama’ni <https://ollama.com> saytidan o‘rnating va ilovani ishga tushiring.
-Agar Ollama hali ishlamayotgan bo‘lsa, alohida terminalda `ollama serve`
-buyrug‘ini bajaring. Model yuklab oling:
+Bu bo‘lim repozitoriydagi mavjud kodni ifodalaydi. Kelajakdagi yo‘nalishlar roadmap'da alohida ko‘rsatilgan.
 
-```powershell
-ollama pull llama3.2
-ollama list
-```
+### Mavjud asos
 
-Ollama API’ning standart manzili: `http://127.0.0.1:11434`.
+- FastAPI backend va React 18 + TypeScript + Vite frontend.
+- PyWebView desktop launcher hamda Windows build/installer jarayoni.
+- Native Ollama (local/Kaggle runtime tanlovi) va OpenAI-compatible endpoint uchun provider abstraction va manager.
+- Streaming chat va suhbatlar tarixi.
+- Chat hamda agent oqimlarida umumiy provider/model tanlovi.
+- Workspace Explorer va chegaralangan fayl/papka amallari.
+- Agent runtime: workspace fayllarini o‘qish uchun aniq ruxsatlar, boshqaruv rejimlari, izolyatsiya boshqaruvi va qo‘llab-quvvatlangan fayl tahriri takliflari uchun tasdiqlash jarayoni.
+- Kaggle notebook/runtime integratsiyasi; foydalanuvchining o‘z Kaggle va tunnel sozlamalarini talab qiladi.
+- Qo‘llab-quvvatlanadigan platformalarda tizim keyring'idan foydalanadigan credential storage asosi.
+- Backend va frontend uchun CI/build jarayonlari.
 
-### 2. Backend’ni ishga tushirish
+### Hozirgi cheklovlar
 
-Repository root papkasida PowerShell oching:
+- Provider katalogi hali to‘liq dinamik va foydalanuvchi kengaytira oladigan connection manager emas.
+- Ixtiyoriy API protokollari uchun alohida adapter kerak bo‘lishi mumkin; faqat endpoint URL kiritish protokol mosligini kafolatlamaydi.
+- Workspace hali to‘liq IDE emas: mukammal editor, integratsiyalashgan terminal, language-server, debugger va to‘liq Git UI mavjud deb hisoblanmaydi.
+- Plugin SDK, plugin loader va foydalanuvchi plugin'lari lifecycle'i hali to‘liq tizim sifatida yaratilmagan.
+- Agent imkoniyatlari hozirgi tool va permission modeli bilan ataylab cheklangan; bu cheklanmagan avtonom coding agent emas.
+- Backend authentication va deployment xavfsizligini kuchaytirish kerak; hozircha uni ishonchsiz tarmoqqa ochmaslik lozim.
+- Desktop shell va installer jarayonlari haqiqiy qo‘llab-quvvatlanadigan Windows qurilmalarida tekshirilishi kerak.
 
-```powershell
+## Mahsulot tajribasi va UI/UX yo‘nalishi
+
+Asosiy ekran **premium, minimal va chat-first AI workspace** bo‘lishi ko‘zda tutilgan.
+
+- Markaziy qism faol suhbat uchun ajratiladi.
+- Pastda qulay prompt maydoni bo‘ladi; model va ulanish konteksti unga yaqin joylashadi.
+- Suhbatlar tarixi va asosiy navigatsiya ixcham yon panelda turadi.
+- Workspace, fayllar, agentlar va plugin'lar asosiy chatni egallab olmasdan navigatsiya orqali ochiladi.
+- API ulanishlari, credential'lar, ruxsatlar, tashqi ko‘rinish va ilg‘or konfiguratsiyalar Settings ichida bo‘ladi.
+- Barcha vositalarni doimiy ko‘rsatish o‘rniga, kerakli kontekstda tegishli amallar chiqariladi.
+- Chat va workspace o‘zaro bog‘langan bo‘ladi: foydalanuvchi fayllarni kontekstga qo‘sha olishi va agent natijalarini workspace'da ochishi kerak.
+
+Bu — **dizayn yo‘nalishi**, hozirgi interfeysda bularning barchasi tayyor degani emas.
+
+## Tizim arxitekturasi
+
+Hozirgi ilova React frontend va modullarga ajratilgan Python/FastAPI backend'dan tashkil topgan. Maqsad — ishlayotgan asosni birdan almashtirish emas, balki mavjud modullar chegaralarini mustahkamlash.
+
+~~~text
+NEXUS
+├── Desktop shell
+│   └── PyWebView launcher / Windows packaging
+├── Frontend
+│   ├── Chat va suhbatlar tarixi
+│   ├── Provider va model boshqaruvi
+│   ├── Agent paneli
+│   ├── Workspace Explorer
+│   └── Settings va diagnostika
+└── Backend (FastAPI)
+    ├── Providers
+    │   ├── Provider base / registry / manager
+    │   └── Ollama va OpenAI-compatible adapterlar
+    ├── Chat va streaming
+    ├── Agents
+    │   ├── Runtime va tools
+    │   ├── Access permissions
+    │   ├── Approval flow
+    │   └── Control va isolation
+    ├── Workspace services
+    ├── Secrets va preferences
+    └── Ixtiyoriy Kaggle integratsiyasi
+~~~
+
+### Arxitekturani kelajakda rivojlantirish
+
+Quyidagilar — arxitektura yo‘nalishlari; ular hozir mavjud papka nomlari yoki tayyor modullar degani emas:
+
+- **Core:** umumiy konfiguratsiya, event'lar, storage chegaralari va security yordamchi vositalari.
+- **Gateway / Connections:** dinamik connection konfiguratsiyasi, protokol adapterlari, model metadata, health-check va provider routing.
+- **Workspace:** yaxshilangan editor, explorer, integratsiyalashgan terminal, Git workflow va session/context boshqaruvi.
+- **Agent Engine:** kengaytiriladigan tools, context management, permission tekshiruvlari, tasdiqlash va bajarish nazorati.
+- **Plugin System:** hujjatlashtirilgan extension contract, manifest, loader, lifecycle va foydalanuvchi boshqaradigan plugin'lar.
+
+Boshlang‘ich yondashuv — **modular monolith**. Servislarni faqat real masshtablash, izolyatsiya yoki texnik xizmat ehtiyoji paydo bo‘lganda ajratamiz.
+
+## Texnologiyalar
+
+| Yo‘nalish | Hozirgi texnologiya |
+|---|---|
+| Backend | Python, FastAPI, Uvicorn |
+| Frontend | React 18, TypeScript, Vite |
+| Desktop | PyWebView |
+| Lokal model runtime | Ollama |
+| Masofaviy model interfeysi | OpenAI-compatible API adapter |
+| Ixtiyoriy compute integratsiyasi | Kaggle notebook va sozlangan tunnel |
+| Credential storage | Python keyring / qo‘llab-quvvatlansa OS credential store |
+| Packaging va CI | GitHub Actions, Windows build/installer skriptlari |
+
+## Roadmap
+
+Holatlar ataylab aniq ajratiladi. Rejalashtirilgan funksiya kodda mavjud bo‘lib, tekshirilmaguncha tayyor deb ko‘rsatilmaydi.
+
+### Poydevor
+- [x] FastAPI + React ilova asosini yaratish.
+- [x] Ollama va OpenAI-compatible provider adapterlarini qo‘shish.
+- [x] Streaming chat va suhbatlar tarixini qo‘shish.
+- [x] Dastlabki workspace Explorer va chegaralangan fayl amallarini qo‘shish.
+- [x] Dastlabki agent runtime, access control va approval mexanizmlarini qo‘shish.
+- [x] Desktop launcher va Windows packaging jarayonini qo‘shish.
+
+### Keyingi ustuvor vazifalar
+- [ ] Hozirgi UI'ni premium, chat-first navigatsiya yo‘nalishiga moslashtirish.
+- [ ] Har bir muhim o‘zgarishdan keyin hujjatlar va feature holatini real kod bilan muvofiqlashtirish.
+- [ ] Provider ulanishlarini hozirgi qat'iy konfiguratsiyadan kengaytirish.
+- [ ] Workspace editing'ni yaxshilash va integratsiyalashgan terminal yo‘nalishini belgilash.
+- [ ] Agent tool contract, context handling va permission chegaralarini kuchaytirish.
+- [ ] Xavfsiz va hujjatlashtirilgan user plugin tizimini ishlab chiqish.
+- [ ] Tarmoqqa chiqarishdan oldin backend authentication va deployment xavfsizligini yaxshilash.
+- [ ] Avtomatlashtirilgan testlar va haqiqiy qurilmadagi desktop tekshiruvlarini kengaytirish.
+
+## Lokal ishlab chiqish
+
+### Talablar
+
+- Python 3.10 yoki undan yangi.
+- Node.js 20 yoki undan yangi (npm bilan).
+- Lokal model ishlatish uchun o‘rnatilgan va ishlayotgan Ollama.
+- Ishlab chiqish uchun Windows 10/11, macOS yoki Linux; desktop packaging'ning ayrim qismlari Windows'ga xos.
+
+### Backend
+
+Repository root papkasidan:
+
+~~~powershell
 cd backend
 py -3 -m venv .venv
 .\.venv\Scripts\Activate.ps1
@@ -46,279 +158,77 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
+~~~
 
-`.env` faylini faqat bir marta yarating. U mavjud bo‘lsa, qayta ustidan
-yozmang — ichidagi lokal sozlamalar va maxfiy qiymatlarni saqlang.
+Virtual muhit allaqachon faol yoki .env mavjud bo‘lsa, lokal konfiguratsiyani keraksiz qayta yaratmang yoki ustidan yozmang.
 
-PowerShell virtual muhitni faollashtirishni bloklasa, shu PowerShell oynasida
-quyidagini bajarib, muhitni yana faollashtiring:
+Backend API hujjatlari: <http://127.0.0.1:8000/docs>
 
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\.venv\Scripts\Activate.ps1
-```
+### Frontend
 
-Backend manzili: <http://127.0.0.1:8000>. API hujjatlari:
-<http://127.0.0.1:8000/docs>.
+Repository root papkasida ikkinchi terminal oching:
 
-### 3. Frontend’ni ishga tushirish
-
-Ikkinchi PowerShell oynasini repository root papkasida oching:
-
-```powershell
+~~~powershell
 cd frontend
 npm ci
 npm run dev
-```
+~~~
 
 Brauzerda <http://127.0.0.1:5173/> manzilini oching.
 
-Frontend standart holatda `http://127.0.0.1:8000` API’ga ulanadi. Manzilni
-o‘zgartirish uchun `frontend/.env.local` faylini yarating:
+Frontend standart holatda http://127.0.0.1:8000 manziliga ulanadi. O‘zgartirish uchun frontend/.env.local yarating:
 
-```env
+~~~env
 VITE_API_BASE_URL=http://127.0.0.1:8000
-```
+~~~
 
-Frontend environment o‘zgaruvchilarini yangilagandan keyin Vite’ni qayta
-ishga tushiring.
+### Build tekshiruvlari
 
-## Sozlamalar
+frontend/ ichida:
 
-Backend sozlamalari `backend/.env` faylidan o‘qiladi:
-
-| O‘zgaruvchi | Vazifasi | Standart qiymat |
-|---|---|---|
-| `OLLAMA_BASE_URL` | Ollama HTTP API manzili | `http://127.0.0.1:11434` |
-| `FRONTEND_ORIGINS` | Vergul bilan ajratilgan CORS manzillari | Vite localhost manzillari |
-| `REQUEST_TIMEOUT_SECONDS` | Ollama so‘rovi kutish vaqti | `8` |
-| `KAGGLE_USERNAME` | Kaggle username | Bo‘sh |
-| `KAGGLE_KEY` | Kaggle API token | Bo‘sh |
-| `KAGGLE_KERNEL_NAME` | Maxfiy Kaggle kernel nomi | `nexus-ollama-server` |
-| `NGROK_DOMAIN` | `https://` siz ngrok statik domeni | Bo‘sh |
-| `TUNNEL_USER` | Tunnel basic-auth foydalanuvchisi | `nexus` |
-| `TUNNEL_PASSWORD` | Kuchli tunnel paroli | Bo‘sh |
-| `OPENAI_COMPATIBLE_BASE_URL` | OpenAI-compatible API manzili, odatda `https://host/v1` | Bo‘sh |
-| `OPENAI_COMPATIBLE_API_KEY` | Provider API kaliti; faqat backend’da saqlanadi | Bo‘sh |
-| `OPENAI_COMPATIBLE_BASE_URL` | OpenAI-compatible API manzili, odatda `https://host/v1` | Bo‘sh |
-| `OPENAI_COMPATIBLE_API_KEY` | Provider API kaliti; faqat backend’da saqlanadi | Bo‘sh |
-
-Kaggle notebook uchun Kaggle Notebook Secrets’da `NGROK_TOKEN` va
-`TUNNEL_PASSWORD` ham bo‘lishi kerak. Backend’dagi tunnel paroli Kaggle
-Secret’dagi qiymat bilan bir xil bo‘lsin. `.env`, API token, ngrok token va
-parollarni Git’ga qo‘shmang.
-
-## Lokal Workspace
-
-Explorer standart holatda foydalanuvchining `~/NexusWorkspace` papkasidan foydalanadi. Boshqa papkani tanlash uchun backend muhitida `NEXUS_WORKSPACE_ROOT` o‘zgaruvchisini belgilang. API yo‘llari workspace ildizidan tashqariga chiqishni rad etadi; ramziy havolalar ro‘yxatda ko‘rsatilmaydi. Matnli fayllarni ochish/tahrirlash limiti 2 MB, yuklash limiti 10 MB. Fayl o‘chirish mavjud emas. Agent ruxsatlari default holatda bo‘sh; har bir agentga faqat alohida tanlangan fayllar uchun read ruxsati beriladi.
-
-## API endpointlari
-
-Interfeys mavzusi va ovoz effektlari `backend/.nexus/preferences.json` faylida lokal saqlanadi. Bu fayl `.gitignore` orqali repozitoriyga kiritilmaydi.
-
-
-| Method | Manzil | Vazifasi |
-|---|---|---|
-| `GET` | `/api/health` | Backend javob berayotganini tekshirish |
-| `GET` | `/api/ollama/status` | Tanlangan Ollama runtime holatini tekshirish |
-| `GET` | `/api/ollama/models` | Tanlangan Ollama runtime’dagi modellarni olish |
-| `POST` | `/api/ollama/models/pull` | Modelni Ollama orqali oqimli progress bilan yuklash; body: `{"name":"llama3.2"}` |
-| `DELETE` | `/api/ollama/models` | Modelni o‘chirish; body: `{"name":"llama3.2"}` |
-| `GET` | `/api/kaggle/status` | Kaggle ishga tushishi va ulanish holatini olish |
-| `GET` | `/api/workspace/tree` | Workspace papkasidagi fayl va papkalar ro‘yxati |
-| `GET` | `/api/workspace/file` | Matnli faylni o‘qish |
-| `GET` | `/api/workspace/asset` | Rasm faylini xavfsiz preview qilish |
-| `POST` | `/api/workspace/file` | Yangi matnli fayl yaratish |
-| `PUT` | `/api/workspace/file` | Matnli faylni saqlash |
-| `POST` | `/api/workspace/directory` | Papka yaratish |
-| `POST` | `/api/workspace/upload` | Faylni base64 orqali yuklash |
-| `GET` | `/api/agents/{agent_id}/permissions` | Agentning aniq fayllarga read ruxsatlarini ko‘rish |
-| `POST` | `/api/agents/{agent_id}/permissions/read` | Agentga bitta workspace faylini o‘qish ruxsatini berish |
-| `DELETE` | `/api/agents/{agent_id}/permissions/read?path=notes.md` | Fayl uchun read ruxsatini bekor qilish |
-| `POST` | `/api/agents/{agent_id}/context` | Ruxsat berilgan tanlangan fayllarni agent konteksti uchun olish |
-| `POST` | `/api/agents/{agent_id}/run` | Agentni ishga tushirish; faqat read-grant tekshiruvidan o‘tgan `workspace_read_file` vositasi mavjud |
-| `GET` | `/api/agents/{agent_id}/approvals` | Agent uchun kutilayotgan fayl tahriri takliflarini ko‘rish |
-| `POST` | `/api/agents/{agent_id}/approvals/{request_id}/decision` | Taklifni tasdiqlash yoki rad etish; body: `{"approve":true}` yoki `{"approve":false}` |
-| `GET` | `/api/chat/conversations` | Suhbatlar ro‘yxatini olish |
-| `GET` | `/api/chat/conversations/{conversation_id}` | Suhbat tarixini olish |
-| `DELETE` | `/api/chat/conversations/{conversation_id}` | Suhbatni o‘chirish |
-| `POST` | `/api/chat/stream` | Tanlangan provider bilan streaming chat; body: provider_id?, model, message, conversation_id?, agent_id?, paths? |
-| `GET` | `/api/providers/catalog` | Konfiguratsiyalangan providerlar, ulanish holati va modellari |
-| `GET` | `/api/providers/active` | Umumiy faol provider tanlovini olish |
-| `PUT` | `/api/providers/active` | Chat va Agent uchun umumiy provider tanlash; body: `{"provider_id":"ollama"}` yoki `{"provider_id":"openai-compatible"}` |
-| `GET` | `/api/providers/policy` | Fallback switching siyosatini olish |
-| `PUT` | `/api/providers/policy` | Fallback switching siyosatini saqlash |
-| `GET` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini olish |
-| `PUT` | `/api/preferences` | Interfeys mavzusi va ovoz sozlamalarini saqlash; body: `{"theme":"dark","sound_enabled":false}` |
-| `POST` | `/api/kaggle/start` | Kaggle runtime’ni boshlash; body: `{"model":"llama3.2"}` |
-| `POST` | `/api/kaggle/mode` | `local` yoki tayyor `kaggle` runtime tanlash |
-
-## Build va tekshiruv
-
-`frontend/` ichida:
-
-```powershell
+~~~powershell
 npm run build
-```
+~~~
 
-`backend/` ichida, virtual muhit faollashtirilgan holda:
+backend/ ichida, virtual muhit faol bo‘lganda:
 
-```powershell
+~~~powershell
 python -m compileall -q app
-```
+~~~
 
-Lokal API’ni tez tekshirish:
+Qo‘shimcha buyruqlar uchun [terminal buyruqlari va ishlash qo‘llanmasi](terminal%20commands.md) bilan tanishing.
 
-```powershell
-Invoke-RestMethod http://127.0.0.1:8000/api/health
-Invoke-RestMethod http://127.0.0.1:8000/api/ollama/status
-Invoke-RestMethod http://127.0.0.1:8000/api/ollama/models
-```
+## Konfiguratsiya va xavfsizlik
 
-To‘liq copy/paste buyruqlar va ishlash sxemalari:
-[Terminal buyruqlari va sxemalari](terminal%20commands.md).
+- Backend konfiguratsiyasi backend/.env faylidan o‘qiladi; boshlang‘ich namuna sifatida backend/.env.example dan foydalaning.
+- API key, Kaggle credential, tunnel token, parol va lokal .env fayllarini Git'ga qo‘shmang.
+- Qo‘llab-quvvatlanadigan joyda maxfiy qiymatlarni credential store'da saqlang. Ularni frontend state, oddiy preferences fayllari, log yoki diagnostika natijalariga yozmang.
+- Kaggle runtime foydalanuvchining o‘z Kaggle credential va notebook secret'larini talab qiladi; bu NEXUS tomonidan host qilinadigan model xizmati emas, ixtiyoriy compute integratsiyasidir.
+- Authentication va deployment himoyasi ataylab sozlanmagan bo‘lsa, backend'ni localhost bilan cheklang. Hozirgi backend'ni ishonchsiz tarmoqqa ochmang.
 
 ## Repository tuzilmasi
 
-```text
-backend/   FastAPI API, Ollama/Kaggle service’lari, schema va notebook shabloni
-frontend/  React + TypeScript dashboard
-nexus-ai/  Avvalgi mustaqil UI prototipi (integratsiyalangan ilova emas)
-```
+~~~text
+backend/       FastAPI ilovasi, provider'lar, router va service'lar
+frontend/      React + TypeScript ilovasi
+desktop/       PyWebView launcher va desktop integratsiyasi
+scripts/       Build va Windows preflight skriptlari
+.github/       CI workflow'lari
+nexus-ai/      Avvalgi mustaqil UI prototipi; integratsiyalashgan ilova emas
+~~~
 
+## Hujjatlarni yuritish tartibi
 
-### Agent access modes va isolation
+Loyihada ikkita README va bitta xronologik rivojlanish jurnali ishlatiladi:
 
-- `GET /api/agents/{agent_id}/control` — joriy rejim va izolyatsiya holati.
-- `PUT /api/agents/{agent_id}/control/mode` — `read_only`, `approval_required`, `autopilot` yoki `locked` rejimini tanlash.
-- `POST /api/agents/{agent_id}/isolate` — agentni qulflash va faol provider so‘rovini bekor qilish.
-- `POST /api/agents/{agent_id}/release` — izolyatsiyadan chiqarish; xavfsiz `read_only` rejimiga qaytaradi.
+- README.md — loyihaning asosiy tavsifi va hozirgi holati.
+- README.uz.md — shu hujjatning o‘zbekcha nusxasi.
+- DEVELOPMENT_LOG.md — sana bo‘yicha qarorlar, bajarilgan ishlar, jarayondagi vazifalar va keyingi qadamlar.
 
-`approval_required` rejimida agentga `workspace_propose_file_edit` vositasi beriladi. Bu vosita faqat mavjud UTF-8 matnli faylni almashtirish taklifini yaratadi; faylni o‘zi yozmaydi. Taklif Approval Queue’da to‘liq matn va fayl yo‘li bilan ko‘rsatiladi. Foydalanuvchi tasdiqlasa, aynan shu mazmun bir marta yoziladi; rad etsa yoki 10 daqiqada ko‘rib chiqilmasa, bajarilmaydi. Taklif yaratilgandan keyin asl fayl o‘zgargan bo‘lsa, tasdiq bekor qilinadi va yangi taklif talab etiladi. Hozircha yangi fayl yaratish, o‘chirish, papka o‘zgartirish yoki ko‘p faylli amallar tasdiqlash vositasida mavjud emas.
+Har bir muhim o‘zgarishdan keyin:
+1. O‘zgarishni amalga oshirish va tekshirish.
+2. Hozirgi holat, arxitektura, ishga tushirish yoki roadmap o‘zgargan bo‘lsa, ikkala README'ni yangilash.
+3. DEVELOPMENT_LOG.md ga sana bilan yangi yozuv qo‘shish.
+4. Bajarilgan, jarayondagi va rejalashtirilgan ishlarni alohida saqlash.
 
-`autopilot` hamon faqat mavjud read-only vositalar bilan cheklangan. Agentga shell yoki tashqi tarmoq vositasi berilmagan. Provider Manager orqali tanlangan modelning tool-calling imkoniyati tekshiriladi; qo‘llab-quvvatlanmasa Agent ishga tushmaydi. Provider Manager orqali tanlangan modelning tool-calling imkoniyati tekshiriladi; qo‘llab-quvvatlanmasa Agent ishga tushmaydi. Tasdiqlash API’si hozirgi local-first backend arxitekturasiga tayanadi; backendni ishonchsiz tarmoqka ochmang, chunki autentifikatsiya qatlami hali mavjud emas. Izolyatsiya faol Ollama HTTP so‘rovini bekor qiladi, ammo bu alohida OS/container sandbox yoki barcha host tarmog‘ini uzish bilan teng emas.
-
-
-## Windows uchun tayyor installer
-
-Oddiy foydalanuvchi uchun GitHub Releases sahifasidan `NEXUS-AI-Setup.exe`
-faylini yuklab olib ishga tushirish kifoya. Installer:
-
-- Dasturni joriy foydalanuvchining `%LOCALAPPDATA%\Programs\\NEXUS AI`
-  papkasiga o‘rnatadi; administrator huquqi talab qilinmaydi.
-- Start Menu yorlig‘ini yaratadi; Desktop yorlig‘i ixtiyoriy.
-- Windows’ning standart uninstall mexanizmi orqali olib tashlanadi.
-- `%LOCALAPPDATA%\NEXUS AI` ichidagi foydalanuvchi sozlamalari va loglarni
-  uninstall vaqtida saqlab qoladi.
-- Ollama’ni paketlamaydi. Ollama alohida o‘rnatiladi.
-- Kaggle Notebook qidirish/yuklash uchun kerakli Kaggle CLI ham paket ichida bo‘ladi; haqiqiy Kaggle hisob ma’lumotlari foydalanuvchi sozlamalaridan olinadi.
-- WebView2 Runtime bo‘lmasa, launcher standart brauzerga fallback qiladi;
-  WebView2’ni alohida o‘rnatish mumkin.
-
-Installer hozircha Windows 10/11 x64 uchun mo‘ljallangan va code signing
-sertifikatisiz build qilinadi. Windows SmartScreen noma’lum publisher haqida
-ogohlantirishi mumkin.
-
-### Installer’ni ishlab chiquvchi sifatida build qilish
-
-Build qiluvchi Windows kompyuterida quyidagilar kerak:
-
-- Python 3.11 yoki yangiroq
-- Node.js 20 yoki yangiroq
-- Inno Setup 6
-
-Repository root papkasida PowerShell oching:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Clean
-```
-
-Natija: `dist/installer/NEXUS-AI-Setup.exe`. GitHub Actions ham Windows
-runner’da installer’ni build qilib, workflow artifact sifatida saqlaydi.
-Release’ga joylashdan oldin o‘rnatish, ishga tushirish, yangilash va uninstall
-jarayonlarini haqiqiy Windows 10/11 qurilmasida sinash kerak.
-
-## Windows desktop launcher (Stage 2)
-
-Desktop rejimi uchun avval backend va desktop bog‘liqliklarini o‘rnating:
-
-```powershell
-python -m pip install -r backend/requirements.txt
-python -m pip install -r desktop/requirements.txt
-```
-
-Frontend build tayyor bo‘lsa, repository root papkasidan ishga tushiring:
-
-```powershell
-python desktop/launcher.py
-```
-
-- `--browser` — PyWebView o‘rniga standart brauzerni ochadi.
-- `--dev` — Vite dev serverini (5173-port) ham ishga tushiradi.
-- `--port 8123` — FastAPI portini o‘zgartiradi (standart: 8000).
-- Windows’da WebView2 Runtime topilmasa, launcher rasmiy runtime’ni o‘rnatish bo‘yicha ko‘rsatma beradi va brauzerga o‘tadi.
-- Ollama alohida o‘rnatiladi; launcher uni paket ichiga qo‘shmaydi va avtomatik ishga tushirmaydi.
-- Tray menyusidan oynani qayta ochish yoki dasturni yopish mumkin. PyWebView/Pillow/pystray bo‘lmasa, brauzer fallback ishlatiladi.
-- Bir vaqtning o‘zida ikkinchi NEXUS nusxasini ochish Windows named mutex orqali bloklanadi.
-
-PyWebView, tray va WebView2 ishlashini haqiqiy Windows 10/11 qurilmasida tekshirish kerak; Linux CI bu platforma integratsiyasini to‘liq tasdiqlamaydi.
-
-
-### Windows preflight va ikonka
-
-Windows 10/11 qurilmasida oldindan tekshiruv:
-
-```powershell
-python -m pip install -r desktop/requirements.txt
-python scripts/create_icon.py
-powershell -ExecutionPolicy Bypass -File scripts/windows-smoke-test.ps1
-python desktop/launcher.py
-```
-
-`create_icon.py` ko‘p o‘lchamli `desktop/assets/icon.ico` faylini yaratadi. Preflight skripti Python, frontend build, WebView2 Runtime fayllari va ikonka mavjudligini tekshiradi; u hech narsa o‘rnatmaydi yoki dasturni ishga tushirmaydi. Yakuniy WebView2, oynani yopish/minimize, tray va qayta ochish sinovlari haqiqiy Windows qurilmasida qo‘lda bajarilishi kerak.
-
-
-### Sozlamalar va maxfiy kalitlar (Stage 3)
-
-- Theme, ovoz va UI tili foydalanuvchi ma’lumotlari papkasida saqlanadi: Windows’da `%LOCALAPPDATA%\NEXUS AI`.
-- Eski `backend/.nexus` sozlamalari yangi papkaga birinchi ishga tushishda nusxalanadi; eski fayllar o‘chirilmaydi.
-- Kaggle, tunnel va OpenAI-compatible API kalitlari Windows Credential Manager’da saqlanadi. Ular oddiy JSON fayllarga yozilmaydi va API orqali qayta o‘qilmaydi.
-- `.env` qiymatlari ustuvor; Credential Manager qiymatlari `.env` bo‘sh bo‘lganda ishlatiladi.
-- Credential Manager integratsiyasi Windows desktop uchun mo‘ljallangan. Boshqa platformalarda maxfiy ma’lumotni saqlash xavfsiz backend bo‘lmasa rad etiladi.
-
-
-### Agent Sandbox v2 (tajriba bosqichi)
-
-Agentning `workspace_read_file` vositasi endi aniq read ruxsati tekshirilgach, vaqtinchalik Docker konteynerida bajariladi. Konteynerga faqat bitta faylning vaqtinchalik nusxasi read-only mount qilinadi; butun workspace, Docker socket yoki maxfiy kalitlar berilmaydi.
-
-Sandbox image’ini repository root papkasidan yarating:
-
-```powershell
-docker build --pull -t nexus-agent-sandbox:py311 -f backend/sandbox/Dockerfile backend/sandbox
-```
-
-Konteyner tarmoqsiz, read-only root filesystem, cheklangan Linux capabilities, no-new-privileges, PID/RAM/CPU va 12 soniyalik vaqt limiti bilan ishlaydi. Har bir o‘qish uchun alohida konteyner yaratiladi va yakunda o‘chiriladi. Docker CLI/daemon yoki image mavjud bo‘lmasa, fayl o‘qish rad etiladi — sandboxsiz fallback yo‘q. Bu himoya faqat agentning fayl o‘qish vositasini qamrab oladi; FastAPI va provider jarayonlari hostda qoladi. Backend API’ni ishonchsiz tarmoqqa ochmang.
-
-
-### Docker Agent Sandbox — haqiqiy runtime smoke-test
-
-Docker Desktop ishlayotgan Windows kompyuterida repository root papkasidan
-PowerShell ochib quyidagini bajaring:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/docker-agent-sandbox-smoke-test.ps1
-```
-
-Skript sandbox image’ini build qiladi, vaqtinchalik matnli faylni alohida
-container ichida o‘qib ko‘radi va `docker inspect` orqali quyidagilarni
-tekshiradi: `network=none`, read-only root filesystem, barcha capabilities
-o‘chirilgani, `no-new-privileges`, PID/RAM/CPU limitlari, non-root user va
-bitta faylning read-only mount qilinishi. Yakunda vaqtinchalik container va
-probe fayl o‘chiriladi; build qilingan image saqlanadi.
-
-Skript workspace fayllariga tegmaydi va NEXUS backend’ini ishga tushirmaydi.
-Bu container konfiguratsiyasi hamda oddiy fayl o‘qishning smoke-testidir;
-Agent API integratsiyasi, Windows launcher yoki xavfsizlikning barcha
-ehtimoliy chetlab o‘tish holatlarini to‘liq tasdiqlamaydi. Natijani
-Docker Desktop ishlayotgan haqiqiy Windows qurilmasida qayd eting.
+README loyihaning **hozirgi tekshirilgan holatini**, development log esa **shu holatga qanday kelib qolinganini** saqlaydi.
