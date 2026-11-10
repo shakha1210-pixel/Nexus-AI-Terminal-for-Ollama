@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity, Bot, Boxes, ChevronDown, CircleHelp, Command,
-  Database, Gauge, LayoutDashboard, MessageSquare, Moon, Network,
+  Gauge, LayoutDashboard, MessageSquare, Moon, Network,
   Plus, RefreshCw, HardDrive, Settings, ShieldCheck, Sun, Volume2, VolumeX, Workflow,
 } from "lucide-react";
 import KagglePanel from "./components/KagglePanel";
@@ -17,6 +17,7 @@ import type { KaggleStatus } from "./types/kaggle";
 import { useTranslation } from "./i18n";
 import { AgentProvider } from "./contexts/AgentContext";
 import "./providers-styles.css";
+import "./chat-first.css";
 
 type Theme = "dark" | "light";
 type View = "dashboard" | "explorer" | "chat" | "agents" | "providers" | "settings";
@@ -45,8 +46,8 @@ const hashForView = (view: View): string => ({
 function App() {
   const { t, language, setLanguage } = useTranslation();
   const [theme, setTheme] = useState<Theme>("dark");
-  const [activeView, setActiveView] = useState<View>("dashboard");
-  const [visitedViews, setVisitedViews] = useState<Set<View>>(() => new Set(["dashboard"]));
+  const [activeView, setActiveView] = useState<View>("chat");
+  const [visitedViews, setVisitedViews] = useState<Set<View>>(() => new Set(["chat"]));
   const navigateTo = useCallback((view: View) => {
     setActiveView(view);
     setVisitedViews((current) => current.has(view) ? current : new Set(current).add(view));
@@ -60,9 +61,9 @@ function App() {
     const syncViewFromLocation = () => {
       const view = viewFromHash(window.location.hash);
       if (!view) {
-        window.history.replaceState(null, "", hashForView("dashboard"));
-        setActiveView("dashboard");
-        setVisitedViews((current) => current.has("dashboard") ? current : new Set(current).add("dashboard"));
+        window.history.replaceState(null, "", hashForView("chat"));
+        setActiveView("chat");
+        setVisitedViews((current) => current.has("chat") ? current : new Set(current).add("chat"));
         return;
       }
       setActiveView(view);
@@ -219,12 +220,12 @@ function App() {
 
   return (
     <AgentProvider>
-    <div className="app-shell">
+    <div className="app-shell chat-first-shell">
       <a className="skip-link" href="#main-content">{t("accessibility.skipToContent")}</a>
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><Command size={19} strokeWidth={2.2} /></div>
-          <div><strong>NEXUS</strong><span>AI PLATFORM</span></div>
+          <div><strong>NEXUS</strong><span>AI WORKSPACE</span></div>
         </div>
 
         <button className="workspace-switcher">
@@ -234,29 +235,18 @@ function App() {
         </button>
 
         <nav className="sidebar-nav" aria-label={t("nav.workspaceTitle")}>
-        <div className="nav-group">
-          <p className="nav-label">{t("nav.workspace")}</p>
-          <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" aria-label={t("nav.dashboard")} title={t("nav.dashboard")} aria-current={activeView === "dashboard" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("dashboard"); }}><LayoutDashboard size={17} aria-hidden="true" />{t("nav.dashboard")}</a>
-          <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" aria-label={t("nav.explorer")} title={t("nav.explorer")} aria-current={activeView === "explorer" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("explorer"); }}><HardDrive size={17} aria-hidden="true" />{t("nav.explorer")}</a>
-          <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" aria-label={t("nav.conversations")} title={t("nav.conversations")} aria-current={activeView === "chat" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("chat"); }}><MessageSquare size={17} aria-hidden="true" />{t("nav.conversations")}</a>
-          <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" aria-label={t("nav.agents")} title={t("nav.agents")} aria-current={activeView === "agents" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("agents"); }}><Bot size={17} aria-hidden="true" />{t("nav.agents")}</a>
-          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.workflows")} title={t("nav.workflows")}><Workflow size={17} aria-hidden="true" />{t("nav.workflows")}</span>
-        </div>
-
-        <div className="nav-group">
-          <p className="nav-label">{t("nav.resources")}</p>
-          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.models")} title={t("nav.models")}><Boxes size={17} aria-hidden="true" />{t("nav.models")}<span className="nav-count">{models.length}</span></span>
-          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.knowledge")} title={t("nav.knowledge")}><Database size={17} aria-hidden="true" />{t("nav.knowledge")}</span>
-          <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" aria-label={t("nav.providers")} title={t("nav.providers")} aria-current={activeView === "providers" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("providers"); }}><Network size={17} aria-hidden="true" />{t("nav.providers")}</a>
-          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.integrations")} title={t("nav.integrations")}><Workflow size={17} aria-hidden="true" />{t("nav.integrations")}</span>
-        </div>
-
-        <div className="nav-group">
-          <p className="nav-label">{t("nav.system")}</p>
-          <span className="nav-item nav-item-disabled" aria-disabled="true" aria-label={t("nav.runtime")} title={t("nav.runtime")}><Activity size={17} aria-hidden="true" />{t("nav.runtime")}</span>
-          <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" aria-label={t("nav.settings")} title={t("nav.settings")} aria-current={activeView === "settings" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("settings"); }}><Settings size={17} aria-hidden="true" />{t("nav.settings")}</a>
-        </div>
-
+          <div className="nav-group">
+            <p className="nav-label">{t("nav.workspace")}</p>
+            <a className={`nav-item ${activeView === "chat" ? "active" : ""}`} href="#conversations" aria-label={t("nav.conversations")} title={t("nav.conversations")} aria-current={activeView === "chat" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("chat"); }}><MessageSquare size={17} aria-hidden="true" />{t("nav.conversations")}</a>
+            <a className={`nav-item ${activeView === "explorer" ? "active" : ""}`} href="#explorer" aria-label={t("nav.explorer")} title={t("nav.explorer")} aria-current={activeView === "explorer" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("explorer"); }}><HardDrive size={17} aria-hidden="true" />{t("nav.explorer")}</a>
+            <a className={`nav-item ${activeView === "agents" ? "active" : ""}`} href="#agents" aria-label={t("nav.agents")} title={t("nav.agents")} aria-current={activeView === "agents" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("agents"); }}><Bot size={17} aria-hidden="true" />{t("nav.agents")}</a>
+          </div>
+          <div className="nav-group">
+            <p className="nav-label">{t("nav.system")}</p>
+            <a className={`nav-item ${activeView === "dashboard" ? "active" : ""}`} href="#dashboard" aria-label={t("nav.dashboard")} title={t("nav.dashboard")} aria-current={activeView === "dashboard" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("dashboard"); }}><LayoutDashboard size={17} aria-hidden="true" />{t("nav.dashboard")}</a>
+            <a className={`nav-item ${activeView === "providers" ? "active" : ""}`} href="#providers" aria-label={t("nav.providers")} title={t("nav.providers")} aria-current={activeView === "providers" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("providers"); }}><Network size={17} aria-hidden="true" />{t("nav.providers")}</a>
+            <a className={`nav-item ${activeView === "settings" ? "active" : ""}`} href="#settings" aria-label={t("nav.settings")} title={t("nav.settings")} aria-current={activeView === "settings" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigateTo("settings"); }}><Settings size={17} aria-hidden="true" />{t("nav.settings")}</a>
+          </div>
         </nav>
         <div className="sidebar-bottom">
           <div className="local-card">
