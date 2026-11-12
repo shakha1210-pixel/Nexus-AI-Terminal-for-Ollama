@@ -34,5 +34,31 @@ class OllamaServiceStatusTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(result["version"])
 
 
+class OllamaRuntimeModeTests(unittest.TestCase):
+    def test_runtime_starts_in_local_mode(self) -> None:
+        from app.config import settings
+
+        service = OllamaService()
+
+        self.assertEqual(service.mode, "local")
+        self.assertEqual(service.base_url, settings.ollama_base_url.rstrip("/"))
+        self.assertIsNone(service.auth)
+
+    def test_runtime_can_switch_remote_and_back_to_local(self) -> None:
+        service = OllamaService()
+        local_url = service.local_base_url
+
+        service.use_remote("https://runtime.example/ollama/", ("nexus", "test-secret"))
+        self.assertEqual(service.mode, "kaggle")
+        self.assertEqual(service.base_url, "https://runtime.example/ollama")
+        self.assertEqual(service.auth, ("nexus", "test-secret"))
+
+        service.use_local()
+        self.assertEqual(service.mode, "local")
+        self.assertEqual(service.base_url, local_url)
+        self.assertIsNone(service.auth)
+
+
+
 if __name__ == "__main__":
     unittest.main()
