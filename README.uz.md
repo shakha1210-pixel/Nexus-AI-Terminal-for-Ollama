@@ -266,3 +266,47 @@ Har bir muhim o‘zgarishdan keyin:
 4. Bajarilgan, jarayondagi va rejalashtirilgan ishlarni alohida saqlash.
 
 README loyihaning **hozirgi tekshirilgan holatini**, development log esa **shu holatga qanday kelib qolinganini** saqlaydi.
+
+
+### Lokal inference va desktop'da bajarish
+
+NEXUS ikkita mustaqil tanlovni qo‘llab-quvvatlashi kerak:
+
+1. **Model qayerda ishlaydi:** foydalanuvchining o‘z kompyuterida, foydalanuvchi sozlagan Kaggle kabi masofaviy muhitda yoki tashqi API orqali.
+2. **NEXUS interfeysi qayerda ishlaydi:** brauzerda, desktop ilovada yoki kelajakdagi Android ilovasida.
+
+Birinchi lokal inference maqsadi — **shu kompyuterda ishlayotgan Ollama**. Mavjud Ollama adapteri allaqachon `http://127.0.0.1:11434` lokal manzilidan foydalanadi, o‘rnatilgan modellarni aniqlaydi va Qwen3 model nomlari uchun tool-calling imkoniyati haqida dastlabki belgi beradi. Agar Ollama o‘rnatilgan va Qwen3 modeli lokal mavjud bo‘lsa, NEXUS so‘rovlarni Kaggle yoki hosting inference xizmatlarisiz yubora oladi. Model imkoniyatlari haqidagi belgilar taxminiy hisoblanadi va haqiqiy model/runtime bilan tekshirilishi kerak.
+
+Desktop ishlash oqimi:
+
+- NEXUS desktop launcher lokal FastAPI xizmatini faqat loopback manzilida ishga tushiradi.
+- Backend lokal inference runtime'ga provider adapter orqali ulanadi.
+- Agent faqat aniq ruxsat berilgan workspace vositalari va permission tekshiruvidan o‘tgan amallardan foydalanadi.
+- Tashqi API va Kaggle ixtiyoriy muqobil bo‘lib qoladi; ular majburiy talab emas.
+
+Lokal modelning o‘zi agent amallarini xavfsiz qilib qo‘ymaydi. Fayllarga kirish, terminal, process ishga tushirish, tarmoq va o‘chirish kabi amallar alohida ruxsat chegaralari, kerakli joyda tasdiqlash va audit natijalariga ega bo‘lishi kerak. Hozirgi agent runtime cheklanmagan terminalga kirishni **taqdim etmaydi**.
+
+### Platformalararo ilova tarqatish
+
+Download bo‘limi platformani aniqlashi yoki foydalanuvchiga tanlatishi va mos paketni taklif qilishi kerak. Har bir platforma uchun format farq qiladi:
+
+- **Windows:** asosiy format — imzolangan `.exe` installer; portable paket keyin ko‘rib chiqilishi mumkin. Repozitoriyda Windows build/installer workflow allaqachon mavjud.
+- **macOS:** macOS build va release avtomatlashtirilgach, imzolangan va notarization'dan o‘tgan `.app` ilovasi `.dmg` (yoki imzolangan package) orqali tarqatiladi.
+- **Android:** dastlab PWA asosidagi Trusted Web Activity (TWA); web ilova, HTTPS domen, manifest va Digital Asset Links tayyor bo‘lgach APK/AAB chiqarish mumkin.
+- **Web:** installer talab qilmaydigan brauzer versiyasi.
+
+TWA — web tajribasini Android ilovasi sifatida qadoqlash usuli. U desktop `.exe`'ning Android'dagi aynan o‘zi emas va kompyuter fayl tizimi, shell yoki lokal process'larga cheklanmagan kirish bermaydi. Android agent imkoniyatlari Android ilova sandbox'i va aniq platforma ruxsatlariga mos loyihalanadi. To‘liq lokal desktop-agent bajarilishi Windows/macOS desktop build'lariga tegishli.
+
+Download sahifasi va release pipeline hali rejalashtirilgan imkoniyatlardir. macOS yoki Android paketlarini build, signing, o‘rnatish, yangilash va smoke-test jarayonlari tayyor bo‘lmaguncha mavjud deb ko‘rsatmaymiz.
+
+### Arxitekturani bosqichma-bosqich qurish
+
+1. **Lokal runtime asosi:** mavjud lokal Ollama yo‘lini aniq, kuzatiladigan va sozlash oson holga keltirish; desktop'da lokal model aniqlanishi va Qwen3 chat'ni tekshirish.
+2. **Connection chegarasi:** inference joylashuvi/runtime konfiguratsiyasini protokol adapterlari va model tanlovidan ajratish; Kaggle ixtiyoriy runtime bo‘lib qoladi.
+3. **Desktop host chegarasi:** lokal xizmat lifecycle'i, loopback-only tarmoq, OS credential storage, workspace root'lari va agent permission tekshiruvlarini belgilash.
+4. **Agent bajarish chegarasi:** terminal/process imkoniyatlarini qo‘shishdan oldin tor doiradagi tools va tasdiqlash jarayonini belgilash; odatiy holatda cheklanmagan shell bermaslik.
+5. **Release asosi:** Windows installer va avtomatik smoke-testlarni barqarorlashtirish; keyin macOS packaging/signing qo‘shish.
+6. **Android/web tarqatish:** web ilovani installable qilish, keyin TWA va Android'ga xos imkoniyatlarni baholash.
+7. **Yagona download tizimi:** platformaga mos release metadata, checksum, versiya/channel tanlovi va update ko‘rsatmalarini nashr qilish.
+
+Har bir bosqich alohida amalga oshiriladi va tekshiriladi. Mavjud modular monolith saqlanadi; bu mantiqiy chegaralarni erta microservice'larga ajratmaymiz.
