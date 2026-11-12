@@ -102,6 +102,40 @@ Quyidagilar — arxitektura yo‘nalishlari; ular hozir mavjud papka nomlari yok
 
 Boshlang‘ich yondashuv — **modular monolith**. Servislarni faqat real masshtablash, izolyatsiya yoki texnik xizmat ehtiyoji paydo bo‘lganda ajratamiz.
 
+### Platformaning taklif etilayotgan arxitekturasi
+
+Quyidagi diagramma NEXUS'ning **uzoq muddatli platforma maqsadini** ko‘rsatadi. Bu hozir ishga tushirilgan servislar yoki infratuzilma tavsifi emas, balki bosqichma-bosqich amalga oshiriladigan reja. Mavjud FastAPI ilovasi boshlang‘ich asos bo‘lib qoladi; alohida servislar yaratishdan oldin chegaralarni modular monolith ichida shakllantiramiz.
+
+~~~text
+Desktop (Windows launcher) ─┐
+Web (React + TypeScript) ────┼──► API Gateway (FastAPI)
+Landing (Next.js yoki Astro) ┘          │
+                                        ├── Auth + RBAC + Workspaces
+                                        ├── Provider Manager (mavjud asos):
+                                        │     Ollama / Kaggle integratsiyasi / OpenAI-compatible
+                                        ├── Chat Service: SSE streaming, suhbatlar tarixi
+                                        ├── RAG Service: yuklash → chunk → embedding → pgvector
+                                        ├── Agent Runtime: tool calling, sandbox, ruxsat tasdig‘i
+                                        ├── Workflow Engine: trigger → step → action
+                                        ├── Billing: Stripe + usage metering
+                                        └── Integrations: GitHub, Slack, Drive/Notion,
+                                              Webhooks, MCP
+                                        │
+                  Postgres + pgvector · Redis (queue/cache)
+                  S3/R2 (fayl saqlash) · Worker (Celery yoki arq)
+~~~
+
+**Amalga oshirish holati va chegaralar**
+
+- **Mavjud asos:** Windows/PyWebView desktop launcher, React + TypeScript + Vite ilovasi, FastAPI backend, provider abstraction/manager, Ollama va OpenAI-compatible adapterlari, Kaggle runtime integratsiyasi, chat streaming/tarixi, workspace amallari va dastlabki agent runtime.
+- **Rejalashtirilgan ilova imkoniyatlari:** alohida API gateway chegarasi, autentifikatsiya va rollarga asoslangan ruxsatlar (RBAC), bir nechta workspace, RAG pipeline, workflow engine, foydalanish hisoboti/billing va kengroq integratsiyalar.
+- **Rejalashtirilgan infratuzilma variantlari:** pgvector kengaytmali PostgreSQL, Redis, S3-compatible fayl ombori (S3/R2) va fon worker'lari (Celery yoki arq). Bular hozirgi ishga tushirish uchun talab emas, kelajakdagi variantlardir.
+- **Kelajakdagi web kirish nuqtalari:** hozirgi React/Vite ilovasi workspace UI bo‘lib qoladi. Alohida Next.js yoki Astro landing sahifasi ommaviy sayt uchun kelajakdagi ixtiyoriy kirish nuqtasi; aniq ehtiyoj tug‘ilgandagina ulardan biri tanlanadi.
+- **Provider izohi:** hozirgi asos Ollama va OpenAI-compatible API'larni, Kaggle esa foydalanuvchi sozlaydigan runtime integratsiyasini qamrab oladi. Bu hali to‘liq dinamik provider platformasi emas.
+
+Diagrammadagi bloklar mantiqiy mas'uliyatlarni bildiradi; ularning har birini alohida microservice sifatida deploy qilish shart emas. Operatsion ehtiyoj isbotlanmaguncha modullarni birgalikda deploy qilinadigan modular monolith sifatida saqlaymiz.
+
+
 ## Texnologiyalar
 
 | Yo‘nalish | Hozirgi texnologiya |
