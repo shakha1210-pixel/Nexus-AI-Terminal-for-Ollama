@@ -61,3 +61,39 @@ This file is the chronological record of meaningful project decisions, implement
 - [ ] Design the RAG data lifecycle, workspace isolation, access controls, and deletion behavior before selecting production storage.
 - [ ] Define API authentication, RBAC roles, tenant/workspace boundaries, and audit requirements before exposing remote access.
 
+
+
+## 2026-11-12 — Local runtime and cross-platform delivery roadmap
+
+### Decisions
+- Treat model execution location and NEXUS client platform as two independent dimensions.
+- Make same-machine Ollama inference the first local runtime target; the current adapter already defaults to `127.0.0.1:11434` and can discover locally installed models, including Qwen3 names.
+- Keep Kaggle as an optional remote runtime, not the default or sole execution environment.
+- Keep desktop agent execution distinct from Android TWA delivery. TWA packages a web experience and does not grant desktop filesystem or shell access.
+- Target Windows installer (.exe), macOS signed/notarized app (.app/.dmg), Android PWA/TWA (APK/AAB), and browser delivery, but only advertise packages after release validation.
+- Preserve the modular-monolith-first architecture and add agent execution capabilities only behind explicit permission boundaries and approval.
+
+### Verified existing foundation
+- `ProviderRuntimeService` registers the native Ollama adapter and uses the configured Ollama service URL.
+- `Settings.ollama_base_url` defaults to `http://127.0.0.1:11434`.
+- The Ollama adapter lists installed models through the local runtime API and includes Qwen3 model-name capability hints.
+- The Windows desktop launcher starts the local FastAPI service and binds it to loopback.
+- The current CI builds the Windows installer; macOS and Android release pipelines are not yet present.
+- The current agent runtime is intentionally restricted and does not provide general terminal/process execution.
+
+### Planned milestones
+1. Verify and document local Ollama/Qwen3 desktop flow.
+2. Separate runtime location/configuration from protocol adapters and model selection.
+3. Formalize desktop host lifecycle, loopback networking, credentials, workspace roots, and permissions.
+4. Design narrowly scoped agent tools and approval before terminal/process capabilities.
+5. Stabilize Windows release; add macOS packaging/signing.
+6. Make the web client installable and evaluate Android TWA.
+7. Add platform-aware download/release metadata, checksums, and update guidance.
+
+### Completed
+- [x] Added local-first runtime and platform-delivery boundaries to both README files.
+- [x] Added an incremental implementation sequence to this development log.
+
+### Not started
+- [ ] No local-runtime code changes were made in this documentation step.
+- [ ] No macOS or Android package is currently being claimed as available.
