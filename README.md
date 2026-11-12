@@ -266,3 +266,47 @@ After a meaningful change:
 4. Keep completed, in-progress, and planned work clearly separated.
 
 The README describes the **current verified state**. The development log preserves the **history of how the project got there**.
+
+
+### Local inference and desktop execution
+
+NEXUS must support two independent execution choices:
+
+1. **Where the model runs:** on the user's own computer, through a remote runtime such as a user-configured Kaggle environment, or through an external API.
+2. **Where the NEXUS interface runs:** in a browser, as a desktop application, or as a future Android application.
+
+The first local inference target is **Ollama on the same computer**. The existing Ollama adapter already uses the local default endpoint `http://127.0.0.1:11434`, discovers installed models, and recognizes Qwen3 model names for tool-calling capability hints. When Ollama is installed and a Qwen3 model is available locally, NEXUS can send chat requests to it without Kaggle or a hosted inference service. Model capability hints must still be treated as estimates and validated against the actual model/runtime.
+
+The intended desktop flow is:
+
+- NEXUS desktop launcher starts the local FastAPI service bound to loopback.
+- The backend connects to the local inference runtime through a provider adapter.
+- The agent uses only explicitly granted workspace tools and permission-checked operations.
+- Remote API and Kaggle connections remain optional alternatives, not prerequisites.
+
+A local model does not automatically make agent actions safe. File access, terminal execution, process launching, network access, and destructive operations must have separate permission boundaries, review/approval where appropriate, and auditable results. The current agent runtime does **not** provide unrestricted terminal access.
+
+### Cross-platform application delivery
+
+The download area should detect or let users select their platform and offer the correct package. The delivery formats are intentionally different:
+
+- **Windows:** signed installer `.exe` as the primary path; a portable package may be considered later. The repository already has a Windows build/installer workflow.
+- **macOS:** signed and notarized `.app` distributed in a `.dmg` (or a signed package) after macOS build and release automation are added.
+- **Android:** initially a PWA delivered through a Trusted Web Activity (TWA), producing an Android APK/AAB when the web app, HTTPS origin, manifest, and Digital Asset Links are ready.
+- **Web:** browser access without an installer.
+
+A TWA is an Android packaging route for a web experience; it is **not** an Android equivalent of a desktop `.exe` and does not grant unrestricted access to a PC filesystem, shell, or local processes. Android-specific agent capabilities must be designed around Android's application sandbox and explicit platform permissions. Full local desktop-agent execution belongs to the Windows/macOS desktop builds.
+
+The download page and release pipeline are planned capabilities. Do not advertise macOS or Android packages as available until their builds, signing, installation, update, and smoke-test flows exist.
+
+### Incremental architecture milestones
+
+1. **Local runtime baseline:** make the existing local Ollama path explicit, observable, and easy to configure; verify local model discovery and Qwen3 chat on a desktop machine.
+2. **Connection boundary:** separate inference location/runtime configuration from protocol adapters and model selection; keep Kaggle as one optional runtime.
+3. **Desktop host boundary:** formalize the local service lifecycle, loopback-only networking, OS credential storage, workspace roots, and agent permission checks.
+4. **Agent execution boundary:** define narrowly scoped tools and approvals before adding terminal/process capabilities; do not expose an unrestricted shell by default.
+5. **Release foundation:** stabilize Windows installer and automated smoke tests; then add macOS packaging/signing.
+6. **Android/web delivery:** make the web app installable, then evaluate TWA packaging and Android-specific capabilities.
+7. **Unified downloads:** publish platform-aware release metadata and checksums, with version/channel selection and update guidance.
+
+Each milestone should be implemented and tested independently. Keep the existing modular monolith; do not split these logical boundaries into microservices prematurely.
