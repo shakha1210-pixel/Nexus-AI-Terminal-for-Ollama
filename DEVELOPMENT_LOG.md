@@ -40,3 +40,24 @@ This file is the chronological record of meaningful project decisions, implement
 - Kaggle is an optional user-configured compute integration, not a NEXUS-hosted inference service.
 - No application code or UI behavior was changed in this documentation task.
 - The first chat-first UI implementation is being developed separately from this documentation branch to keep review scopes isolated.
+
+## 2026-11-12 — Long-term platform architecture added
+
+### Decisions
+- Record the proposed multi-entry architecture: Windows desktop launcher, React + TypeScript workspace web app, and an optional future Next.js or Astro landing site connecting to a FastAPI API gateway.
+- Document logical backend capabilities: Auth/RBAC/workspaces, provider management, chat/SSE/history, RAG, agent runtime, workflows, billing/usage metering, and integrations (GitHub, Slack, Drive/Notion, Webhooks, MCP).
+- Record PostgreSQL + pgvector, Redis, S3/R2, and Celery/arq workers as candidate future infrastructure, not current dependencies.
+- Keep the modular-monolith-first strategy. The diagram expresses logical boundaries and does not mandate one deployable microservice per box.
+- Clearly distinguish the existing provider foundation (Ollama and OpenAI-compatible adapters, plus user-configured Kaggle runtime integration) from the planned dynamic provider platform.
+
+### Completed
+- [x] Added the target platform diagram and implementation-status notes to README.md.
+- [x] Added the corresponding Uzbek architecture section to README.uz.md.
+- [x] Explicitly marked authentication/RBAC, RAG, workflows, billing, broad integrations, and the proposed data/worker infrastructure as planned rather than implemented.
+
+### Planned
+- [ ] Define phased milestones and acceptance criteria for each target capability before implementation.
+- [ ] Decide whether/when a separate public landing site is needed and select Next.js or Astro based on concrete requirements.
+- [ ] Design the RAG data lifecycle, workspace isolation, access controls, and deletion behavior before selecting production storage.
+- [ ] Define API authentication, RBAC roles, tenant/workspace boundaries, and audit requirements before exposing remote access.
+
