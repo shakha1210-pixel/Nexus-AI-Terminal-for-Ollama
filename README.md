@@ -102,6 +102,40 @@ The following are architectural directions, not existing directory names or comp
 
 Start with a **modular monolith**. Extract services only when real scaling, isolation, or maintenance needs justify it.
 
+### Proposed platform topology
+
+The diagram below records the **long-term platform target**. It is a planning architecture, not a description of services or infrastructure already deployed. The existing FastAPI application remains the starting point; implement these boundaries incrementally inside a modular monolith before considering independent services.
+
+~~~text
+Desktop (Windows launcher) ─┐
+Web (React + TypeScript) ────┼──► API Gateway (FastAPI)
+Landing (Next.js or Astro) ──┘          │
+                                        ├── Auth + RBAC + Workspaces
+                                        ├── Provider Manager (existing foundation):
+                                        │     Ollama / Kaggle integration / OpenAI-compatible
+                                        ├── Chat Service: SSE streaming, conversation history
+                                        ├── RAG Service: upload → chunk → embedding → pgvector
+                                        ├── Agent Runtime: tool calling, sandbox, approval
+                                        ├── Workflow Engine: trigger → step → action
+                                        ├── Billing: Stripe + usage metering
+                                        └── Integrations: GitHub, Slack, Drive/Notion,
+                                              Webhooks, MCP
+                                        │
+                  Postgres + pgvector · Redis (queue/cache)
+                  S3/R2 (file storage) · Worker (Celery or arq)
+~~~
+
+**Implementation status and boundaries**
+
+- **Existing foundation:** Windows/PyWebView desktop launcher, React + TypeScript + Vite application, FastAPI backend, provider abstraction/manager, Ollama and OpenAI-compatible adapters, Kaggle runtime integration, chat streaming/history, workspace operations, and an initial agent runtime.
+- **Planned application capabilities:** dedicated API gateway boundary, authentication and role-based access control (RBAC), multi-workspace support, RAG pipeline, workflow engine, usage metering/billing, and broader integrations.
+- **Planned infrastructure choices:** PostgreSQL with pgvector, Redis, S3-compatible object storage (S3/R2), and background workers (Celery or arq). These are candidate components, not current runtime requirements.
+- **Planned web entry points:** keep the current React/Vite application as the workspace UI. A separate Next.js or Astro landing site is an optional future public-facing entry point; choose one only when there is a concrete need.
+- **Provider note:** the current provider foundation covers Ollama and OpenAI-compatible APIs, with Kaggle as a user-configured runtime integration. It is not yet a fully dynamic provider platform.
+
+The target diagram describes logical responsibilities, not a requirement to deploy every box as a separate microservice. Keep service boundaries modular and deploy together until operational needs justify separation.
+
+
 ## Technology stack
 
 | Area | Current technology |
